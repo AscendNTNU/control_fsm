@@ -4,7 +4,6 @@
 #include "BeginState.hpp"
 #include "PreFlightState.hpp"
 
-class ControlFSM;
 class ControlFSM {
 private:
 	//Add state classes as friend classes here - allowing them to use transitionTo.
@@ -32,7 +31,9 @@ protected:
 	void transitionTo(StateInterface& state, StateInterface* _pCaller);
 
 public:
+	//Constructor sets default/starting state
 	ControlFSM() { _stateVault._pCurrentState = &BEGINSTATE; }
+	//Destructor not used.
 	~ControlFSM() {}
 	//Get a pointer to the current running state
 	StateInterface* getState() { return _stateVault._pCurrentState; }

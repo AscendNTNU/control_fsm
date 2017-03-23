@@ -10,8 +10,9 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	}
 }
 
+//Not doing much - just prints a current state for debugging purposes
 void BeginState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	//Nothing to do here really
+	fsm.handleFSMInfo("FSM current state: Begin");
 }
 
 void BeginState::loopState(ControlFSM& fsm) {
