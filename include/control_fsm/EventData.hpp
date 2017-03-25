@@ -30,12 +30,12 @@ enum class EventType {
 	REQUEST,
 	ARMED,
 	DISARMED
-}
+};
 
 class EventData {
 public:
 	RequestType request;
-	EventType eventType
+	EventType eventType;
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.
