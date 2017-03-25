@@ -1,6 +1,7 @@
 #pragma once
 #include "EventData.hpp"
 #include <iostream>
+#include <mavros_msgs/PositionTarget.h>
 /*
 NOTE:
 FSM is not async so do not run any blocking code 
@@ -13,12 +14,16 @@ public:
 	virtual ~StateInterface() {}
 	//Handles incoming external events
 	virtual void handleEvent(ControlFSM& fsm, const EventData& event) = 0;
-	//The function statebegin() wull run on current state AFTER event/transition.
-	virtual void stateBegin(ControlFSM& fsm, const EventData& event) = 0;
+	//The function statebegin() will run on current state AFTER event/transition.
+	//stateBegin is only implemented if needed by state.
+	virtual void stateBegin(ControlFSM& fsm, const EventData& event) {}
 	//Runs state specific code
-	virtual void loopState(ControlFSM& fsm) = 0;
+	//loopState is only implemented if needed by state
+	virtual void loopState(ControlFSM& fsm) {}
 	//Should return name of the state - used for debugging purposes
 	virtual std::string getStateName() = 0;
+	//Each state is responsible for delivering setpoints when the state is active. 
+	virtual const mavros_msgs::PositionTarget& getSetPoint() = 0;
 
 
 	/*

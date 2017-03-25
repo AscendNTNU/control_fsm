@@ -7,7 +7,23 @@ This class should contain all information a state might need to make a correct d
 
 
 //All the different states must have its own value
-enum class RequestType {ABORT, BEGIN, END, PREFLIGHT, IDLE, SHUTDOWN, TAKEOFF, BLINDHOVER, POSHOLD, GOTO, LAND, BLINDLAND, TRACKGB, INTERGB, ESTIMATORADJ};
+enum class RequestType {
+	ABORT,
+	BEGIN,
+	END,
+	PREFLIGHT,
+	IDLE, 
+	SHUTDOWN, 
+	TAKEOFF, 
+	BLINDHOVER, 
+	POSHOLD, 
+	GOTO, 
+	LAND, 
+	BLINDLAND, 
+	TRACKGB, 
+	INTERGB, 
+	ESTIMATORADJ
+};
 
 
 class EventData {

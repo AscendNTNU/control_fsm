@@ -15,9 +15,5 @@ void BeginState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	fsm.handleFSMInfo("FSM current state: Begin");
 }
 
-void BeginState::loopState(ControlFSM& fsm) {
-	//Begin state only wait for an event - nothing really to do here
-}
-
 
 

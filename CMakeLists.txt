@@ -7,6 +7,9 @@ project(control_fsm)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  geometry_msgs
+  mavros_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -99,10 +102,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-# INCLUDE_DIRS include 
-# LIBRARIES control_fsm
-# CATKIN_DEPENDS roscpp std_msgs
-# DEPENDS system_lib
+	CATKIN_DEPENDS message_runtime
 )
 
 ###########
@@ -111,9 +111,9 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+	include
+  	${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
