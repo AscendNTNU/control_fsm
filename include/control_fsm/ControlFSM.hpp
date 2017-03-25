@@ -28,7 +28,7 @@ private:
 
 protected:
 	//States can only be changed by states or FSM logic
-	void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
+	void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);git
 	
 public:
 	//Constructor sets default/starting state

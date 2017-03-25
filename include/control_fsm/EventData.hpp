@@ -8,6 +8,7 @@ This class should contain all information a state might need to make a correct d
 
 //All the different states must have its own value
 enum class RequestType {
+	NONE,
 	ABORT,
 	BEGIN,
 	END,
@@ -25,10 +26,16 @@ enum class RequestType {
 	ESTIMATORADJ
 };
 
+enum class EventType {
+	REQUEST,
+	ARMED,
+	DISARMED
+}
 
 class EventData {
 public:
 	RequestType request;
+	EventType eventType
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.

@@ -15,6 +15,8 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, co
 		handleFSMInfo("Current state: " + getState()->getStateName());
 		//Pass event to new current state
 		getState()->stateBegin(*this, event);
+	} else {
+		handleFSMError("Transition request made another state");
 	}
 }
 
