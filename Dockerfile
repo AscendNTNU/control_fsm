@@ -5,7 +5,9 @@ ENV ROS_WORKSPACE_PATH=~/catkin_workspace
 ENV ROS_PACKAGE_NAME=control_fsm
 
 RUN apt-get update -qq && apt-get install -yqq \
-	build-essential
+	build-essential \
+    ros-kinetic-mavros \
+    ros-kinetic-mavros-extras
 
 
 RUN mkdir -p $ROS_WORKSPACE_PATH/src

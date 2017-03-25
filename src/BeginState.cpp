@@ -15,5 +15,8 @@ void BeginState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	fsm.handleFSMInfo("FSM current state: Begin");
 }
 
+//Returns setpoint
+const mavros_msgs::PositionTarget& BeginState::getSetpoint() const { return _setpoint; }
+
 
 

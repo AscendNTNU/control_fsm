@@ -9,6 +9,8 @@ in any of these methods.
 */
 class ControlFSM;
 class StateInterface {
+protected:
+	mavros_msgs::PositionTarget _setpoint; //C++11
 public:
 	//Virtual destructor - override if needed
 	virtual ~StateInterface() {}
@@ -21,9 +23,9 @@ public:
 	//loopState is only implemented if needed by state
 	virtual void loopState(ControlFSM& fsm) {}
 	//Should return name of the state - used for debugging purposes
-	virtual std::string getStateName() = 0;
+	virtual std::string getStateName() const = 0;
 	//Each state is responsible for delivering setpoints when the state is active. 
-	virtual const mavros_msgs::PositionTarget& getSetPoint() = 0;
+	virtual const mavros_msgs::PositionTarget& getSetpoint() const = 0;
 
 
 	/*

@@ -16,12 +16,8 @@ void PreFlightState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	fsm.handleFSMInfo("Current state: Preflight");
 }
 
-void PreFlightState::loopState(ControlFSM& fsm) {
-	/*
-	TODO Do preflight here
-	After preflight -> transition to idle
-	*/
-}
+//Returns setpoint
+const mavros_msgs::PositionTarget& PreFlightState::getSetpoint() const { return _setpoint; }
 
 
 
