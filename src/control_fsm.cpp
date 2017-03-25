@@ -1,5 +1,5 @@
-#include "ControlFSM.hpp"
-#include "EventData.hpp"
+#include "control_fsm/ControlFSM.hpp"
+#include "control_fsm/EventData.hpp"
 #include <ros/ros.h>
 
 int main(int argc, char** argv) {
