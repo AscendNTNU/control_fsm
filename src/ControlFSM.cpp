@@ -4,7 +4,10 @@
 //TODO: Initiate static instances of the different state classes here!!
 BeginState ControlFSM::BEGINSTATE;
 PreFlightState ControlFSM::PREFLIGHTSTATE;
-
+IdleState ControlFSM::IDLESTATE;
+TakeoffState ControlFSM::TAKEOFFSTATE;
+BlindHoverState ControlFSM::BLINDHOVERSTATE;
+PositionHoldState ControlFSM::POSITIONHOLDSTATE;
 
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {

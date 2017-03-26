@@ -1,18 +1,30 @@
-#pragma once
+#ifndef CONTROL_FSM_HPP
+#define CONTROL_FSM_HPP
 
 #include "StateInterface.hpp"
 #include "BeginState.hpp"
 #include "PreFlightState.hpp"
+#include "IdleState.hpp"
+#include "TakeoffState.hpp"
+#include "BlindHoverState.hpp"
+#include "PositionHoldState.hpp"
 
 class ControlFSM {
 private:
 	//Add state classes as friend classes here - allowing them to use transitionTo.
 	friend class BeginState;
 	friend class PreFlightState;
+	friend class IdleState;
+	friend class TakeoffState;
+	friend class BlindHoverState;
+	friend class PositionHoldState;
 	//Add static instances of the different desired states here!
 	static BeginState BEGINSTATE;
 	static PreFlightState PREFLIGHTSTATE;
-
+	static IdleState IDLESTATE;
+	static TakeoffState TAKEOFFSTATE;
+	static BlindHoverState BLINDHOVERSTATE;
+	static PositionHoldState POSITIONHOLDSTATE;
 	//Only this ControlFSM class should be allowed to access the _pCurrentState pointer.
 	/*Struct explanation:
 	The struct (with instance _stateHolder) keeps the _pCurrentState private. 
@@ -48,4 +60,5 @@ public:
 	void handleFSMInfo(std::string warnMsg);
 };
 
+#endif
 

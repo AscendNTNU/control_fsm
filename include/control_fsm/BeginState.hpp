@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BEGIN_STATE_HPP
+#define BEGIN_STATE_HPP
 
 #include "StateInterface.hpp"
 
@@ -8,3 +9,5 @@ public:
 	std::string getStateName() const override { return "Begin"; }
 	const mavros_msgs::PositionTarget& getSetpoint() override;
 };
+
+#endif

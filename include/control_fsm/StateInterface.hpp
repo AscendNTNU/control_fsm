@@ -1,4 +1,6 @@
-#pragma once
+#ifndef STATE_INTERFACE_HPP
+#define STATE_INTERFACE_HPP
+
 #include "EventData.hpp"
 #include <iostream>
 #include <mavros_msgs/PositionTarget.h>
@@ -15,8 +17,6 @@ class StateInterface {
 protected:
 	mavros_msgs::PositionTarget _setpoint;
 public:
-	//Constructor sets default _setpoint type to IDLE - just in case
-	StateInterface() { _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE; }
 	//Virtual destructor - override if needed
 	virtual ~StateInterface() {}
 	//Handles incoming external events
@@ -30,5 +30,8 @@ public:
 	//Should return name of the state - used for debugging purposes
 	virtual std::string getStateName() const = 0;
 	//Each state is responsible for delivering setpoints when the state is active. 
+	//Be aware - it's pass by referebce
 	virtual const mavros_msgs::PositionTarget& getSetpoint() = 0;
 };
+
+#endif

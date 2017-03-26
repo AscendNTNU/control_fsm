@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PREFLIGHT_STATE_HPP
+#define PREFLIGHT_STATE_HPP
 
 #include "StateInterface.hpp"
 
@@ -9,3 +10,5 @@ public:
     //Returns setpoint
 	const mavros_msgs::PositionTarget& getSetpoint() override;
 };
+
+#endif

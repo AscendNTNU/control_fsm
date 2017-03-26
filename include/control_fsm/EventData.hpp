@@ -1,12 +1,12 @@
-#pragma once
-
+#ifndef EVENT_DATA_HPP
+#define EVENT_DATA_HPP
 /*
 TODO
 This class should contain all information a state might need to make a correct decision.
 */
 
 
-//All the different states must have its own value
+//Request to go to a certain state
 enum class RequestType {
 	NONE,
 	ABORT,
@@ -18,26 +18,43 @@ enum class RequestType {
 	TAKEOFF, 
 	BLINDHOVER, 
 	POSHOLD, 
-	GOTO, 
+	GOTO, //GOTO XYZ
 	LAND, 
 	BLINDLAND, 
-	TRACKGB, 
-	INTERGB, 
-	ESTIMATORADJ
+	TRACKGB, //Track/follow ground robot
+	INTERGB, //Interact with ground robot (tap)
+	ESTIMATORADJ //Estimator adjust
 };
 
 enum class EventType {
+	NONE,
 	REQUEST,
 	ARMED,
-	DISARMED
+	DISARMED,
+	ERROR,
+	POSREGAINED,
+	POSLOST,
+	TAKEOFFFINISHED
+};
+
+struct PositionTargetXYZ {
+	bool valid = false;
+	double x;
+	double y;
+	double z;
+	PositionTargetXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
+	PositionTargetXYZ() : valid(false) {}
 };
 
 class EventData {
 public:
-	RequestType request;
-	EventType eventType;
+	RequestType request = RequestType::NONE; //No request as default
+	EventType eventType = EventType::NONE; //No event as default
+	PositionTargetXYZ positionTarget = PositionTargetXYZ(); //Invalid position as default
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.
 */
 };
+
+#endif
