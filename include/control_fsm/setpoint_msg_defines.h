@@ -1,6 +1,8 @@
 #ifndef SETPOINT_MSG_DEFINES
 #define SETPOINT_MSG_DEFINES
 
+#define DEFAULT_MASK 
+
 #define IGNORE_PX (1 << 0)	// Position ignore flags
 #define IGNORE_PY (1 << 1)
 #define IGNORE_PZ (1 << 2)
@@ -17,9 +19,6 @@
 #define SETPOINT_TYPE_LAND 0x2000
 #define SETPOINT_TYPE_LOITER 0x3000
 #define SETPOINT_TYPE_IDLE 0x4000
-#define SETPOINT_TYPE_BLIND_HOVER 0x5000
-#define SETPOINT_TYPE_BLIND_TAKEOFF 0x6000
-#define SETPOINT_TYPE_BLIND_LAND 0x7000
 
 constexpr uint16_t default_mask = IGNORE_VX | IGNORE_VY | IGNORE_VZ | 
 								  IGNORE_AFX | IGNORE_AFY | IGNORE_AFZ | 

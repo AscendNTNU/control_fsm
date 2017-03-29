@@ -1,5 +1,6 @@
 #ifndef EVENT_DATA_HPP
 #define EVENT_DATA_HPP
+#include <functional>
 /*
 TODO
 This class should contain all information a state might need to make a correct decision.
@@ -54,11 +55,16 @@ struct PositionGoalXYZ {
 };
 
 class EventData {
+private:
+	std::function<void()> _onComplete = []() {}; //Does nothing by default
 public:
 	RequestType request = RequestType::NONE; //No request as default
 	EventType eventType = EventType::NONE; //No event as default
 	PositionGoalXYZ positionTarget = PositionGoalXYZ(); //Invalid position as default
     CommandType commandType = CommandType::NONE; //No command as default
+    void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
+    void finishEvent() const { _onComplete(); }
+
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.

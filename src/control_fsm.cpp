@@ -2,6 +2,9 @@
 #include "control_fsm/EventData.hpp"
 #include <ros/ros.h>
 
+//This is just for testing FSM transitions
+
+
 int main(int argc, char** argv) {
 
 	ros::init(argc, argv, "control_fsm_test");
