@@ -49,8 +49,8 @@ struct PositionGoalXYZ {
 	double x;
 	double y;
 	double z;
-	PositionTargetXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
-	PositionTargetXYZ() : valid(false) {}
+	PositionGoalXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
+	PositionGoalXYZ() : valid(false) {}
 };
 
 class EventData {
