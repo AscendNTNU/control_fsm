@@ -37,7 +37,14 @@ enum class EventType {
 	TAKEOFFFINISHED
 };
 
-struct PositionTargetXYZ {
+enum class CommandType {
+    NONE, //Not part of a command
+    LANDXY, //Request part of command to land at XY
+    GOTOXYZ, //Reqeust part of going to specified XYZ
+    LANDGB //Request part of interacting with ground robot
+};
+
+struct PositionGoalXYZ {
 	bool valid = false;
 	double x;
 	double y;
@@ -50,7 +57,8 @@ class EventData {
 public:
 	RequestType request = RequestType::NONE; //No request as default
 	EventType eventType = EventType::NONE; //No event as default
-	PositionTargetXYZ positionTarget = PositionTargetXYZ(); //Invalid position as default
+	PositionGoalXYZ positionTarget = PositionGoalXYZ(); //Invalid position as default
+    CommandType commandType = CommandType::NONE; //No command as default
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.
