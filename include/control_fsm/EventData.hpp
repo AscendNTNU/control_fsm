@@ -29,13 +29,14 @@ enum class RequestType {
 
 enum class EventType {
 	NONE,
-	REQUEST,
-	ARMED,
-	DISARMED,
-	ERROR,
-	POSREGAINED,
-	POSLOST,
-	TAKEOFFFINISHED
+	REQUEST, //Simple transition request
+	COMMAND, //More complex command with multiple transitions
+	ARMED, //Notify system is armed
+	DISARMED, //Notify system is disarmed
+	ERROR, //Notify there is an error
+	POSREGAINED, //Notify position is regained
+	POSLOST, //Notify position is lost
+	TAKEOFFFINISHED //Notify takeoff is finished
 };
 
 enum class CommandType {
@@ -62,6 +63,7 @@ public:
 	EventType eventType = EventType::NONE; //No event as default
 	PositionGoalXYZ positionTarget = PositionGoalXYZ(); //Invalid position as default
     CommandType commandType = CommandType::NONE; //No command as default
+
     void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
     void finishEvent() const { _onComplete(); }
 
