@@ -10,6 +10,8 @@
 #include "TakeoffState.hpp"
 #include "BlindHoverState.hpp"
 #include "PositionHoldState.hpp"
+#include "ShutdownState.hpp"
+#include "EstimateAdjustState.hpp"
 
 class ControlFSM {
 private:
@@ -20,6 +22,8 @@ private:
 	friend class TakeoffState;
 	friend class BlindHoverState;
 	friend class PositionHoldState;
+	friend class ShutdownState;
+	friend class EstimateAdjustState;
 	//Add static instances of the different desired states here!
 	static BeginState BEGINSTATE;
 	static PreFlightState PREFLIGHTSTATE;
@@ -27,6 +31,8 @@ private:
 	static TakeoffState TAKEOFFSTATE;
 	static BlindHoverState BLINDHOVERSTATE;
 	static PositionHoldState POSITIONHOLDSTATE;
+	static ShutdownState SHUTDOWNSTATE;
+	static EstimateAdjustState ESTIMATEADJUSTSTATE;
 	//Only this ControlFSM class should be allowed to access the _pCurrentState pointer.
 	/*Struct explanation:
 	The struct (with instance _stateHolder) keeps the _pCurrentState private. 

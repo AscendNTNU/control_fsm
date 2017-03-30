@@ -8,6 +8,8 @@ IdleState ControlFSM::IDLESTATE;
 TakeoffState ControlFSM::TAKEOFFSTATE;
 BlindHoverState ControlFSM::BLINDHOVERSTATE;
 PositionHoldState ControlFSM::POSITIONHOLDSTATE;
+ShutdownState ControlFSM::SHUTDOWNSTATE;
+EstimateAdjustState ControlFSM::ESTIMATEADJUSTSTATE;
 
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
