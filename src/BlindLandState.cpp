@@ -18,9 +18,9 @@ void BlindLandState::loopState(ControlFSM& fsm) {
 	//TODO Transition to IDLE when landed
 }
 
-const mavros_msgs::PositionTarget& BlindLandState::getSetpoint() {
+const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return _setpoint;
+	return &_setpoint;
 }
 
 

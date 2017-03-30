@@ -14,7 +14,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//TODO Initalize variables so the drone will hold it's position
 }
 
-const mavros_msgs::PositionTarget& PositionHoldState::getSetpoint() {
+const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return _setpoint;
+	return &_setpoint;
 }

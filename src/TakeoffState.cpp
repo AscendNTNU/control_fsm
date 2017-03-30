@@ -20,7 +20,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
 	//TODO Implement takeoff
 }
 
-const mavros_msgs::PositionTarget& TakeoffState::getSetpoint() {
+const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return _setpoint; //Will generate error
+	return &_setpoint; //Will generate error
 }

@@ -19,9 +19,9 @@ void GoToState::loopState(ControlFSM& fsm) {
 	//TODO Implement GoTo state loop.
 }
 
-const mavros_msgs::PositionTarget& GoToState::getSetpoint() {
+const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return _setpoint;
+	return &_setpoint;
 }
 
 

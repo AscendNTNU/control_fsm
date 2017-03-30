@@ -51,13 +51,15 @@ struct PositionGoalXYZ {
 	double x;
 	double y;
 	double z;
-	PositionGoalXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
+	double yaw;
+	PositionGoalXYZ(double posX, double posY, double posZ, double rotYaw) : x(posX), y(posY), z(posZ), yaw(rotYaw), valid(true) {}
 	PositionGoalXYZ() : valid(false) {}
 };
 
 class EventData {
 private:
 	std::function<void()> _onComplete = []() {}; //Does nothing by default
+	std::function<void(std::string)> _onError = [](std::string) {}; //Does nothing by default
 public:
 	RequestType request = RequestType::NONE; //No request as default
 	EventType eventType = EventType::NONE; //No event as default
@@ -65,7 +67,9 @@ public:
     CommandType commandType = CommandType::NONE; //No command as default
 
     void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
+    void setOnErrorCallback(std::function<void(std::string)> callback) { _onError = callback; }
     void finishEvent() const { _onComplete(); }
+    void eventError(std::string errorMsg) { _onError(errorMsg); }
 
 /*
 Should contain all neccesary data for a state to make

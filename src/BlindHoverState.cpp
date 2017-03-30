@@ -21,7 +21,7 @@ void BlindHoverState::loopState(ControlFSM& fsm) {
 	//TODO Implement blind hover loop (trigger internal transition when position is regained)
 }
 
-const mavros_msgs::PositionTarget& BlindHoverState::getSetpoint() {
+const mavros_msgs::PositionTarget* BlindHoverState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return _setpoint;
+	return &_setpoint;
 }

@@ -1,6 +1,8 @@
 #ifndef CONTROL_FSM_HPP
 #define CONTROL_FSM_HPP
 
+#include <mavros_msgs/PositionTarget.h>
+
 #include "StateInterface.hpp"
 #include "BeginState.hpp"
 #include "PreFlightState.hpp"
@@ -58,6 +60,10 @@ public:
 	void handleFSMError(std::string errMsg);
 	//Send info message to user
 	void handleFSMInfo(std::string warnMsg);
+	//Returns setpoint from current state
+	const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
+
+
 };
 
 #endif

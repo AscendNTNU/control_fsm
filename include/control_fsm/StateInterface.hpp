@@ -31,7 +31,7 @@ public:
 	virtual std::string getStateName() const = 0;
 	//Each state is responsible for delivering setpoints when the state is active. 
 	//Be aware - it's return by reference - only return _setpoint.
-	virtual const mavros_msgs::PositionTarget& getSetpoint() = 0;
+	virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
 };
 
 #endif
