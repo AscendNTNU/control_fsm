@@ -2,6 +2,7 @@
 #define CONTROL_FSM_HPP
 
 #include <mavros_msgs/PositionTarget.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #include "StateInterface.hpp"
 #include "BeginState.hpp"
@@ -12,6 +13,11 @@
 #include "PositionHoldState.hpp"
 #include "ShutdownState.hpp"
 #include "EstimateAdjustState.hpp"
+#include "TrackGBState.hpp"
+#include "InteractGBState.hpp"
+#include "GoToState.hpp"
+#include "LandState.hpp"
+#include "BlindLandState.hpp"
 
 class ControlFSM {
 private:
@@ -24,6 +30,11 @@ private:
 	friend class PositionHoldState;
 	friend class ShutdownState;
 	friend class EstimateAdjustState;
+	friend class TrackGBState;
+	friend class InteractGBState;
+	friend class GoToState;
+	friend class LandState;
+	friend class BlindLandState;
 	//Add static instances of the different desired states here!
 	static BeginState BEGINSTATE;
 	static PreFlightState PREFLIGHTSTATE;
@@ -33,6 +44,12 @@ private:
 	static PositionHoldState POSITIONHOLDSTATE;
 	static ShutdownState SHUTDOWNSTATE;
 	static EstimateAdjustState ESTIMATEADJUSTSTATE;
+	static TrackGBState TRACKGBSTATE;
+	static InteractGBState INTERACTGBSTATE;
+	static GoToState GOTOSTATE;
+	static LandState LANDSTATE;
+	static BlindLandState BLINDLANDSTATE;
+
 	//Only this ControlFSM class should be allowed to access the _pCurrentState pointer.
 	/*Struct explanation:
 	The struct (with instance _stateHolder) keeps the _pCurrentState private. 
@@ -45,6 +62,12 @@ private:
 	private:
 		StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
 	} _stateVault;
+
+	struct {
+		bool valid = false;
+		geometry_msgs::PoseStamped position;
+	} _dronePosition;
+	
 
 protected:
 	//States can only be changed by states or FSM logic
@@ -65,9 +88,17 @@ public:
 	//Send errormessage to user
 	void handleFSMError(std::string errMsg);
 	//Send info message to user
-	void handleFSMInfo(std::string warnMsg);
+	void handleFSMInfo(std::string infoMsg);
+	//Send warning message to user
+	void handleFSMWarn(std::string warnMsg);
+	//Send debug message to user
+	void handleFSMDebug(std::string debugMsg);
 	//Returns setpoint from current state
 	const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
+	//Set current position
+	void setPosition(const geometry_msgs::PoseStamped& pose);
+	//Get current position
+	const geometry_msgs::PoseStamped* getPosition() {return _dronePosition.valid ? &_dronePosition.position : nullptr; }
 
 
 };

@@ -10,18 +10,22 @@ BlindHoverState ControlFSM::BLINDHOVERSTATE;
 PositionHoldState ControlFSM::POSITIONHOLDSTATE;
 ShutdownState ControlFSM::SHUTDOWNSTATE;
 EstimateAdjustState ControlFSM::ESTIMATEADJUSTSTATE;
-
+TrackGBState ControlFSM::TRACKGBSTATE;
+InteractGBState ControlFSM::INTERACTGBSTATE;
+GoToState ControlFSM::GOTOSTATE;
+LandState ControlFSM::LANDSTATE;
+BlindLandState ControlFSM::BLINDLANDSTATE;
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
 	//Only current running state is allowed to change state
 	if(getState() == pCaller) {
 		//Set the current state pointer
 		_stateVault._pCurrentState = &state;
-		handleFSMInfo("Current state: " + getState()->getStateName());
+		handleFSMDebug("Current state: " + getState()->getStateName());
 		//Pass event to new current state
 		getState()->stateBegin(*this, event);
 	} else {
-		handleFSMError("Transition request made another state");
+		handleFSMError("Transition request made by another state");
 	}
 }
 
@@ -44,8 +48,6 @@ void ControlFSM::loopCurrentState(void) {
 	getState()->loopState(*this);
 }
 
-
-//Change the current running state - be carefull to only change into an allowed state
 //Send error message to user via ROS
 void ControlFSM::handleFSMError(std::string errMsg) {
 	ROS_ERROR("%s", (std::string("[Control FSM] ") + errMsg).c_str());
@@ -55,5 +57,22 @@ void ControlFSM::handleFSMError(std::string errMsg) {
 void ControlFSM::handleFSMInfo(std::string infoMsg) {
 	ROS_INFO("%s",(std::string("[Control FSM] ") + infoMsg).c_str());
 }
+
+//Send warning to user via ROS
+void ControlFSM::handleFSMWarn(std::string warnMsg) {
+	ROS_WARN("%s", (std::string("[Control FSM] ") + warnMsg).c_str());
+}
+
+//Send debug message to user via ROS
+void ControlFSM::handleFSMDebug(std::string debugMsg) {
+	ROS_DEBUG("%s", (std::string("[Control FSM] ") + debugMsg).c_str());
+}
+
+void ControlFSM::setPosition(const geometry_msgs::PoseStamped& pose) {
+	//TODO Set _dronePosition.valid to false if position is not valid
+	_dronePosition.position = pose;
+}
+
+
 
 

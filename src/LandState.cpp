@@ -16,6 +16,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 void LandState::loopState(ControlFSM& fsm) {
 	//Autotransition to IDLE when completed
+	//Finish current commands
 }
 
 const mavros_msgs::PositionTarget* LandState::getSetpoint() {

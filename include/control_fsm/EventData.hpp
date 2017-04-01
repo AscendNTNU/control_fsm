@@ -30,7 +30,7 @@ enum class RequestType {
 enum class EventType {
 	NONE,
 	REQUEST, //Simple transition request
-	COMMAND, //More complex command with multiple transitions
+	COMMAND,
 	ARMED, //Notify system is armed
 	DISARMED, //Notify system is disarmed
 	ERROR, //Notify there is an error
