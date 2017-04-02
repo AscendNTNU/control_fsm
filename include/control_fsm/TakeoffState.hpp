@@ -2,9 +2,12 @@
 #define TAKE_OFF_STATE_HPP
 #include "StateInterface.hpp"
 
+#define TAKEOFF_ALTITUDE 1.0f 
+#define TAKEOFF_ALTITUDE_REACHED_THRESHOLD 0.1
+
 class TakeoffState : public StateInterface {
 private:
-	double _takeoffaltitude = -1; //Invalid takeoff altitude as default
+	EventData _cmd;
 public:
 	TakeoffState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

@@ -64,7 +64,7 @@ private:
 	} _stateVault;
 
 	struct {
-		bool valid = false;
+		bool validXY = false;
 		geometry_msgs::PoseStamped position;
 	} _dronePosition;
 	
@@ -97,9 +97,10 @@ public:
 	const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
 	//Set current position
 	void setPosition(const geometry_msgs::PoseStamped& pose);
-	//Get current position
-	const geometry_msgs::PoseStamped* getPosition() {return _dronePosition.valid ? &_dronePosition.position : nullptr; }
-
+	//Get current position - will return nullptr if invalid
+	const geometry_msgs::PoseStamped* getPositionXYZ() {return _dronePosition.validXY ? &_dronePosition.position : nullptr; }
+	//Get altitude (should always be correct - 1D lidar)
+	double getPositionZ() { return _dronePosition.position.pose.position.z; }
 
 };
 

@@ -4,7 +4,7 @@
 
 class BlindHoverState : public StateInterface {
 private:
-	double _hoverAltitude = 0.5; //Pretty safe default value
+	EventData _cmd;
 public: 
 	BlindHoverState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

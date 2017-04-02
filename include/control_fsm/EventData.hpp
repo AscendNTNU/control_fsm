@@ -33,10 +33,9 @@ enum class EventType {
 	COMMAND,
 	ARMED, //Notify system is armed
 	DISARMED, //Notify system is disarmed
-	ERROR, //Notify there is an error
 	POSREGAINED, //Notify position is regained
 	POSLOST, //Notify position is lost
-	TAKEOFFFINISHED //Notify takeoff is finished
+	GROUNDDETECTED
 };
 
 enum class CommandType {
@@ -68,8 +67,8 @@ public:
 
     void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
     void setOnErrorCallback(std::function<void(std::string)> callback) { _onError = callback; }
-    void finishEvent() const { _onComplete(); }
-    void eventError(std::string errorMsg) { _onError(errorMsg); }
+    void finishCMD() const { _onComplete(); }
+    void eventError(std::string errorMsg) const { _onError(errorMsg); }
 
 /*
 Should contain all neccesary data for a state to make

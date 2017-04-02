@@ -3,6 +3,8 @@
 #include "StateInterface.hpp"
 
 class LandState : public StateInterface {
+private:
+	EventData _cmd;
 public:
 	LandState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

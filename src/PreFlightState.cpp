@@ -3,13 +3,22 @@
 
 //Only check for an abort event
 void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	if(event.request == RequestType::ABORT) {
-		//Transition back to start
-		fsm.transitionTo(ControlFSM::BEGINSTATE, this, event);
+	if(event.eventType == EventType::COMMAND) {
+		event.eventError("Drone is not yet active (preflight) - command ignored");
+		fsm.handleFSMWarn("Drone is not yet active - commands ignored");
+	} else if(event.eventType == EventType::REQUEST) {
+		if(event.request == RequestType::ABORT) {
+			fsm.transitionTo(ControlFSM::BEGINSTATE, this, event);
+		} else {
+			fsm.handleFSMWarn("Invalid transition request");
+		}
+	} else if(event.eventType == EventType::ARMED) {
+		fsm.transitionTo(ControlFSM::IDLESTATE, this, event); //Transition to IDLE when armed
 	} else {
-		fsm.handleFSMInfo("Invalid transiton");
+		fsm.handleFSMInfo("Event ignored");
 	}
 }
+
 
 //Returns setpoint
 const mavros_msgs::PositionTarget* PreFlightState::getSetpoint() { 

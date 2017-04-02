@@ -15,13 +15,14 @@ InteractGBState ControlFSM::INTERACTGBSTATE;
 GoToState ControlFSM::GOTOSTATE;
 LandState ControlFSM::LANDSTATE;
 BlindLandState ControlFSM::BLINDLANDSTATE;
+
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
 	//Only current running state is allowed to change state
 	if(getState() == pCaller) {
 		//Set the current state pointer
 		_stateVault._pCurrentState = &state;
-		handleFSMDebug("Current state: " + getState()->getStateName());
+		handleFSMInfo("Current state: " + getState()->getStateName());
 		//Pass event to new current state
 		getState()->stateBegin(*this, event);
 	} else {
@@ -71,6 +72,7 @@ void ControlFSM::handleFSMDebug(std::string debugMsg) {
 void ControlFSM::setPosition(const geometry_msgs::PoseStamped& pose) {
 	//TODO Set _dronePosition.valid to false if position is not valid
 	_dronePosition.position = pose;
+	_dronePosition.validXY = true; //TODO Add checks here
 }
 
 

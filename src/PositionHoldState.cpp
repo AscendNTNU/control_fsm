@@ -50,7 +50,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	const geometry_msgs::PoseStamped* pose = fsm.getPosition();
+	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	//GoTo blind hover if position not valid
 	if(pose == nullptr) {
 		EventData nEvent = event;
@@ -63,8 +63,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Set setpoint to current position
 	_setpoint.position.x = pose->pose.position.x;
 	_setpoint.position.y = pose->pose.position.y;
-	_setpoint.position.z = pose->pose.position.z;
-
+	//Keep old altitude if abort
+	//TODO Should we use an default hover altitude in case of ABORT?
+	if(event.eventType != EventType::REQUEST || event.request != RequestType::ABORT) {
+		_setpoint.position.z = pose->pose.position.z;
+	}
+	
 	//No need to check other commands
 	if(event.eventType != EventType::COMMAND || event.commandType == CommandType::NONE) {
 		return; 
