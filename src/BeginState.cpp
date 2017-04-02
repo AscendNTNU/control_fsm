@@ -14,6 +14,8 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		} else {
 			fsm.handleFSMWarn("Invalid transiton request!");
 		}
+	} else {
+		fsm.handleFSMDebug("Event ignored");
 	}
 }
 

@@ -116,21 +116,28 @@ include_directories(
   	${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
-# add_library(control_fsm
-#   src/${PROJECT_NAME}/control_fsm.cpp
-# )
+file(GLOB control_fsm_SRC "src/*.cpp")
 
+## Declare a C++ library
+add_library(control_fsm_lib
+  ${control_fsm_SRC}
+)
+target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
+
+target_link_libraries(control_fsm_lib
+	${catkin_LIBRARIES}
+)
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(control_fsm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-file(GLOB control_fsm_SRC "src/*.cpp")
-
 ## Declare a C++ executable
-add_executable(control_fsm_test ${control_fsm_SRC})
+add_executable(control_fsm_test src/nodes/control_fsm_test)
 target_compile_features(control_fsm_test PRIVATE cxx_range_for)
+
+add_executable(control_fsm_main src/nodes/control_fsm_main)
+target_compile_features(control_fsm_main PRIVATE cxx_range_for)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -138,7 +145,11 @@ target_compile_features(control_fsm_test PRIVATE cxx_range_for)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(control_fsm_test
-  ${catkin_LIBRARIES}
+  	control_fsm_lib
+)
+
+target_link_libraries(control_fsm_main
+	control_fsm_lib
 )
 
 #############

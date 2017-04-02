@@ -2,9 +2,6 @@
 #define TAKE_OFF_STATE_HPP
 #include "StateInterface.hpp"
 
-#define TAKEOFF_ALTITUDE 1.0f 
-#define TAKEOFF_ALTITUDE_REACHED_THRESHOLD 0.1
-
 class TakeoffState : public StateInterface {
 private:
 	EventData _cmd;

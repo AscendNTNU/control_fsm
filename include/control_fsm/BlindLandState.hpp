@@ -3,6 +3,8 @@
 #include "StateInterface.hpp"
 
 class BlindLandState : public StateInterface {
+private:
+	EventData _cmd;
 public:
 	BlindLandState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

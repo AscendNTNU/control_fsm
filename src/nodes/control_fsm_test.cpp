@@ -2,6 +2,8 @@
 #include "control_fsm/EventData.hpp"
 #include <ros/ros.h>
 
+#define DEBUG true
+
 //This is just for testing FSM transitions
 
 void printOptions();
@@ -9,15 +11,25 @@ geometry_msgs::PoseStamped fakePosition();
 
 int main(int argc, char** argv) {
 
+	//Set logger level to debug for testing
+	if(DEBUG) {
+		if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
+			ros::console::notifyLoggerLevelsChanged();
+		}
+	}
+
 	ros::init(argc, argv, "control_fsm_test");
+	ros::NodeHandle n;
 	EventData event; //This object will be passed as a reference to the current state
 	ControlFSM fsm; //Statemachine object
+	int a = 0;
 	std::cout << "Current state: " << fsm.getState()->getStateName() << std::endl;
 	while(ros::ok()) {
 		printOptions();
 		int selection = -1;
 		std::cout << "Your selection: ";
 		std::cin >> selection;
+		std::cout << "\n" << std::endl;
 		EventData event;
 		switch(selection) {
 			case 1:
@@ -90,12 +102,19 @@ int main(int argc, char** argv) {
 				event.setOnCompleteCallback([](){
 					std::cout << "Command complete!" << std::endl;
 				});
+				event.setOnErrorCallback([&](std::string s) {
+					std::cout << "Callback: Command error!" << std::endl;
+					a++;
+				});
 				break;
 			case 18:
 				event.eventType = EventType::COMMAND;
 				event.commandType = CommandType::LANDXY;
 				event.setOnCompleteCallback([](){
 					std::cout << "Command complete!" << std::endl;
+				});
+				event.setOnErrorCallback([](std::string s) {
+					std::cout << "Callback: Command error!" << std::endl;
 				});
 				break;
 			case 19:
@@ -104,12 +123,18 @@ int main(int argc, char** argv) {
 				event.setOnCompleteCallback([](){
 					std::cout << "Command complete!" << std::endl;
 				});
+				event.setOnErrorCallback([](std::string s) {
+					std::cout << "Callback: Command error!" << std::endl;
+				});
 				break;
 			case 20:
 				event.eventType = EventType::COMMAND;
 				event.commandType = CommandType::LANDGB;
 				event.setOnCompleteCallback([](){
-					std::cout << "Command complete!" << std::endl;
+					std::cout << "Callback: Command complete!" << std::endl;
+				});
+				event.setOnErrorCallback([](std::string s) {
+					std::cout << "Callback: Command error!" << std::endl;
 				});
 				break;
 			case 21:
@@ -136,6 +161,7 @@ int main(int argc, char** argv) {
 		}
 		fsm.handleEvent(event);
 		fsm.loopCurrentState();
+		std::cout << "A: " << a << std::endl;
 	}
 }
 

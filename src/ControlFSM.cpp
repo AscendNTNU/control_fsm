@@ -22,7 +22,7 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, co
 	if(getState() == pCaller) {
 		//Set the current state pointer
 		_stateVault._pCurrentState = &state;
-		handleFSMInfo("Current state: " + getState()->getStateName());
+		handleFSMDebug("Current state: " + getState()->getStateName());
 		//Pass event to new current state
 		getState()->stateBegin(*this, event);
 	} else {

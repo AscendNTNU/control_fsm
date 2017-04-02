@@ -24,7 +24,6 @@ constexpr uint16_t default_mask = IGNORE_VX | IGNORE_VY | IGNORE_VZ |
 								  IGNORE_AFX | IGNORE_AFY | IGNORE_AFZ | 
 								  IGNORE_YAW_RATE;
 
-
-#define BLIND_HOVER_ALTITUDE 1.0f								  
+							  
 
 #endif

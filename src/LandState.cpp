@@ -23,6 +23,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
 	} else if(event.eventType == EventType::COMMAND) {
 		fsm.handleFSMError("ABORT should be sent before new command!");
+		event.eventError("ABORT should be sent before new command!");
 	}
 }
 

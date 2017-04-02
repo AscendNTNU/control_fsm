@@ -4,6 +4,8 @@
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
 
+#define BLIND_HOVER_ALTITUDE 1.0f	
+
 BlindHoverState::BlindHoverState() {
 	_setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
 }
@@ -15,6 +17,8 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	} else if(event.eventType == EventType::REQUEST) {
 		if(event.request == RequestType::BLINDLAND) {
 			fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
+		} else {
+			fsm.handleFSMWarn("Invalid transition request");
 		}
 	}
 }
