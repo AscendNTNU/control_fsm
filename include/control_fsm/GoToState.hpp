@@ -4,7 +4,7 @@
 
 class GoToState : public StateInterface {
 private:
-	EventData _lastEvent;
+	EventData _cmd;
 public:
 	GoToState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
