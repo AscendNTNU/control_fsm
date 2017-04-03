@@ -30,69 +30,38 @@ int main(int argc, char** argv) {
 	
 	//Subscribe to neccesary topics
 	ros::NodeHandle n;
-	ros::Subscriber local_pos_sub = n.subscribe("mavros/local_position/pose", 100, local_pos_callback);
+	ros::Subscriber local_pos_sub = n.subscribe("mavros/local_position/pose", 10, local_pos_callback);
 	ros::Subscriber user_input_sub = n.subscribe("control_fsm_gazebo_input/value", 10, user_input_callback);
 
-	ros::Publisher setpoint_pub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 100);
-
-	ros::ServiceClient arming_client = n.serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
-    ros::ServiceClient set_mode_client = n.serviceClient<mavros_msgs::SetMode>("mavros/set_mode");
-    ros::Subscriber state_sub = n.subscribe<mavros_msgs::State>("mavros/state", 100, state_callback);
+	ros::Publisher setpoint_pub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10);
+    ros::Subscriber state_sub = n.subscribe<mavros_msgs::State>("mavros/state", 10, state_callback);
 
 	ros::spinOnce();
 
-	ros::Rate loop_rate(30);
-
-	mavros_msgs::SetMode offb_set_mode;
-	offb_set_mode.request.custom_mode = "OFFBOARD";
-
-	mavros_msgs::CommandBool arm_cmd;
-	arm_cmd.request.value = true;
-
-	ros::Time last = ros::Time::now();
+	ros::Rate loop_rate(20);
 
 	mavros_msgs::PositionTarget tempSetpoint;
 	tempSetpoint.position.x = 0;
 	tempSetpoint.position.y = 0;
 	tempSetpoint.position.z = 0;
-	//only for simulation
+
+	//Wait for offboard mode and arming
 	while ( !is_offboard || !is_armed) {
 		setpoint_pub.publish(tempSetpoint);
 		ros::spinOnce();
-		if(ros::Time::now() - last > ros::Duration(5.0)) {
-			last = ros::Time::now();
-			if(!is_offboard) {
-				if(set_mode_client.call(offb_set_mode) && offb_set_mode.response.success) {
-					is_offboard = true;
-					std::cout << "OFFBOARD" << std::endl;
-				}
-			} else if(!is_armed) {
-				if(arming_client.call(arm_cmd) && arm_cmd.response.success) {
-					is_armed = true;
-					std::cout << "ARMED" << std::endl;
-					break;
-				}
-			}
-		}
 		loop_rate.sleep();
 	}
 
-	while(!fsm.getIsActive()) {
-		setpoint_pub.publish(tempSetpoint);
-		ros::spinOnce();
-		if(is_offboard && is_armed) {
-			EventData armedEvent;
-			armedEvent.eventType = EventType::ARMED;
-			fsm.handleEvent(armedEvent);
-		}
-		loop_rate.sleep();
+	if(is_offboard && is_armed) {
+		EventData armedEvent;
+		armedEvent.eventType = EventType::ARMED;
+		fsm.handleEvent(armedEvent);
+	} else {
+		return -1;
 	}
 
 	ros::Time setpoint_last_sent = ros::Time::now();
-	std::cout << "Reached main loop" << std::endl;
 	while(ros::ok()) {
-		//TODO Take get input from planning or other 
-
 		ros::spinOnce();
 		fsm.loopCurrentState();
 		if(ros::Time::now() - setpoint_last_sent >= ros::Duration(1/30.0)) {
@@ -105,6 +74,7 @@ int main(int argc, char** argv) {
 }
 
 void local_pos_callback(const geometry_msgs::PoseStamped& input) {
+	//Faking ground detected event
 	if(fsm.getPositionZ() >= 0.2 && input.pose.position.z < 0.2) {
 		EventData landEvent;
 		landEvent.eventType = EventType::GROUNDDETECTED;
@@ -115,8 +85,25 @@ void local_pos_callback(const geometry_msgs::PoseStamped& input) {
 
 void state_callback(const mavros_msgs::State::ConstPtr& msg) {
 	current_state = *msg;
+	if(!is_armed && msg->armed) {
+		is_armed = msg->armed;
+		ROS_INFO("ARMED");
+	} else if(is_armed && !msg->armed) {
+		is_armed = msg->armed;
+		ROS_INFO("DISARMED");
+	}
+	bool ofb = (msg->mode == "OFFBOARD");
+	if(!is_offboard && ofb) {
+		is_offboard = (msg->mode == "OFFBOARD");
+		ROS_INFO("OFFBOARD");
+	} else if(is_offboard && !ofb) {
+		is_offboard = false;
+		ROS_INFO("LOST OFFBOARD");
+	}
+
 }
 
+//Generate events based on user input
 void user_input_callback(const std_msgs::Int32& val) {
 	EventData event;
 		switch(val.data) {
@@ -203,6 +190,7 @@ void user_input_callback(const std_msgs::Int32& val) {
 				event.setOnErrorCallback([](std::string s) {
 					std::cout << "Callback: Command error!" << std::endl;
 				});
+				event.positionGoal = PositionGoalXYZ(10, 10, 2, 0);
 				break;
 			case 19:
 				event.eventType = EventType::COMMAND;
@@ -213,6 +201,7 @@ void user_input_callback(const std_msgs::Int32& val) {
 				event.setOnErrorCallback([](std::string s) {
 					std::cout << "Callback: Command error!" << std::endl;
 				});
+				event.positionGoal = PositionGoalXYZ(10, 10, 2, 0);
 				break;
 			case 20:
 				event.eventType = EventType::COMMAND;
@@ -223,6 +212,7 @@ void user_input_callback(const std_msgs::Int32& val) {
 				event.setOnErrorCallback([](std::string s) {
 					std::cout << "Callback: Command error!" << std::endl;
 				});
+				event.positionGoal = PositionGoalXYZ(10, 10, 2, 0);
 				break;
 			case 21:
 				event.eventType = EventType::ARMED;

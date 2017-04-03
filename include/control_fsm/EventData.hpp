@@ -62,7 +62,7 @@ private:
 public:
 	RequestType request = RequestType::NONE; //No request as default
 	EventType eventType = EventType::NONE; //No event as default
-	PositionGoalXYZ positionTarget = PositionGoalXYZ(); //Invalid position as default
+	PositionGoalXYZ positionGoal = PositionGoalXYZ(); //Invalid position as default
     CommandType commandType = CommandType::NONE; //No command as default
 
     void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
