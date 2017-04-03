@@ -14,6 +14,7 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		}
 	} else if(event.eventType == EventType::ARMED) {
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, event); //Transition to IDLE when armed
+		fsm._isActive = true;
 	} else {
 		fsm.handleFSMInfo("Event ignored");
 	}

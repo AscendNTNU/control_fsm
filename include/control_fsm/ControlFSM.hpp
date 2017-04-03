@@ -68,6 +68,7 @@ private:
 		geometry_msgs::PoseStamped position;
 	} _dronePosition;
 	
+	bool _isActive = false;
 
 protected:
 	//States can only be changed by states or FSM logic
@@ -101,7 +102,8 @@ public:
 	const geometry_msgs::PoseStamped* getPositionXYZ() {return _dronePosition.validXY ? &_dronePosition.position : nullptr; }
 	//Get altitude (should always be correct - 1D lidar)
 	double getPositionZ() { return _dronePosition.position.pose.position.z; }
-
+	//Returns true if drone is active (and acceptable to commands)
+	bool getIsActive() { return _isActive; }
 };
 
 #endif
