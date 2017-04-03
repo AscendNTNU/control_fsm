@@ -15,6 +15,10 @@ void ShutdownState::loopState(ControlFSM& fsm) {
 	//TODO Perform neccesary shutdown procedures
 }
 
+void ShutdownState::stateBegin(ControlFSM& fsm, const EventData& event) {
+	fsm._isActive = false;
+}
+
 //Make sure to return _setpoint (make sure it will stay in memory!)
 const mavros_msgs::PositionTarget* ShutdownState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();

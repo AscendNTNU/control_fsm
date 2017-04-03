@@ -9,6 +9,7 @@
 TakeoffState::TakeoffState() {
 	_setpoint = mavros_msgs::PositionTarget();
 	_setpoint.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
+	_setpoint.position.z = TAKEOFF_ALTITUDE;
 }
 
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
