@@ -5,6 +5,7 @@
 
 LandState::LandState() {
 	_setpoint.type_mask = default_mask | SETPOINT_TYPE_LAND;
+	_setpoint.position.z = -1; //Shouldnt matter
 }
 
 void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -30,6 +31,11 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(event.eventType == EventType::COMMAND) {
 		_cmd = event;
+	}
+	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
+	if(pPose != nullptr) {
+		_setpoint.position.x = pPose->pose.position.x;
+		_setpoint.position.y = pPose->pose.position.y;
 	}
 }
 
