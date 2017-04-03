@@ -3,12 +3,13 @@
 #include <ros/ros.h>
 #include "control_fsm/ControlFSM.hpp"
 
-#define TAKEOFF_ALTITUDE 1.0f 
+#define TAKEOFF_ALTITUDE 2.0f 
 #define TAKEOFF_ALTITUDE_REACHED_THRESHOLD 0.1
 
 TakeoffState::TakeoffState() {
 	_setpoint = mavros_msgs::PositionTarget();
 	_setpoint.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
+	_setpoint.position.z = TAKEOFF_ALTITUDE;
 }
 
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {

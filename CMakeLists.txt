@@ -74,6 +74,12 @@ target_compile_features(control_fsm_test PRIVATE cxx_range_for)
 add_executable(control_fsm_main src/nodes/control_fsm_main)
 target_compile_features(control_fsm_main PRIVATE cxx_range_for)
 
+add_executable(control_fsm_gazebo_test src/nodes/control_fsm_gazebo_test)
+target_compile_features(control_fsm_gazebo_test PRIVATE cxx_range_for)
+
+add_executable(control_fsm_gazebo_input src/nodes/control_fsm_gazebo_input)
+target_compile_features(control_fsm_gazebo_input PRIVATE cxx_range_for)
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(control_fsm_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -84,5 +90,13 @@ target_link_libraries(control_fsm_test
 )
 
 target_link_libraries(control_fsm_main
+	control_fsm_lib
+)
+
+target_link_libraries(control_fsm_gazebo_test
+	control_fsm_lib
+)
+
+target_link_libraries(control_fsm_gazebo_input
 	control_fsm_lib
 )
