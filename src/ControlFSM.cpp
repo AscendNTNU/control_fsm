@@ -36,6 +36,13 @@ void ControlFSM::handleEvent(const EventData& event) {
 		handleFSMError("Bad implementation of FSM - FSM allways need a state");
 		return;
 	}
+	if(event.eventType == EventType::MANUAL) {
+		//If drone entered manual mode: Abort current operation, and then send correct manual event.
+		EventData abortEvent;
+		abortEvent.eventType = EventType::REQUEST;
+		abortEvent.request = RequestType::ABORT;
+		handleEvent(abortEvent);
+	}
 	//Pass event to current running state
 	getState()->handleEvent(*this, event);
 }

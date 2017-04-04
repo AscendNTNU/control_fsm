@@ -4,13 +4,18 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/PositionTarget.h>
+#include <mavros_msgs/State.h>
 
 
 bool first_position_recieved = false;
+bool is_armed = false;
+bool is_offboard = false;
+
 
 ControlFSM fsm;
 
 void local_pos_callback(const geometry_msgs::PoseStamped& input);
+void state_changed_callback(const mavros_msgs::State& state);
 
 int main(int argc, char** argv) {
 
@@ -46,4 +51,25 @@ int main(int argc, char** argv) {
 
 void local_pos_callback(const geometry_msgs::PoseStamped& input) {
 	fsm.setPosition(input);
+}
+
+void state_changed_callback(const mavros_msgs::State& state) {
+	bool offboardTrue = (state.mode == "OFFBOARD");
+	//Only act if relevant states has changed
+	if(offboardTrue != is_offboard || state.armed != is_armed) {
+		if(is_offboard && is_armed) {
+			EventData manualEvent;
+			manualEvent.eventType = EventType::MANUAL;
+			fsm.handleEvent(manualEvent);
+		}
+
+		is_offboard = offboardTrue;
+		is_armed = state.armed;
+		if(is_armed && is_offboard) {
+			EventData autonomousEvent;
+			autonomousEvent.eventType = EventType::AUTONOMOUS;
+			fsm.handleEvent(autonomousEvent);
+		}
+	}
+
 }
