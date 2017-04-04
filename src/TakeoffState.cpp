@@ -3,7 +3,7 @@
 #include <ros/ros.h>
 #include "control_fsm/ControlFSM.hpp"
 
-#define TAKEOFF_ALTITUDE 2.0f 
+#define TAKEOFF_ALTITUDE 1.0f 
 #define TAKEOFF_ALTITUDE_REACHED_THRESHOLD 0.1
 
 TakeoffState::TakeoffState() {

@@ -9,7 +9,7 @@ PositionHoldState::PositionHoldState() {
 
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	if(event.eventType == EventType::COMMAND) {
+	if(event.isValidCMD()) {
 		switch(event.commandType) {
 			case CommandType::GOTOXYZ:
 			case CommandType::LANDXY:
@@ -70,20 +70,19 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	}
 	
 	//No need to check other commands
-	if(event.eventType != EventType::COMMAND || event.commandType == CommandType::NONE) {
-		return; 
-	}
-	//Check command and make correct transition
-	switch(event.commandType) {
-		case CommandType::GOTOXYZ:
-		case CommandType::LANDXY:
-			fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition on to GOTO state
-			break;
-		case CommandType::LANDGB:
-			fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
-			break;
-		default:
-			break;
+	if(event.isValidCMD()) {
+		//Check command and make correct transition
+		switch(event.commandType) {
+			case CommandType::GOTOXYZ:
+			case CommandType::LANDXY:
+				fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition on to GOTO state
+				break;
+			case CommandType::LANDGB:
+				fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
+				break;
+			default:
+				break;
+		}
 	}
 }
 

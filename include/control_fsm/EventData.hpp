@@ -54,7 +54,7 @@ struct PositionGoalXYZ {
 	PositionGoalXYZ(double posX, double posY, double posZ, double rotYaw) : x(posX), y(posY), z(posZ), yaw(rotYaw), valid(true) {}
 	PositionGoalXYZ() : valid(false) {}
 };
-
+class EventData;
 class EventData {
 private:
 	std::function<void()> _onComplete = []() {}; //Does nothing by default
@@ -70,10 +70,39 @@ public:
     void finishCMD() const { _onComplete(); }
     void eventError(std::string errorMsg) const { _onError(errorMsg); }
 
+    bool isValidCMD() const {
+    	return (eventType == EventType::COMMAND && commandType != CommandType::NONE);
+    }
+
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.
 */
+};
+
+class LandXYCMDEvent : public EventData {
+private:
+	const double _goToAltitude = 1.0f;
+public:
+	LandXYCMDEvent(double x, double y, double yaw) {
+		positionGoal = PositionGoalXYZ(x, y, _goToAltitude, yaw);
+		eventType = EventType::COMMAND;
+		commandType = CommandType::LANDXY;
+	}
+};
+
+class GoToXYZCMDEvent : public EventData {
+public:
+	GoToXYZCMDEvent(double x, double y, double z, double yaw) {
+		positionGoal = PositionGoalXYZ(x,y,z,yaw);
+		eventType = EventType::COMMAND;
+		commandType = CommandType::GOTOXYZ;
+	}
+};
+
+class LandGBCMDEvent : public EventData {
+public:
+	//TODO Implement event type
 };
 
 #endif

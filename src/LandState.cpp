@@ -12,24 +12,28 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Should land ever need to handle commands? ABORT request should be sent before new command 
 	if(event.eventType == EventType::REQUEST) {
 		if(event.request == RequestType::ABORT) {
+			if(_cmd.isValidCMD()) {
+				_cmd.eventError("ABORT request sent. Aborting command");
+				_cmd = EventData();
+			}
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 			return;
 		}
 	} else if(event.eventType == EventType::GROUNDDETECTED) {
 		//Land is finished
-		if(_cmd.eventType == EventType::COMMAND) {
+		if(_cmd.isValidCMD()) {
 			_cmd.finishCMD();
 			_cmd = EventData();
 		}
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
-	} else if(event.eventType == EventType::COMMAND) {
+	} else if(event.isValidCMD()) {
 		fsm.handleFSMError("ABORT should be sent before new command!");
 		event.eventError("ABORT should be sent before new command!");
 	}
 }
 
 void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	if(event.eventType == EventType::COMMAND) {
+	if(event.isValidCMD()) {
 		_cmd = event;
 	}
 	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
