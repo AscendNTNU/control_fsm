@@ -37,7 +37,7 @@ void ControlFSM::handleEvent(const EventData& event) {
 		return;
 	}
 	if(event.eventType == EventType::MANUAL) {
-		//If drone entered manual mode: Abort current operation, and then send correct manual event.
+		//If drone entered manual mode: Abort current operation, and go to stable.
 		EventData abortEvent;
 		abortEvent.eventType = EventType::REQUEST;
 		abortEvent.request = RequestType::ABORT;

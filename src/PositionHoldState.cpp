@@ -21,7 +21,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			default:
 				break;
 		}
-	} else if(event.eventType == EventType::REQUEST) {
+	} else if(event.isValidRequest()) {
 		switch(event.request) {
 			case RequestType::GOTO:
 				fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
@@ -46,6 +46,13 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		}
 	} else if(event.eventType == EventType::POSLOST) {
 		fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
+	} else if(event.eventType == EventType::AUTONOMOUS) {
+		fsm.transitionTo(*this, this, event); //Transition to itself, sets correct setpoint after manual mode
+		/*
+		TODO This might not be a suffecient solution to midflight loss of OFFBOARD. 
+		If the mavros state message arrives "late" the drone will try to go to the old
+		position setpoints. Consider adding another state for manual flight (that always use current position as setpoint)
+		*/
 	}
 }
 

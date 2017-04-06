@@ -11,6 +11,8 @@ bool first_position_recieved = false;
 bool is_armed = false;
 bool is_offboard = false;
 
+constexpr double SETPOINT_PUB_RATE = 30.0f; //In Hz
+
 
 ControlFSM fsm;
 
@@ -32,18 +34,22 @@ int main(int argc, char** argv) {
 	ros::Rate loop_rate(30);
 
 	//Wait for all systems to initalize
-	while(ros::ok && !first_position_recieved) {
+	while(ros::ok() && !first_position_recieved) {
 		ros::spinOnce();
 	}
 
+	ros::Time setpointLastPub = ros::Time::now();
 	while(ros::ok()) {
 		//TODO Take get input from planning or other 
+		//TODO Implement actionlib
 
-		ros::spinOnce();
-		fsm.loopCurrentState();
-		const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
-		setpoint_pub.publish(*pSetpoint);
-		loop_rate.sleep();
+		ros::spinOnce(); //Handle all incoming messages
+		fsm.loopCurrentState(); //Run current FSM state loop
+		if(ros::Time::now() - setpointLastPub >= ros::Duration(1.0 / SETPOINT_PUB_RATE)) {
+			const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+			setpoint_pub.publish(*pSetpoint);
+			setpointLastPub = ros::Time::now();
+		}
 	}
 
 	return 0;
