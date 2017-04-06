@@ -1,0 +1,23 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	], 
+	"build_systems": 
+	[
+		{
+			"name": "ControlFSM Docker build",
+			"working_dir": "${project_path}",
+			"shell_cmd": "docker build .",
+			"shell": true
+		},
+		{
+			"name": "ControlFSM catkin_make",
+			"working_dir": "${project_path}/../../", //catkin working directory
+			"shell_cmd": "catkin_make",
+			"shell": true
+		}
+	]
+}

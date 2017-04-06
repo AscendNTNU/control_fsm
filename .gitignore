@@ -1,2 +1,4 @@
 *.un~
 msg/
+*.sublime-workspace
+
