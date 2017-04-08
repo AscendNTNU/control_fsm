@@ -10,7 +10,7 @@ LandState::LandState() {
 
 void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Should land ever need to handle commands? ABORT request should be sent before new command 
-	if(event.eventType == EventType::REQUEST) {
+	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
 			if(_cmd.isValidCMD()) {
 				_cmd.eventError("ABORT request sent. Aborting command");

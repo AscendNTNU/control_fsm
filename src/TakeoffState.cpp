@@ -39,6 +39,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		fsm.handleFSMError("No position available");
 		if(_cmd.isValidCMD()) {
 			_cmd.eventError("No position available");
+			_cmd = EventData();
 		}
 		RequestEvent abortEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, abortEvent);

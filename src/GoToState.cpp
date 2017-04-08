@@ -13,18 +13,17 @@ GoToState::GoToState() {
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	if(event.eventType == EventType::REQUEST) {
+	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT || event.request == RequestType::POSHOLD) {
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 		} else {
 			fsm.handleFSMWarn("Illegal transiton request");
 		}
-	} else if(event.eventType == EventType::COMMAND) {
-		if(event.commandType != CommandType::NONE) {
-			_cmd = event;
-			//TODO Initiate route replan
+	} else if(event.isValidCMD()) {
+		if(_cmd.isValidCMD()) {
+			event.eventError("ABORT request should be sent before new command");
 		} else {
-			fsm.handleFSMWarn("Recieved command with commandtype NONE - bug!");
+			fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition to itself
 		}
 	}
 }
@@ -42,7 +41,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 	}
 
-	//TODO Replace this with correct goto procedure
+	//TODO NOT CORRECT IMPLEMENTATION: Replace this with correct goto procedure
 	_setpoint.position.x = _cmd.positionGoal.x;
 	_setpoint.position.y = _cmd.positionGoal.y;
 	_setpoint.position.z = _cmd.positionGoal.z;
@@ -68,7 +67,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     	std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) < DESTINATION_REACHED_THRESHOLD) {
     	EventData event;
     	event.eventType == EventType::REQUEST;
-    	if(_cmd.eventType == EventType::COMMAND) {
+    	if(_cmd.isValidCMD()) {
     		switch(_cmd.commandType) {
     			case CommandType::LANDXY:
     				fsm.transitionTo(ControlFSM::LANDSTATE, this, _cmd);
@@ -83,7 +82,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     				break;
     		}
     	} else {
-    		event.request == RequestType::POSHOLD;
+    		event.request = RequestType::POSHOLD;
     		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
     	}
     }

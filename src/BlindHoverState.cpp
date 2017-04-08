@@ -6,13 +6,17 @@
 
 #define BLIND_HOVER_ALTITUDE 1.0f	
 
+/*
+Only blind states (blind hover and blind land) will accept running without valid position.
+*/
+
 BlindHoverState::BlindHoverState() {
 	_setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle incoming events when blind hovering
-	if(event.eventType == EventType::COMMAND) {
+	if(event.isValidCMD()) {
 		_cmd = event; //Hold event until position is regained.
 	} else if(event.eventType == EventType::REQUEST) {
 		if(event.request == RequestType::BLINDLAND) {
@@ -42,15 +46,13 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 void BlindHoverState::loopState(ControlFSM& fsm) {
 	//Transition to position hold when position is valid.
 	if(fsm.getPositionXYZ() != nullptr) {
-		if(_cmd.eventType == EventType::COMMAND) {
+		if(_cmd.isValidCMD()) {
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, _cmd);
 			_cmd = EventData(); //Reset _cmd
-			return;
+		} else {
+			RequestEvent event(RequestType::POSHOLD);
+			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 		}
-		EventData event;
-		event.eventType = EventType::REQUEST;
-		event.request = RequestType::POSHOLD;
-		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 	}
 }
 
