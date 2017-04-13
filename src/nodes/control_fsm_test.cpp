@@ -138,10 +138,10 @@ int main(int argc, char** argv) {
 				});
 				break;
 			case 21:
-				event.eventType = EventType::ARMED;
+				event.eventType = EventType::AUTONOMOUS;
 				break;
 			case 22:
-				event.eventType = EventType::DISARMED;
+				event.eventType = EventType::MANUAL;
 				break;
 			case 23:
 				event.eventType = EventType::POSREGAINED;
@@ -190,8 +190,8 @@ void printOptions() {
 	std::cout << "20: LANDGB\n";
 
 	std::cout << "\nOther event types:\n";
-	std::cout << "21: ARMED\n";
-	std::cout << "22: DISARMED\n";
+	std::cout << "21: AUTONOMOUS\n";
+	std::cout << "22: MANUAL\n";
 	std::cout << "23: POSREGAINED\n";
 	std::cout << "24: POSLOST\n";
 	std::cout << "25: GROUNDDETECTED\n";

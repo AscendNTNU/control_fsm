@@ -8,12 +8,8 @@ EstimateAdjustState::EstimateAdjustState() {
 }
 
 void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.eventType == EventType::COMMAND) {
-        if(event.commandType != CommandType::NONE) {
-            _cmd = event;
-        } else {
-            fsm.handleFSMWarn("Recieved command of type NONE - ignoring");
-        }
+    if(event.isValidCMD()) {
+        _cmd = event;
     } else if(event.eventType == EventType::REQUEST) {
         if(event.request == RequestType::ABORT && _cmd.eventType == EventType::COMMAND) {
             _cmd = EventData();

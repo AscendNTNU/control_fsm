@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 
 	if(is_offboard && is_armed) {
 		EventData armedEvent;
-		armedEvent.eventType = EventType::ARMED;
+		armedEvent.eventType = EventType::AUTONOMOUS;
 		fsm.handleEvent(armedEvent);
 	} else {
 		return -1;
@@ -215,10 +215,10 @@ void user_input_callback(const std_msgs::Int32& val) {
 				event.positionGoal = PositionGoalXYZ(10, 10, 2, 0);
 				break;
 			case 21:
-				event.eventType = EventType::ARMED;
+				event.eventType = EventType::AUTONOMOUS;
 				break;
 			case 22:
-				event.eventType = EventType::DISARMED;
+				event.eventType = EventType::MANUAL;
 				break;
 			case 23:
 				event.eventType = EventType::POSREGAINED;

@@ -4,13 +4,20 @@
 
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/PositionTarget.h>
+#include <mavros_msgs/State.h>
 
 
 bool first_position_recieved = false;
+bool is_armed = false;
+bool is_offboard = false;
+
+constexpr double SETPOINT_PUB_RATE = 30.0f; //In Hz
+
 
 ControlFSM fsm;
 
 void local_pos_callback(const geometry_msgs::PoseStamped& input);
+void state_changed_callback(const mavros_msgs::State& state);
 
 int main(int argc, char** argv) {
 
@@ -27,18 +34,22 @@ int main(int argc, char** argv) {
 	ros::Rate loop_rate(30);
 
 	//Wait for all systems to initalize
-	while(ros::ok && !first_position_recieved) {
+	while(ros::ok() && !first_position_recieved) {
 		ros::spinOnce();
 	}
 
+	ros::Time setpointLastPub = ros::Time::now();
 	while(ros::ok()) {
 		//TODO Take get input from planning or other 
+		//TODO Implement actionlib
 
-		ros::spinOnce();
-		fsm.loopCurrentState();
-		const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
-		setpoint_pub.publish(*pSetpoint);
-		loop_rate.sleep();
+		ros::spinOnce(); //Handle all incoming messages
+		fsm.loopCurrentState(); //Run current FSM state loop
+		if(ros::Time::now() - setpointLastPub >= ros::Duration(1.0 / SETPOINT_PUB_RATE)) {
+			const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+			setpoint_pub.publish(*pSetpoint);
+			setpointLastPub = ros::Time::now();
+		}
 	}
 
 	return 0;
@@ -46,4 +57,25 @@ int main(int argc, char** argv) {
 
 void local_pos_callback(const geometry_msgs::PoseStamped& input) {
 	fsm.setPosition(input);
+}
+
+void state_changed_callback(const mavros_msgs::State& state) {
+	bool offboardTrue = (state.mode == "OFFBOARD");
+	//Only act if relevant states has changed
+	if(offboardTrue != is_offboard || state.armed != is_armed) {
+		if(is_offboard && is_armed) {
+			EventData manualEvent;
+			manualEvent.eventType = EventType::MANUAL;
+			fsm.handleEvent(manualEvent);
+		}
+
+		is_offboard = offboardTrue;
+		is_armed = state.armed;
+		if(is_armed && is_offboard) {
+			EventData autonomousEvent;
+			autonomousEvent.eventType = EventType::AUTONOMOUS;
+			fsm.handleEvent(autonomousEvent);
+		}
+	}
+
 }

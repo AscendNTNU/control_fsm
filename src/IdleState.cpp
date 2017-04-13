@@ -11,9 +11,9 @@ IdleState::IdleState() {
 }
 
 void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	if(event.eventType == EventType::COMMAND && event.commandType != CommandType::NONE) {
+	if(event.isValidCMD()) {
 		fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
-	} else if(event.eventType == EventType::REQUEST) {
+	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::TAKEOFF) {
 			fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
 		} else {

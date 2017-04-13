@@ -31,8 +31,8 @@ enum class EventType {
 	NONE,
 	REQUEST, //Simple transition request
 	COMMAND,
-	ARMED, //Notify system is armed
-	DISARMED, //Notify system is disarmed
+	AUTONOMOUS, //Notify system is in autonomous mode (ARMED and OFFBOARD)
+	MANUAL, //Notify system is in manual mode (DISARMED and/or not OFFBOARD)
 	POSREGAINED, //Notify position is regained
 	POSLOST, //Notify position is lost
 	GROUNDDETECTED
@@ -54,7 +54,7 @@ struct PositionGoalXYZ {
 	PositionGoalXYZ(double posX, double posY, double posZ, double rotYaw) : x(posX), y(posY), z(posZ), yaw(rotYaw), valid(true) {}
 	PositionGoalXYZ() : valid(false) {}
 };
-
+class EventData;
 class EventData {
 private:
 	std::function<void()> _onComplete = []() {}; //Does nothing by default
@@ -70,10 +70,51 @@ public:
     void finishCMD() const { _onComplete(); }
     void eventError(std::string errorMsg) const { _onError(errorMsg); }
 
+    bool isValidCMD() const { return (eventType == EventType::COMMAND && commandType != CommandType::NONE); }
+
+    bool isValidRequest() const { return (eventType == EventType::REQUEST && request != RequestType::NONE); }
+
 /*
 Should contain all neccesary data for a state to make
 neccesary decisions/transitions. Avoid large data copying if possible.
 */
+};
+
+
+//Wrapper classes for most used cases of EventData class - less writing
+
+class LandXYCMDEvent : public EventData {
+private:
+	//Altitude to go to before landing
+	const double _goToAltitude = 1.0f;
+public:
+	LandXYCMDEvent(double x, double y, double yaw) {
+		positionGoal = PositionGoalXYZ(x, y, _goToAltitude, yaw);
+		eventType = EventType::COMMAND;
+		commandType = CommandType::LANDXY;
+	}
+};
+
+class GoToXYZCMDEvent : public EventData {
+public:
+	GoToXYZCMDEvent(double x, double y, double z, double yaw) {
+		positionGoal = PositionGoalXYZ(x,y,z,yaw);
+		eventType = EventType::COMMAND;
+		commandType = CommandType::GOTOXYZ;
+	}
+};
+
+class LandGBCMDEvent : public EventData {
+public:
+	//TODO Implement event type
+};
+
+class RequestEvent : public EventData {
+public:
+	RequestEvent(RequestType r) {
+		eventType = EventType::REQUEST;
+		request = r;
+	}
 };
 
 #endif
