@@ -17,13 +17,24 @@ BlindHoverState::BlindHoverState() {
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle incoming events when blind hovering
 	if(event.isValidCMD()) {
-		_cmd = event; //Hold event until position is regained.
-	} else if(event.eventType == EventType::REQUEST) {
+		if(!_cmd.isValidCMD()) {
+			_cmd = event; //Hold event until position is regained.
+		} else {
+			event.eventError("CMD rejected!");
+			fsm.handleFSMWarn("ABORT old command first");
+		}
+	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::BLINDLAND) {
+			if(_cmd.isValidCMD()) {
+				_cmd.eventError("Manual request overriding cmd");
+				_cmd = EventData();
+			}
 			fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
 		} else {
 			fsm.handleFSMWarn("Invalid transition request");
 		}
+	} else {
+		fsm.handleFSMInfo("Event ignored!");
 	}
 }
 
@@ -33,14 +44,15 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 		if(event.eventType == EventType::COMMAND) {
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event); //Pass command on to next state
 		} else {
-			EventData rEvent;
-			rEvent.eventType = EventType::REQUEST;
-			rEvent.request = RequestType::POSHOLD;
+			RequestEvent rEvent(RequestType::POSHOLD);
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, rEvent);
 		}
 		return;
 	}
-	_setpoint.position.z = BLIND_HOVER_ALTITUDE;
+	if(event.isValidCMD()) {
+		_cmd = event;
+	}
+	_setpoint.position.z = BLIND_HOVER_ALTITUDE; //TODO Check this design decision (default hover height)
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {

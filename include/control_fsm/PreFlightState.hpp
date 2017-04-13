@@ -5,6 +5,7 @@
 
 class PreFlightState : public StateInterface {
 public:
+	PreFlightState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "Preflight"; }
     //Returns setpoint
