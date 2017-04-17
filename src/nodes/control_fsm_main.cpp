@@ -11,7 +11,7 @@ bool first_position_recieved = false;
 bool is_armed = false;
 bool is_offboard = false;
 
-constexpr double SETPOINT_PUB_RATE = 30.0f; //In Hz
+constexpr float SETPOINT_PUB_RATE = 1.0 / 30.0f; //In seconds
 
 
 ControlFSM fsm;
@@ -27,13 +27,13 @@ int main(int argc, char** argv) {
 	ros::NodeHandle n;
 	ros::Subscriber local_pos_sub = n.subscribe("mavros/mocap/pose", 10, local_pos_callback);
 	
+	//Set up neccesary publishers
 	ros::Publisher setpoint_pub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 10);
 
+	//Spin once to get first messages
 	ros::spinOnce();
 
-	ros::Rate loop_rate(30);
-
-	//Wait for all systems to initalize
+	//Wait for all systems to initalize and position to become valid
 	while(ros::ok() && !first_position_recieved) {
 		ros::spinOnce();
 	}
@@ -43,10 +43,12 @@ int main(int argc, char** argv) {
 		//TODO Take get input from planning or other 
 		//TODO Implement actionlib
 
-		ros::spinOnce(); //Handle all incoming messages
+		ros::spinOnce(); //Handle all incoming messages - generates fsm events
 		fsm.loopCurrentState(); //Run current FSM state loop
-		if(ros::Time::now() - setpointLastPub >= ros::Duration(1.0 / SETPOINT_PUB_RATE)) {
-			const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+
+		//Publish setpoints at gived rate
+		if(ros::Time::now() - setpointLastPub >= ros::Duration(SETPOINT_PUB_RATE)) {
+			constq mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
 			setpoint_pub.publish(*pSetpoint);
 			setpointLastPub = ros::Time::now();
 		}
@@ -63,19 +65,22 @@ void state_changed_callback(const mavros_msgs::State& state) {
 	bool offboardTrue = (state.mode == "OFFBOARD");
 	//Only act if relevant states has changed
 	if(offboardTrue != is_offboard || state.armed != is_armed) {
+		//Check if old state was autonomous
+		//=> now in manual mode
 		if(is_offboard && is_armed) {
 			EventData manualEvent;
 			manualEvent.eventType = EventType::MANUAL;
 			fsm.handleEvent(manualEvent);
 		}
-
+		//Set current state
 		is_offboard = offboardTrue;
 		is_armed = state.armed;
+
+		//If it is armed and in offboard - notify AUTONOMOUS mode
 		if(is_armed && is_offboard) {
 			EventData autonomousEvent;
 			autonomousEvent.eventType = EventType::AUTONOMOUS;
 			fsm.handleEvent(autonomousEvent);
 		}
 	}
-
 }
