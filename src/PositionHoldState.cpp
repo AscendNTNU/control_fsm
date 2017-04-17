@@ -49,7 +49,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
-	//GoTo blind hover if position not valid
+	//GoTo blind hover if position not valid, should never occur
 	if(pose == nullptr) {
 		if(event.isValidCMD()) {
 			event.eventError("No valid position!");

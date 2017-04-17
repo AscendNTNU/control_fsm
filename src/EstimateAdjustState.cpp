@@ -9,10 +9,16 @@ EstimateAdjustState::EstimateAdjustState() {
 
 void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
-        _cmd = event;
+        if(_cmd.isValidCMD()) {
+            event.eventError("ABORT old CMD first!");
+            fsm.handleFSMWarn("ABORT old CMD before sending new!");
+        } else { 
+            _cmd = event;
+        }
     } else if(event.eventType == EventType::REQUEST) {
-        if(event.request == RequestType::ABORT && _cmd.eventType == EventType::COMMAND) {
+        if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
             _cmd = EventData();
+            _cmd.eventError("ABORT request!");
             fsm.handleFSMDebug("ABORTING command, but estimateadjust cant be aborted!");
         } else {
             fsm.handleFSMWarn("Illegal transition request");
@@ -27,20 +33,18 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
     bool posInvalid = true;
     
     if(posInvalid) {
-        if(_cmd.eventType == EventType::COMMAND) {
+        if(_cmd.isValidCMD()) {
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
             _cmd = EventData();
         } else {
-            EventData event;
-            event.eventType == EventType::REQUEST;
-            event.request == RequestType::BLINDHOVER;
+            RequestEvent event(RequestType::BLINDHOVER);
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
         }
     }
 }
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	if(event.eventType == EventType::COMMAND && event.commandType != CommandType::NONE) {
+	if(event.isValidCMD()) {
         _cmd = event;
     }
 }

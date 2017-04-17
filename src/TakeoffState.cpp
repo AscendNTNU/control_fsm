@@ -58,9 +58,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
 			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
 			_cmd = EventData();
 		} else {
-			EventData event;
-			event.eventType == EventType::REQUEST;
-			event.request == RequestType::BLINDHOVER;
+			RequestEvent event(RequestType::BLINDHOVER);
 			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
 		}
 	}

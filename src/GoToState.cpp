@@ -33,11 +33,9 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//TODO Implement rest of stateBegin
 	if(!event.positionGoal.valid) {
 		if(_cmd.isValidCMD()) {
-			event.eventError("Not valid position target");
+			event.eventError("No valid position target");
 		}
-		EventData nEvent;
-		nEvent.eventType = EventType::REQUEST;
-		nEvent.request = RequestType::ABORT;
+		RequestEvent nEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 	}
 
