@@ -1,0 +1,16 @@
+#Goal
+float32 x
+float32 y
+float32 z
+float32 yaw
+int16 goalType
+int16 GOTOXYZ = 0
+int16 LANDXY = 1
+int16 LANDGB = 2
+int16 gbNr
+---
+#Result
+bool finished
+---
+#Progress
+bool inProgress

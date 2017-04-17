@@ -1,10 +1,12 @@
 #include <ros/ros.h>
 
 #include "control_fsm/ControlFSM.hpp"
+#include "control_fsm/ActionServer.hpp"
 
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/State.h>
+
 
 
 bool first_position_recieved = false;
@@ -42,13 +44,14 @@ int main(int argc, char** argv) {
 	while(ros::ok()) {
 		//TODO Take get input from planning or other 
 		//TODO Implement actionlib
+		ActionServer actionserver(&fsm);
 
 		ros::spinOnce(); //Handle all incoming messages - generates fsm events
 		fsm.loopCurrentState(); //Run current FSM state loop
 
 		//Publish setpoints at gived rate
 		if(ros::Time::now() - setpointLastPub >= ros::Duration(SETPOINT_PUB_RATE)) {
-			constq mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+			const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
 			setpoint_pub.publish(*pSetpoint);
 			setpointLastPub = ros::Time::now();
 		}
