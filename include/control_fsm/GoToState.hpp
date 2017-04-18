@@ -1,10 +1,13 @@
 #ifndef GO_TO_STATE_HPP
 #define GO_TO_STATE_HPP
 #include "StateInterface.hpp"
+#include <ros/ros.h>
 
 class GoToState : public StateInterface {
 private:
 	EventData _cmd;
+	ros::NodeHandle _nh;
+	ros::Publisher _posPub;
 public:
 	GoToState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

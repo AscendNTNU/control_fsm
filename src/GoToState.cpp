@@ -4,12 +4,15 @@
 #include "control_fsm/ControlFSM.hpp"
 #include <geometry_msgs/PoseStamped.h>
 #include <cmath>
+#include <planner/point.h>
 
 #define DESTINATION_REACHED_THRESHOLD 0.1
 #define DEBUG
 
 GoToState::GoToState() {
 	_setpoint.type_mask = default_mask;
+    //TODO Change topic
+	posPub_ = _nh.advertise<planner::point>("/control_path_planner", 10);
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -38,12 +41,16 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		RequestEvent nEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 	}
+	//Sets setpoint to current position - until planner is done
+	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
+	_setpoint.position.x = pose->pose.position.x;
+	_setpoint.position.y = pose->pose.position.y;
+	_setpoint.position.z = pose->pose.position.z;
+	//TODO Set yaw
 
-	//TODO NOT CORRECT IMPLEMENTATION: Replace this with correct goto procedure
-	_setpoint.position.x = _cmd.positionGoal.x;
-	_setpoint.position.y = _cmd.positionGoal.y;
-	_setpoint.position.z = _cmd.positionGoal.z;
-	_setpoint.yaw = _cmd.positionGoal.yaw;
+	planner::point plannerPosition;
+	plannerPosition.x = pose->pose.position.x;
+	plannerPosition.y = pose->pose.position.y;
 }
 
 void GoToState::loopState(ControlFSM& fsm) {

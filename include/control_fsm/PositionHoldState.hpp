@@ -3,8 +3,6 @@
 #include "StateInterface.hpp"
 
 class PositionHoldState : public StateInterface {
-private:
-	double _posX, _posY, _posZ;
 public:
 	PositionHoldState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

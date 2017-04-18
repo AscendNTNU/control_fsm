@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   actionlib_msgs
   actionlib
+  planner
 )
 
 ## Generate added messages and services with any dependencies listed here
