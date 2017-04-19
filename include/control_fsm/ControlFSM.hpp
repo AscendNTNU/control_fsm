@@ -19,6 +19,7 @@
 #include "LandState.hpp"
 #include "BlindLandState.hpp"
 
+///Main FSM logic
 class ControlFSM {
 private:
 	//Add state classes as friend classes here - allowing them to use transitionTo.

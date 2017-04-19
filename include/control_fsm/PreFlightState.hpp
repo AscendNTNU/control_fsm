@@ -3,6 +3,7 @@
 
 #include "StateInterface.hpp"
 
+///Runs preflight checks and transition to idle when ready
 class PreFlightState : public StateInterface {
 public:
 	PreFlightState();

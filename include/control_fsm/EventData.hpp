@@ -45,6 +45,7 @@ enum class CommandType {
     LANDGB //Request part of interacting with ground robot
 };
 
+///Defines a position goal
 struct PositionGoalXYZ {
 	bool valid = false;
 	double x;
@@ -54,7 +55,10 @@ struct PositionGoalXYZ {
 	PositionGoalXYZ(double posX, double posY, double posZ, double rotYaw) : x(posX), y(posY), z(posZ), yaw(rotYaw), valid(true) {}
 	PositionGoalXYZ() : valid(false) {}
 };
+
 class EventData;
+
+///Contains all info about events
 class EventData {
 private:
 	///Callback function when a CMD is completed

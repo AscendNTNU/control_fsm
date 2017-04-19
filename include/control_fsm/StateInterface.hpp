@@ -5,6 +5,10 @@
 #include <iostream>
 #include <mavros_msgs/PositionTarget.h>
 #include "setpoint_msg_defines.h"
+
+class ControlFSM;
+
+///Abstract interface class inherited by all states
 /*
 NOTE:
 FSM is not async so do not run any blocking code 
@@ -12,7 +16,6 @@ in any of these methods.
 EventData is passed by reference and is NOT guaranteed to remain in scope. 
 DO NOT store event data by reference
 */
-class ControlFSM;
 class StateInterface {
 protected:
 	mavros_msgs::PositionTarget _setpoint;
