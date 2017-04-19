@@ -57,7 +57,9 @@ struct PositionGoalXYZ {
 class EventData;
 class EventData {
 private:
+	///Callback function when a CMD is completed
 	std::function<void()> _onComplete = []() {}; //Does nothing by default
+	///Callback function when a CMD fails.
 	std::function<void(std::string)> _onError = [](std::string) {}; //Does nothing by default
 public:
 	RequestType request = RequestType::NONE; //No request as default
@@ -65,24 +67,22 @@ public:
 	PositionGoalXYZ positionGoal = PositionGoalXYZ(); //Invalid position as default
     CommandType commandType = CommandType::NONE; //No command as default
 
+    ///Setter function for complete callback
     void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
+    ///Setter function for error callback
     void setOnErrorCallback(std::function<void(std::string)> callback) { _onError = callback; }
+    ///Finishes a CMD (calls the _onComplete callback)
     void finishCMD() const { _onComplete(); }
+    ///CMD error (calls _onError callback)
     void eventError(std::string errorMsg) const { _onError(errorMsg); }
-
+    ///Checks if this event is a valid cmd type
     bool isValidCMD() const { return (eventType == EventType::COMMAND && commandType != CommandType::NONE); }
-
+    ///Checks if this event is a valid request type
     bool isValidRequest() const { return (eventType == EventType::REQUEST && request != RequestType::NONE); }
-
-/*
-Should contain all neccesary data for a state to make
-neccesary decisions/transitions. Avoid large data copying if possible.
-*/
 };
 
 
-//Wrapper classes for most used cases of EventData class - less writing
-
+///Wrapper class for LandXY CMD events
 class LandXYCMDEvent : public EventData {
 private:
 	//Altitude to go to before landing
@@ -95,6 +95,7 @@ public:
 	}
 };
 
+///Wrapper class for GoToXYZ CMD events
 class GoToXYZCMDEvent : public EventData {
 public:
 	GoToXYZCMDEvent(double x, double y, double z, double yaw) {
@@ -104,11 +105,13 @@ public:
 	}
 };
 
+///Wrapper class for LandGB CMD events
 class LandGBCMDEvent : public EventData {
 public:
 	//TODO Implement event type
 };
 
+///Wrapper class for requests events
 class RequestEvent : public EventData {
 public:
 	RequestEvent(RequestType r) {
