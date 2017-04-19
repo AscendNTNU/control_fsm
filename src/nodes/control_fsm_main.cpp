@@ -8,7 +8,6 @@
 #include <mavros_msgs/State.h>
 
 
-
 bool first_position_recieved = false;
 bool is_armed = false;
 bool is_offboard = false;
@@ -36,15 +35,20 @@ int main(int argc, char** argv) {
 	ros::spinOnce();
 
 	//Wait for all systems to initalize and position to become valid
+	ROS_INFO("Waiting for first position msg!");
+	/* TODO Uncomment
 	while(ros::ok() && !first_position_recieved) {
 		ros::spinOnce();
 	}
+	*/
+	ROS_INFO("First position message recieved!");
 
+	ActionServer actionserver(&fsm);
 	ros::Time setpointLastPub = ros::Time::now();
+
 	while(ros::ok()) {
 		//TODO Take get input from planning or other 
 		//TODO Implement actionlib
-		ActionServer actionserver(&fsm);
 
 		ros::spinOnce(); //Handle all incoming messages - generates fsm events
 		fsm.loopCurrentState(); //Run current FSM state loop

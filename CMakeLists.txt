@@ -79,6 +79,9 @@ target_compile_features(control_fsm_gazebo_test PRIVATE cxx_range_for)
 add_executable(control_fsm_gazebo_input src/nodes/control_fsm_gazebo_input)
 target_compile_features(control_fsm_gazebo_input PRIVATE cxx_range_for)
 
+add_executable(control_fsm_actionlib_client src/nodes/control_fsm_actionlib_client)
+target_compile_features(control_fsm_actionlib_client PRIVATE cxx_range_for)
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(control_fsm_test
   	control_fsm_lib
@@ -94,6 +97,10 @@ target_link_libraries(control_fsm_gazebo_test
 
 target_link_libraries(control_fsm_gazebo_input
 	control_fsm_lib
+)
+
+target_link_libraries(control_fsm_actionlib_client
+	${catkin_LIBRARIES}
 )
 
 
