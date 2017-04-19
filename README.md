@@ -30,9 +30,9 @@ For developers:
 
 Doxygen support is added.
 Run:
-'''
+```
 doxygen Doxyfile
-'''
+```
 to generate documentation
 
 
