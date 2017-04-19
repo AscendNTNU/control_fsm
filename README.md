@@ -28,6 +28,12 @@ For developers:
 	- If there is: Terminate, or pass the CMD on (depending on current state)
 - Each state is responsible for delivering valid setpoints (through getSetpoint method)
 
+Doxygen support is added.
+Run:
+'''
+doxygen Doxyfile
+'''
+to generate documentation
 
 
 
