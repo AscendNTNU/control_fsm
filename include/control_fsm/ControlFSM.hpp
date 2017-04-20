@@ -51,14 +51,14 @@ private:
 	static GoToState GOTOSTATE;
 	static LandState LANDSTATE;
 	static BlindLandState BLINDLANDSTATE;
-
-	///Holds a pointer to current running state
-	/**Struct "vault" explanation:
-	The struct (with instance _stateHolder) keeps the _pCurrentState private. 
-	The struct friends the FSM class so the FSM class can access the pointer. 
-	Even though other classes or function might have access to FSM private variables through friend,
-	they still wont have access to the pointer.
-	*/
+	/**
+	 * @brief Holds a pointer to current running state
+	 * @details Struct "vault" explanation:
+	 *	The struct (with instance _stateHolder) keeps the _pCurrentState private. 
+	 *	The struct friends the FSM class so the FSM class can access the pointer. 
+	 *	Even though other classes or function might have access to FSM private variables through friend,
+	 *	they still wont have access to the pointer.
+	 */
 	struct {
 	friend class ControlFSM;
 	private:
@@ -75,7 +75,13 @@ private:
 	bool _isActive = false;
 
 protected:
-	///States can only be changed by states or FSM logic
+	/**
+	 * @brief Changes the current running state
+	 * @details Allows the current running state to change the current state pointer
+	 * @param state Which state instance to transition to0
+	 * @param _pCaller Which state that requests the transition
+	 * @param event Which event triggered the transition request
+	 */
 	void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
 	
 public:
@@ -89,9 +95,11 @@ public:
 	///Get pointer to the current running state
 	StateInterface* getState() { return _stateVault._pCurrentState; }
 	
-	///Handles incoming event
-	/**Sends the external event to the current running state.
-	 The event will be handled by the handleState function in the state interface.*/
+	/**
+	 * @brief Handles incoming (external) events
+	 * @details Events are sent to current running state
+	 * @param event Information about the external event
+	 */
 	void handleEvent(const EventData& event);
 	
 	///Loops the current running state
