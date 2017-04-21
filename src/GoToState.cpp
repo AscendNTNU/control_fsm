@@ -5,6 +5,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <cmath>
 #include <geometry_msgs/Point32.h>
+#include <ascend_msgs/PathPlannerPlan.h>
 
 #define DESTINATION_REACHED_THRESHOLD 0.1
 #define DEBUG
@@ -104,7 +105,7 @@ const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 	return &_setpoint;
 }
 
-void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPoint& msg) {
+void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan& msg) {
 	
 }
 

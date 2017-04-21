@@ -2,7 +2,7 @@
 #define GO_TO_STATE_HPP
 #include "StateInterface.hpp"
 #include <ros/ros.h>
-#include <ascend_msgs/PathPlannerPoint.h>
+#include <ascend_msgs/PathPlannerPlan.h>
 
 class GoToState : public StateInterface {
 private:
@@ -12,11 +12,11 @@ private:
 	ros::Publisher _targetPub;
 
 	struct {
-		ascend_msgs::PathPlannerPoint plan;
+		ascend_msgs::PathPlannerPlan plan;
 		bool valid = false;
 	} _currentPlan;
 
-	void pathRecievedCB(const ascend_msgs::PathPlannerPoint& msg);
+	void pathRecievedCB(const ascend_msgs::PathPlannerPlan& msg);
 public:
 	GoToState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
