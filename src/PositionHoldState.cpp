@@ -65,7 +65,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_setpoint.position.y = pose->pose.position.y;
 	//Keep old altitude if abort
 	//TODO Should we use an default hover altitude in case of ABORT?
-	if(event.eventType != EventType::REQUEST || event.request != RequestType::ABORT) {
+	if(!event.isValidRequest() || event.request != RequestType::ABORT) {
 		_setpoint.position.z = pose->pose.position.z;
 	}
 	

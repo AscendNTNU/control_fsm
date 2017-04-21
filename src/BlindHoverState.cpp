@@ -4,7 +4,7 @@
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
 
-#define BLIND_HOVER_ALTITUDE 1.0f	
+#define DEFAULT_BLIND_HOVER_ALTITUDE 1.0f	
 
 /*
 Only blind states (blind hover and blind land) will accept running without valid position.
@@ -12,6 +12,7 @@ Only blind states (blind hover and blind land) will accept running without valid
 
 BlindHoverState::BlindHoverState() {
 	_setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
+	_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -52,7 +53,20 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 	if(event.isValidCMD()) {
 		_cmd = event;
 	}
-	_setpoint.position.z = BLIND_HOVER_ALTITUDE; //TODO Check this design decision (default hover height)
+
+	//Set relevant parameters
+	//Takeoff altitude
+	ros::NodeHandle _nh("~");
+	float temp_blind_hover_alt = -10;
+	if(_nh.getParam("blind_hover_altitude", temp_blind_hover_alt)) {
+		if(std::fabs(_setpoint.position.z - temp_blind_hover_alt) > 0.01 && temp_blind_hover_alt > 0) {
+			fsm.handleFSMInfo("Takeoff altitude param found: " + std::to_string(temp_blind_hover_alt));
+			_setpoint.position.z = temp_blind_hover_alt;
+		}
+	} else {
+		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
+		_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
+	}
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
