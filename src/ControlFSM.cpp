@@ -20,6 +20,8 @@ BlindLandState ControlFSM::BLINDLANDSTATE;
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
 	//Only current running state is allowed to change state
 	if(getState() == pCaller) {
+		//Run stateEnd on current running state before transitioning
+		getState()->stateEnd(*this, event);
 		//Set the current state pointer
 		_stateVault._pCurrentState = &state;
 		handleFSMInfo("Current state: " + getState()->getStateName());

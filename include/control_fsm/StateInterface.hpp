@@ -30,9 +30,13 @@ public:
 	///Runs on current state AFTER transition
 	/**stateBegin is only implemented if needed by state.*/
 	virtual void stateBegin(ControlFSM& fsm, const EventData& event) {}
+
+	///Runs on current state BEFORE transition
+	/**stateEnd is only implemented if needed by state*/
+	virtual void stateEnd(ControlFSM& fsm, const EventData& event) {}
 	
 	///Runs state specific code
-	/**loopState is only implemented if needed by state */
+	/**loopState is only implemented if needed by state*/
 	virtual void loopState(ControlFSM& fsm) {}
 	
 	///Should return name of the state - used for debugging purposes

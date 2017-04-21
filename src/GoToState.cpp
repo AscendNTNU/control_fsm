@@ -19,8 +19,23 @@ GoToState::GoToState() {
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidRequest()) {
-		if(event.request == RequestType::ABORT || event.request == RequestType::POSHOLD) {
+		if(event.request == RequestType::ABORT) {
+			if(_cmd.isValidCMD()) {
+				_cmd.eventError("ABORT");
+			}
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+		} else if(event.request == RequestType::POSHOLD) {
+			if(_cmd.isValidCMD()) {
+				fsm.handleFSMWarn("ABORT CMD before sending manual request!");
+			} else {
+				fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+			}
+		} else if(event.request == RequestType::GOTOXYZ) {
+			if(_cmd.isValidCMD()) {
+				fsm.handleFSMWarn("ABORT CMD before sending manual request!");
+			} else {
+				fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+			}
 		} else {
 			fsm.handleFSMWarn("Illegal transiton request");
 		}
@@ -34,7 +49,9 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
+	_isActive = true;
 	_cmd = event;
+	//Current plan is invalid until new plan is recieved
 	_currentPlan.valid = false;
 	//TODO Implement rest of stateBegin
 	if(!event.positionGoal.valid) {
@@ -55,7 +72,13 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Only x and y is used
 	destPoint.x = event.positionGoal.x;
 	destPoint.y = event.positionGoal.y;
+	//Send desired target to pathplanner
+	_targetPub.Publish(destPoint);
 
+}
+
+void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
+	_isActive = false;
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -106,7 +129,12 @@ const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 }
 
 void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan& msg) {
-	
+	//Ignore callback if state is not active
+	if(!_isActive) {
+		return;
+	}
+	_currentPlan.plan = msg;
+	_currentPlan.valid = true;
 }
 
 

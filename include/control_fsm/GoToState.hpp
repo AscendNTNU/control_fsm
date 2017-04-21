@@ -11,7 +11,7 @@ private:
 	ros::NodeHandle _nh;
 	ros::Publisher _posPub;
 	ros::Publisher _targetPub;
-
+	bool _isActive = false;
 	struct {
 		ascend_msgs::PathPlannerPlan plan;
 		bool valid = false;
@@ -23,6 +23,7 @@ public:
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
 	void stateBegin(ControlFSM& fsm, const EventData& event) override;
 	void loopState(ControlFSM& fsm) override;
+	void endState(ControlFSM& fsm, const EventData& event) override;
 	std::string getStateName() const { return "GoTo";}
 	const mavros_msgs::PositionTarget* getSetpoint();
 };
