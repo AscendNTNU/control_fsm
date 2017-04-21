@@ -30,7 +30,7 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			} else {
 				fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 			}
-		} else if(event.request == RequestType::GOTOXYZ) {
+		} else if(event.request == RequestType::GOTO) {
 			if(_cmd.isValidCMD()) {
 				fsm.handleFSMWarn("ABORT CMD before sending manual request!");
 			} else {
@@ -61,6 +61,9 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		RequestEvent nEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 	}
+
+	ros::NodeHandle nh()
+
 	//Sets setpoint to current position - until planner is done
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	_setpoint.position.x = pose->pose.position.x;
@@ -73,7 +76,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	destPoint.x = event.positionGoal.x;
 	destPoint.y = event.positionGoal.y;
 	//Send desired target to pathplanner
-	_targetPub.Publish(destPoint);
+	_targetPub.publish(destPoint);
 
 }
 
