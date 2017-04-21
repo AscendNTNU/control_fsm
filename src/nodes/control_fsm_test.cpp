@@ -10,7 +10,7 @@ void printOptions();
 geometry_msgs::PoseStamped fakePosition();
 
 int main(int argc, char** argv) {
-
+	ros::init(argc, argv, "control_fsm_test_node");
 	//Set logger level to debug for testing
 	if(DEBUG) {
 		if(ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
