@@ -12,9 +12,7 @@
 
 GoToState::GoToState() {
 	_setpoint.type_mask = default_mask;
-    //TODO Change topic
-	_posPub = _nh.advertise<geometry_msgs::Point32>("/control/path_planner/current_position", 1);
-	_targetPub = _nh.advertise<geometry_msgs::Point32>("/control/path_planner/current_position", 1);
+    //TODO Change topic	
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -60,9 +58,24 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		}
 		RequestEvent nEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
+		return;
 	}
 
-	ros::NodeHandle nh()
+	if(_pnh == nullptr) {
+		stateInit(fsm);
+	}
+
+	float tempDestReachedMargin = -10;
+	if(_pnh->getParam("dest_reached_margin", tempDestReachedMargin)) {
+		if(std::fabs(_destReachedMargin - tempDestReachedMargin) > 0.001 && tempDestReachedMargin > 0) {
+			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
+			_destReachedMargin = tempDestReachedMargin;
+		}
+	} else {
+		fsm.handleFSMWarn("No dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
+		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
+	}
+
 
 	//Sets setpoint to current position - until planner is done
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
@@ -98,9 +111,9 @@ void GoToState::loopState(ControlFSM& fsm) {
     		_cmd.eventError("Lost position");
     	}
     }
-    if(std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) < DESTINATION_REACHED_THRESHOLD &&
-    	std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) < DESTINATION_REACHED_THRESHOLD &&
-    	std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) < DESTINATION_REACHED_THRESHOLD) {
+    if(std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin &&
+    	std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin &&
+    	std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin) {
     	EventData event;
     	event.eventType = EventType::REQUEST;
     	if(_cmd.isValidCMD()) {
@@ -131,13 +144,30 @@ const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 	return &_setpoint;
 }
 
-void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan& msg) {
+void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg) {
 	//Ignore callback if state is not active
 	if(!_isActive) {
 		return;
 	}
-	_currentPlan.plan = msg;
+	_currentPlan.plan = *msg;
 	_currentPlan.valid = true;
+}
+
+void GoToState::stateInit(ControlFSM& fsm) {
+		_pnh.reset(new ros::NodeHandle("~"));
+		if(!_pnh->getParam("control_planner_plan", _planSubTopic)) {
+			fsm.handleFSMWarn("No planner topic found, using default: " + _planSubTopic);
+		}
+		if(!_pnh->getParam("control_planner_position", _posPubTopic)) {
+			fsm.handleFSMWarn("No planner topic found, using default: " + _posPubTopic);
+		}
+		if(!_pnh->getParam("control_planner_target", _targetPubTopic)) {
+			fsm.handleFSMWarn("No planner topic found, using default: " + _targetPubTopic);
+		}
+		_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);
+		_targetPub = _pnh->advertise<geometry_msgs::Point32>(_targetPubTopic , 1);
+		_planSub = _pnh->subscribe(_planSubTopic, 1, &GoToState::pathRecievedCB, this);
+
 }
 
 

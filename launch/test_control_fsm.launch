@@ -5,6 +5,7 @@
 		<param name="takeoff_altitude" value="1.0"/>
 		<param name="altitude_reached_margin" value="0.1"/>
 		<param name="control_planner_plan" value="/control/planner/plan"/>
-		<param name="control_planner_position" value="/control/planner/plan"/>
+		<param name="control_planner_position" value="/control/planner/current_position"/>
+		<param name="control_planner_target" value="/control/planner/target"/>
 	</node>
 </launch>
