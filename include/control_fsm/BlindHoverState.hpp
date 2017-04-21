@@ -2,6 +2,7 @@
 #define BLIND_HOVER_STATE_HPP
 #include "StateInterface.hpp"
 
+///State handling blind hover
 class BlindHoverState : public StateInterface {
 private:
 	EventData _cmd;

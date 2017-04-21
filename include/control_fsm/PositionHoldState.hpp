@@ -2,6 +2,7 @@
 #define POSITION_HOLD_STATE_HPP
 #include "StateInterface.hpp"
 
+///Holds the current position
 class PositionHoldState : public StateInterface {
 public:
 	PositionHoldState();

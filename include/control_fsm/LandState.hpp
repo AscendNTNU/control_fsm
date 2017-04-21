@@ -2,6 +2,7 @@
 #define LAND_STATE_HPP
 #include "StateInterface.hpp"
 
+///Lands the drone
 class LandState : public StateInterface {
 private:
 	EventData _cmd;

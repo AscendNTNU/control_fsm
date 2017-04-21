@@ -2,6 +2,7 @@
 #define SHUTDOWN_STATE_HPP
 #include "StateInterface.hpp"
 
+///Disables drone
 class ShutdownState : public StateInterface {
 public:
 	ShutdownState();

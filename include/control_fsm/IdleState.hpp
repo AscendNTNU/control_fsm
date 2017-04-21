@@ -6,6 +6,7 @@
 #include <mavros_msgs/PositionTarget.h>
 #include "EventData.hpp"
 
+///Idle
 class IdleState : public StateInterface {
 public:
 	IdleState();

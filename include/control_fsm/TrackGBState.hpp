@@ -2,6 +2,7 @@
 #define TRACK_GB_STATE_HPP
 #include "StateInterface.hpp"
 
+///Tracks ground robot
 class TrackGBState : public StateInterface {
 public:
 	TrackGBState();

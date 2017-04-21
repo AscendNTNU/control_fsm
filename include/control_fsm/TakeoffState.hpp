@@ -2,6 +2,7 @@
 #define TAKE_OFF_STATE_HPP
 #include "StateInterface.hpp"
 
+///Takeoff state
 class TakeoffState : public StateInterface {
 private:
 	EventData _cmd;

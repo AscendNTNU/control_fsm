@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <ascend_msgs/PathPlannerPlan.h>
 
+///Moves drone to XYZ 
 class GoToState : public StateInterface {
 private:
 	EventData _cmd;
