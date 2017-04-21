@@ -4,7 +4,7 @@
 #include "control_fsm/ControlFSM.hpp"
 #include <geometry_msgs/PoseStamped.h>
 #include <cmath>
-#include <planner/point.h>
+#include <geometry_msgs/Point32.h>
 
 #define DESTINATION_REACHED_THRESHOLD 0.1
 #define DEBUG
@@ -12,7 +12,8 @@
 GoToState::GoToState() {
 	_setpoint.type_mask = default_mask;
     //TODO Change topic
-	posPub_ = _nh.advertise<planner::point>("/control_path_planner", 10);
+	_posPub = _nh.advertise<geometry_msgs::Point32>("/control/path_planner/current_position", 1);
+	_targetPub = _nh.advertise<geometry_msgs::Point32>("/control/path_planner/current_position", 1);
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -33,6 +34,7 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_cmd = event;
+	_currentPlan.valid = false;
 	//TODO Implement rest of stateBegin
 	if(!event.positionGoal.valid) {
 		if(_cmd.isValidCMD()) {
@@ -48,9 +50,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_setpoint.position.z = pose->pose.position.z;
 	//TODO Set yaw
 
-	planner::point plannerPosition;
-	plannerPosition.x = pose->pose.position.x;
-	plannerPosition.y = pose->pose.position.y;
+	geometry_msgs::Point32 destPoint;
+	//Only x and y is used
+	destPoint.x = event.positionGoal.x;
+	destPoint.y = event.positionGoal.y;
+
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -98,6 +102,10 @@ void GoToState::loopState(ControlFSM& fsm) {
 const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPoint& msg) {
+	
 }
 
 
