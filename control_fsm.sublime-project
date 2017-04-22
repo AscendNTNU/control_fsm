@@ -1,23 +1,26 @@
 {
+	"build_systems":
+	[
+		{
+			"name": "ControlFSM Docker build",
+			"shell": true,
+			"shell_cmd": "docker build .",
+			"working_dir": "${project_path}"
+		},
+		{
+			"name": "ControlFSM catkin_make",
+			"shell": true,
+			"shell_cmd": "catkin_make",
+			"working_dir": "${project_path}/../../"
+		}
+	],
 	"folders":
 	[
 		{
 			"path": "."
-		}
-	], 
-	"build_systems": 
-	[
-		{
-			"name": "ControlFSM Docker build",
-			"working_dir": "${project_path}",
-			"shell_cmd": "docker build .",
-			"shell": true
 		},
 		{
-			"name": "ControlFSM catkin_make",
-			"working_dir": "${project_path}/../../", //catkin working directory
-			"shell_cmd": "catkin_make",
-			"shell": true
+			"path": "/home/haavard/catkin_ws/src/ascend_msgs"
 		}
 	]
 }
