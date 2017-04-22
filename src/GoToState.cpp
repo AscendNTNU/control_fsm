@@ -6,6 +6,8 @@
 #include <cmath>
 #include <geometry_msgs/Point32.h>
 #include <ascend_msgs/PathPlannerPlan.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 #define DESTINATION_REACHED_THRESHOLD 0.1
 #define DEBUG
@@ -75,29 +77,52 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
 	}
 
+	float tempSetpReachedMargin = -10;
+	if(_pnh->getParam("setp_reached_margin", tempSetpReachedMargin)) {
+		if(std::fabs(_setpointReachedMargin - tempSetpReachedMargin) > 0.001 && tempSetpReachedMargin > 0) {
+			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempSetpReachedMargin));
+			_setpointReachedMargin = tempSetpReachedMargin;
+		}
+	} else {
+		fsm.handleFSMWarn("No param dest_reached_margin found, using default: " + std::to_string(DEFAULT_SETPOINT_REACHED_MARGIN));
+		_setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
+	}
+
 
 	//Sets setpoint to current position - until planner is done
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	_setpoint.position.x = pose->pose.position.x;
 	_setpoint.position.y = pose->pose.position.y;
-	_setpoint.position.z = pose->pose.position.z;
-	//TODO Set yaw
+
+	//Z setpoint can be set right away
+	_setpoint.position.z = event.positionGoal.z;
+
+	//TODO: Test this implementation
+	double quatX = pose->pose.orientation.x;
+	double quatY = pose->pose.orientation.y;
+	double quatZ = pose->pose.orientation.z;
+	double quatW = pose->pose.orientation.w;
+	tf2::Quaternion q(quatX, quatY, quatZ, quatW);
+	tf2::Matrix3x3 m(q);
+	double roll, pitch, yaw;
+	m.getRPY(roll, pitch, yaw);
+	_setpoint.yaw = yaw;
 
 	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
 	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
 
 	//If only altitude is different, no need for pathplanner
 	if(xWithinReach && yWithinReach) {
-		_setpoint.position.z = event.positionGoal.z;
-
-	} else {
-		geometry_msgs::Point32 destPoint;
-		//Only x and y is used
-		destPoint.x = event.positionGoal.x;
-		destPoint.y = event.positionGoal.y;
-		//Send desired target to pathplanner
-		_targetPub.publish(destPoint);
+		return;
 	}
+	//Send desired goal to path planner
+	geometry_msgs::Point32 destPoint;
+	//Only x and y is used
+	destPoint.x = event.positionGoal.x;
+	destPoint.y = event.positionGoal.y;
+	//Send desired target to pathplanner
+	_targetPub.publish(destPoint);
+	
 
 }
 
@@ -121,9 +146,9 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
 
 	//TODO Implement GoTo state loop.
-	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
-	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
-	bool zWithinReach = (std::fabs(pose->pose.position.z - event.positionGoal.z) < _destReachedMargin);
+	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
+	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
+	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
 
 	//If destination is reached, transition to another state
 	if(xWithinReach && yWithinReach && zWithinReach) {
@@ -135,7 +160,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 				case CommandType::LANDGB:
 					fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, _cmd);
 					break;
-				case CommandType::GOTO:
+				case CommandType::GOTOXYZ:
 					_cmd.finishCMD();
 					RequestEvent doneEvent(RequestType::POSHOLD);
 					fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, doneEvent);
@@ -149,6 +174,23 @@ void GoToState::loopState(ControlFSM& fsm) {
 		return;
 	}
 
+	//Only continue if there is a valid plan available
+	if(!_currentPlan.valid || _currentPlan.plan.arrayOfPoints.size() <= 0) {
+		return;
+	}
+
+	auto currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
+
+	xWithinReach = (std::fabs(pPose->pose.position.x - currentPoint.x) <= _setpointReachedMargin);
+	yWithinReach = (std::fabs(pPose->pose.position.y - currentPoint.y) <= _setpointReachedMargin);
+	if(xWithinReach && yWithinReach) {
+		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
+			++_currentPlan.index;
+			currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
+		}
+	}
+	_setpoint.position.x = currentPoint.x;
+	_setpoint.position.y = currentPoint.y;
 }
 
 const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
@@ -163,6 +205,7 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 	}
 	_currentPlan.plan = *msg;
 	_currentPlan.valid = true;
+	_currentPlan.index = 0;
 }
 
 void GoToState::stateInit(ControlFSM& fsm) {

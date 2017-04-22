@@ -7,5 +7,6 @@
 		<param name="control_planner_plan" value="/control/planner/plan"/>
 		<param name="control_planner_position" value="/control/planner/current_position"/>
 		<param name="control_planner_target" value="/control/planner/target"/>
+		<param name="setp_reached_margin" value="0.3"/>
 	</node>
 </launch>

@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   actionlib
   ascend_msgs
+  tf2
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -32,7 +33,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	CATKIN_DEPENDS message_runtime ascend_msgs
+	CATKIN_DEPENDS message_runtime ascend_msgs 
 )
 
 ###########
