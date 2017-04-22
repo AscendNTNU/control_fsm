@@ -2,6 +2,7 @@
 #define BLIND_LAND_STATE_HPP
 #include "StateInterface.hpp"
 
+///State handling blind landings
 class BlindLandState : public StateInterface {
 private:
 	EventData _cmd;

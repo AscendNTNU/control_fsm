@@ -2,6 +2,8 @@
 #include "control_fsm/setpoint_msg_defines.h"
 #include <geometry_msgs/PoseStamped.h>
 #include "control_fsm/ControlFSM.hpp"
+#include "control_fsm/EventData.hpp"
+
 //Constructor sets default setpoint type mask
 PositionHoldState::PositionHoldState() {
 	_setpoint.type_mask = default_mask;
@@ -10,17 +12,8 @@ PositionHoldState::PositionHoldState() {
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidCMD()) {
-		switch(event.commandType) {
-			case CommandType::GOTOXYZ:
-			case CommandType::LANDXY:
-				fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition on to GOTO state
-				break;
-			case CommandType::LANDGB:
-				fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
-				break;
-			default:
-				break;
-		}
+		//All valid command needs to go via the GOTO state
+		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
 	} else if(event.isValidRequest()) {
 		switch(event.request) {
 			case RequestType::GOTO:
@@ -38,8 +31,6 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			case RequestType::ESTIMATORADJ:
 				fsm.transitionTo(ControlFSM::ESTIMATEADJUSTSTATE, this, event);
 				break;
-			case RequestType::NONE:
-				break; //Does nothin
 			default:
 				fsm.handleFSMWarn("Transition not allowed");
 				break;
@@ -58,11 +49,13 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
-	//GoTo blind hover if position not valid
+	//GoTo blind hover if position not valid, should never occur
 	if(pose == nullptr) {
-		EventData nEvent = event;
+		if(event.isValidCMD()) {
+			event.eventError("No valid position!");
+		}
+		EventData nEvent;
 		nEvent.eventType = EventType::POSLOST;
-		nEvent.request = RequestType::BLINDHOVER;
 		fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, nEvent); 
 		return;
 	}
@@ -72,24 +65,14 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_setpoint.position.y = pose->pose.position.y;
 	//Keep old altitude if abort
 	//TODO Should we use an default hover altitude in case of ABORT?
-	if(event.eventType != EventType::REQUEST || event.request != RequestType::ABORT) {
+	if(!event.isValidRequest() || event.request != RequestType::ABORT) {
 		_setpoint.position.z = pose->pose.position.z;
 	}
 	
 	//No need to check other commands
 	if(event.isValidCMD()) {
-		//Check command and make correct transition
-		switch(event.commandType) {
-			case CommandType::GOTOXYZ:
-			case CommandType::LANDXY:
-				fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition on to GOTO state
-				break;
-			case CommandType::LANDGB:
-				fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
-				break;
-			default:
-				break;
-		}
+		//All valid commands need to go to correct place on arena before anything else
+		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); 
 	}
 }
 

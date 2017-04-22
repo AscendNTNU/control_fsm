@@ -18,17 +18,26 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			}
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 			return;
+		} else {
+			fsm.handleFSMWarn("Illegal transition request!");
 		}
 	} else if(event.eventType == EventType::GROUNDDETECTED) {
 		//Land is finished
 		if(_cmd.isValidCMD()) {
-			_cmd.finishCMD();
+			//Only landxy should occur!
+			if(_cmd.commandType == CommandType::LANDXY) {
+				_cmd.finishCMD();
+			}
 			_cmd = EventData();
 		}
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
 	} else if(event.isValidCMD()) {
-		fsm.handleFSMError("ABORT should be sent before new command!");
-		event.eventError("ABORT should be sent before new command!");
+		if(_cmd.isValidCMD()) {
+			fsm.handleFSMWarn("ABORT should be sent before new command!");
+			event.eventError("ABORT should be sent before new command!");
+		} else {
+			fsm.handleFSMWarn("Not accepting CMDs before land is completed!");
+		}
 	}
 }
 

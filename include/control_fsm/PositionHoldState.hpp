@@ -2,9 +2,8 @@
 #define POSITION_HOLD_STATE_HPP
 #include "StateInterface.hpp"
 
+///Holds the current position
 class PositionHoldState : public StateInterface {
-private:
-	double _posX, _posY, _posZ;
 public:
 	PositionHoldState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;

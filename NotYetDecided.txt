@@ -1,8 +1,4 @@
 
-Takeoff:
-	- Should takeoff ignore PX and PY? 
-		- If not, what do we use as X Y setpoint?
-
 Obstacles:
 	- How should drone act when an obstacle is moving towards the drone (close)?
 
@@ -17,4 +13,7 @@ Position loss:
 
 Startup procedures:
 	- What Preflight checks must be made before drone is ready?
-	- 
+
+How should tracking ground robot be implemented?
+
+

@@ -2,6 +2,7 @@
 #define GO_TO_STATE_HPP
 #include "StateInterface.hpp"
 
+///Moves drone to XYZ 
 class GoToState : public StateInterface {
 private:
 	EventData _cmd;

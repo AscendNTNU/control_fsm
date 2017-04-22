@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   actionlib_msgs
   actionlib
+  ascend_msgs
 )
 
 
@@ -39,7 +40,7 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	CATKIN_DEPENDS message_runtime
+	CATKIN_DEPENDS message_runtime ascend_msgs
 )
 
 ###########
@@ -102,8 +103,6 @@ target_link_libraries(control_fsm_gazebo_input
 target_link_libraries(control_fsm_actionlib_client
 	${catkin_LIBRARIES}
 )
-
-
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(control_fsm_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -112,5 +111,4 @@ add_dependencies(control_fsm_gazebo_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 add_dependencies(control_fsm_gazebo_input ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_actionlib_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 

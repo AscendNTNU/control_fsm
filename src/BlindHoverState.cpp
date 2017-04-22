@@ -4,7 +4,7 @@
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
 
-#define BLIND_HOVER_ALTITUDE 1.0f	
+#define DEFAULT_BLIND_HOVER_ALTITUDE 1.0f	
 
 /*
 Only blind states (blind hover and blind land) will accept running without valid position.
@@ -12,18 +12,30 @@ Only blind states (blind hover and blind land) will accept running without valid
 
 BlindHoverState::BlindHoverState() {
 	_setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
+	_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle incoming events when blind hovering
 	if(event.isValidCMD()) {
-		_cmd = event; //Hold event until position is regained.
-	} else if(event.eventType == EventType::REQUEST) {
+		if(!_cmd.isValidCMD()) {
+			_cmd = event; //Hold event until position is regained.
+		} else {
+			event.eventError("CMD rejected!");
+			fsm.handleFSMWarn("ABORT old command first");
+		}
+	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::BLINDLAND) {
+			if(_cmd.isValidCMD()) {
+				_cmd.eventError("Manual request overriding cmd");
+				_cmd = EventData();
+			}
 			fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
 		} else {
 			fsm.handleFSMWarn("Invalid transition request");
 		}
+	} else {
+		fsm.handleFSMInfo("Event ignored!");
 	}
 }
 
@@ -33,14 +45,28 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 		if(event.eventType == EventType::COMMAND) {
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event); //Pass command on to next state
 		} else {
-			EventData rEvent;
-			rEvent.eventType = EventType::REQUEST;
-			rEvent.request = RequestType::POSHOLD;
+			RequestEvent rEvent(RequestType::POSHOLD);
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, rEvent);
 		}
 		return;
 	}
-	_setpoint.position.z = BLIND_HOVER_ALTITUDE;
+	if(event.isValidCMD()) {
+		_cmd = event;
+	}
+
+	//Set relevant parameters
+	//Takeoff altitude
+	ros::NodeHandle _nh("~");
+	float temp_blind_hover_alt = -10;
+	if(_nh.getParam("blind_hover_altitude", temp_blind_hover_alt)) {
+		if(std::fabs(_setpoint.position.z - temp_blind_hover_alt) > 0.01 && temp_blind_hover_alt > 0) {
+			fsm.handleFSMInfo("Takeoff altitude param found: " + std::to_string(temp_blind_hover_alt));
+			_setpoint.position.z = temp_blind_hover_alt;
+		}
+	} else {
+		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
+		_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
+	}
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {

@@ -10,14 +10,23 @@ BlindLandState::BlindLandState() {
 void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.eventType == EventType::GROUNDDETECTED) {
 		//Land completed
-		if(_cmd.eventType == EventType::COMMAND) {
+		if(_cmd.isValidCMD()) {
 			fsm.transitionTo(ControlFSM::IDLESTATE, this, _cmd);
 			_cmd = EventData(); 
 		} else {
 			fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
 		}
-	} else if(event.eventType == EventType::COMMAND) {
-		_cmd = event; //COPY event and use it after finished landing.
+	} else if(event.isValidCMD()) {
+		//Blind land not part of normal operation. 
+		//Any command will be ignored!
+		event.eventError("CMD rejected!");
+		fsm.handleFSMWarn("Blind land not part of normal operation! Ignoring commands!");
+	} else if(event.isValidRequest()) {
+		if(event.request == RequestType::ABORT) {
+			fsm.handleFSMWarn("Can't ABORT blind land!");
+		} else {
+			fsm.handleFSMWarn("Illegal transition request!");
+		}
 	} else {
 		fsm.handleFSMDebug("Event ignored!");
 	}

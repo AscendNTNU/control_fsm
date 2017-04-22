@@ -2,6 +2,7 @@
 #define ESTIMATE_ADJUST_STATE_HPP
 #include "StateInterface.hpp"
 
+///Adjusting position estimate
 class EstimateAdjustState : public StateInterface {
 private:
     EventData _cmd;

@@ -32,12 +32,10 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_cmd = event;
 	//TODO Implement rest of stateBegin
 	if(!event.positionGoal.valid) {
-		if(_cmd.eventType == EventType::COMMAND) {
-			event.eventError("Not valid position target");
+		if(_cmd.isValidCMD()) {
+			event.eventError("No valid position target");
 		}
-		EventData nEvent;
-		nEvent.eventType = EventType::REQUEST;
-		nEvent.request = RequestType::ABORT;
+		RequestEvent nEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 	}
 
@@ -66,7 +64,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     	std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) < DESTINATION_REACHED_THRESHOLD &&
     	std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) < DESTINATION_REACHED_THRESHOLD) {
     	EventData event;
-    	event.eventType == EventType::REQUEST;
+    	event.eventType = EventType::REQUEST;
     	if(_cmd.isValidCMD()) {
     		switch(_cmd.commandType) {
     			case CommandType::LANDXY:

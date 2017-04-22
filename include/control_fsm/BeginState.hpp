@@ -3,8 +3,10 @@
 
 #include "StateInterface.hpp"
 
+///Entrypoint state
 class BeginState : public StateInterface {
 public:
+	BeginState();
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
 	std::string getStateName() const override { return "Begin"; }
 	const mavros_msgs::PositionTarget* getSetpoint() override;
