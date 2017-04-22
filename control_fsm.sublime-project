@@ -18,9 +18,6 @@
 	[
 		{
 			"path": "."
-		},
-		{
-			"path": "/home/haavard/catkin_ws/src/ascend_msgs"
 		}
 	]
 }
