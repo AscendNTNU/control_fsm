@@ -12,7 +12,6 @@
 
 GoToState::GoToState() {
 	_setpoint.type_mask = default_mask;
-    //TODO Change topic	
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -72,7 +71,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 			_destReachedMargin = tempDestReachedMargin;
 		}
 	} else {
-		fsm.handleFSMWarn("No dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
+		fsm.handleFSMWarn("No param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
 		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
 	}
 
@@ -84,12 +83,21 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_setpoint.position.z = pose->pose.position.z;
 	//TODO Set yaw
 
-	geometry_msgs::Point32 destPoint;
-	//Only x and y is used
-	destPoint.x = event.positionGoal.x;
-	destPoint.y = event.positionGoal.y;
-	//Send desired target to pathplanner
-	_targetPub.publish(destPoint);
+	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
+	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
+
+	//If only altitude is different, no need for pathplanner
+	if(xWithinReach && yWithinReach) {
+		_setpoint.position.z = event.positionGoal.z;
+
+	} else {
+		geometry_msgs::Point32 destPoint;
+		//Only x and y is used
+		destPoint.x = event.positionGoal.x;
+		destPoint.y = event.positionGoal.y;
+		//Send desired target to pathplanner
+		_targetPub.publish(destPoint);
+	}
 
 }
 
@@ -98,44 +106,48 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
-	//TODO Implement GoTo state loop.
-    
-	//TODO REPLACE THIS - ONLY FOR TESTING PURPOSES
-	#ifdef DEBUG
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
+
+	//Get position
+	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
+	//Should never occur, but just in case
     if(pPose == nullptr) {
     	EventData event;
-    	event.eventType = EventType::REQUEST;
-    	event.request = RequestType::ABORT;
-    	if(_cmd.eventType == EventType::COMMAND) {
-    		_cmd.eventError("Lost position");
-    	}
-    }
-    if(std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin &&
-    	std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin &&
-    	std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin) {
-    	EventData event;
-    	event.eventType = EventType::REQUEST;
+    	event.eventType = EventType::POSLOST;
     	if(_cmd.isValidCMD()) {
-    		switch(_cmd.commandType) {
-    			case CommandType::LANDXY:
-    				fsm.transitionTo(ControlFSM::LANDSTATE, this, _cmd);
-    				break;
-    			case CommandType::LANDGB:
-    				fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, _cmd);
-    				break;
-    			default:
-    				_cmd.finishCMD();
-    				event.request = RequestType::POSHOLD;
-    				fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
-    				break;
-    		}
-    	} else {
-    		event.request = RequestType::POSHOLD;
-    		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+    		_cmd.eventError("No position");
     	}
+    	fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+    	return;
     }
-    #endif
+
+	//TODO Implement GoTo state loop.
+	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
+	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
+	bool zWithinReach = (std::fabs(pose->pose.position.z - event.positionGoal.z) < _destReachedMargin);
+
+	//If destination is reached, transition to another state
+	if(xWithinReach && yWithinReach && zWithinReach) {
+		if(_cmd.isValidCMD()) {
+			switch(_cmd.commandType) {
+				case CommandType::LANDXY:
+					fsm.transitionTo(ControlFSM::LANDSTATE, this, _cmd);
+					break;
+				case CommandType::LANDGB:
+					fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, _cmd);
+					break;
+				case CommandType::GOTO:
+					_cmd.finishCMD();
+					RequestEvent doneEvent(RequestType::POSHOLD);
+					fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, doneEvent);
+					break;
+			}
+		} else {
+			RequestEvent posHoldEvent(RequestType::POSHOLD);
+			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, posHoldEvent);
+		}
+		//Destination reached, no need to excecute the rest of the function
+		return;
+	}
 
 }
 
