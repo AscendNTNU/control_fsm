@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
 	ROS_INFO("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
 		ros::spinOnce();
+		ros::Duration(0.5).sleep();
 	}
 	ROS_INFO("First position message recieved!");
 
@@ -121,14 +122,16 @@ void localPosCB(const geometry_msgs::PoseStamped& input) {
 }
 
 void mavrosStateChangedCB(const mavros_msgs::State& state) {
-	bool offboardTrue = (state.mode == "OFFBOARD");
+	bool offboardTrue = (state.mode == std::string("OFFBOARD"));
+	bool armedTrue = (bool)state.armed;
 	//Only act if relevant states has changed
-	if(offboardTrue != isOffboard || state.armed != isArmed) {
+	if(offboardTrue != isOffboard || armedTrue != isArmed) {
 		//Check if old state was autonomous
 		//=> now in manual mode
 		if(isOffboard && isArmed) {
 			EventData manualEvent;
 			manualEvent.eventType = EventType::MANUAL;
+			ROS_INFO("Manual sent!");
 			fsm.handleEvent(manualEvent);
 		}
 		//Set current state
@@ -139,6 +142,7 @@ void mavrosStateChangedCB(const mavros_msgs::State& state) {
 		if(isArmed && isOffboard) {
 			EventData autonomousEvent;
 			autonomousEvent.eventType = EventType::AUTONOMOUS;
+			ROS_INFO("Autonomous event sent");
 			fsm.handleEvent(autonomousEvent);
 		}
 	}

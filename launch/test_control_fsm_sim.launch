@@ -1,0 +1,18 @@
+<launch>
+	<include file="$(find mavros)/launch/px4.launch">
+		<arg name="fcu_url" value="udp://:14540@127.0.0.1:14557"/>
+	</include>
+	<node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">
+		<param name="dest_reached_threshold" value="0.3"/>
+		<param name="blind_hover_altitude" value="1.0"/>
+		<param name="takeoff_altitude" value="1.0"/>
+		<param name="altitude_reached_margin" value="0.1"/>
+		<param name="control_planner_plan" value="control/planner/plan"/>
+		<param name="control_planner_position" value="control/planner/current_position"/>
+		<param name="fsm_error_topic" value="control/fsm/on_error"/>
+		<param name="fsm_info_topic" value="control/fsm/on_info"/>
+		<param name="fsm_warn_topic" value="control/fsm/on_warn"/>
+		<param name="fsm_state_changed_topic" value="control/fsm/state_changed"/>
+		<param name="status_msg_buffer_size" value="10"/>
+	</node>
+</launch>
