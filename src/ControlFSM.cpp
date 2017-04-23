@@ -25,6 +25,8 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, co
 		handleFSMInfo("Current state: " + getState()->getStateName());
 		//Pass event to new current state
 		getState()->stateBegin(*this, event);
+		//Notify state has changed
+		_onStateChanged();
 	} else {
 		handleFSMError("Transition request made by another state");
 	}
@@ -59,16 +61,19 @@ void ControlFSM::loopCurrentState(void) {
 //Send error message to user via ROS
 void ControlFSM::handleFSMError(std::string errMsg) {
 	ROS_ERROR("%s", (std::string("[Control FSM] ") + errMsg).c_str());
+	_onFSMError(errMsg);
 }
 
 //Send info message to user via ROS
 void ControlFSM::handleFSMInfo(std::string infoMsg) {
 	ROS_INFO("%s",(std::string("[Control FSM] ") + infoMsg).c_str());
+	_onFSMInfo(infoMsg);
 }
 
 //Send warning to user via ROS
 void ControlFSM::handleFSMWarn(std::string warnMsg) {
 	ROS_WARN("%s", (std::string("[Control FSM] ") + warnMsg).c_str());
+	_onFSMWarn(warnMsg);
 }
 
 //Send debug message to user via ROS
