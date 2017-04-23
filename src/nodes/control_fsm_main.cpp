@@ -217,6 +217,9 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 				default: return RequestType::NONE;
 			}
 		})();
+		if(event.request == RequestType::GOTO) {
+			event.positionGoal = PositionGoalXYZ(req.x, req.y, req.z, req.yaw);
+		}
 	} else if(event.eventType == EventType::COMMAND) {
 		//Lambda expression returning correct commandEvent
 		event = ([&]() -> EventData{
