@@ -3,6 +3,7 @@
 
 #include <mavros_msgs/PositionTarget.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <functional>
 
 #include "StateInterface.hpp"
 #include "BeginState.hpp"
@@ -74,6 +75,15 @@ private:
 	///Is drone in an active state?
 	bool _isActive = false;
 
+	///Callback when a transition is made
+	std::function<void()> _onStateChanged = [](){};
+	///Callback when an error occurs in FSM
+	std::function<void(const std::string&)> _onFSMError = [](const std::string& msg){};
+	///Callback when an warning occurs in FSM
+	std::function<void(const std::string&)> _onFSMWarn = [](const std::string& msg){};
+	///Callbacks when an info message occurs in FSM
+	std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
+
 protected:
 	/**
 	 * @brief Changes the current running state
@@ -131,6 +141,15 @@ public:
 	
 	///Checks if FSM is in an "active" state
 	bool getIsActive() { return _isActive; }
+
+	///Sets new callback function for onStateChanged
+	void setOnStateChangedCB(std::function<void()> cb) { _onStateChanged = cb; }
+	///Sets new callback function for onFSMError
+	void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {_onFSMError = cb; }
+	///Sets new callback function for onFSMError
+	void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {_onFSMWarn = cb; }
+	///Sets new callback function for onFSMError
+	void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
 };
 
 #endif
