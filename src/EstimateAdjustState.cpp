@@ -44,9 +44,8 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
 }
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	if(event.isValidCMD()) {
-        _cmd = event;
-    }
+	_setpoint.yaw = fsm.getOrientationYaw();
+
 }
 
 const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {

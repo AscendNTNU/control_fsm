@@ -35,7 +35,8 @@ enum class EventType {
 	MANUAL, //Notify system is in manual mode (DISARMED and/or not OFFBOARD)
 	POSREGAINED, //Notify position is regained
 	POSLOST, //Notify position is lost
-	GROUNDDETECTED
+	GROUNDDETECTED,
+	OBSTACLECLOSING
 };
 
 enum class CommandType {

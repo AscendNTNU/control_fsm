@@ -33,7 +33,7 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	//TODO Is this override really needed? Decide!
+	_setpoint.yaw = fsm.getOrientationYaw();
 }
 
 void BlindLandState::loopState(ControlFSM& fsm) {

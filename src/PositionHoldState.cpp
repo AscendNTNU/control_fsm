@@ -48,6 +48,12 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
+	//No need to check other commands
+	if(event.isValidCMD()) {
+		//All valid commands need to go to correct place on arena before anything else
+		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); 
+	}
+
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	//GoTo blind hover if position not valid, should never occur
 	if(pose == nullptr) {
@@ -68,12 +74,9 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(!event.isValidRequest() || event.request != RequestType::ABORT) {
 		_setpoint.position.z = pose->pose.position.z;
 	}
+
+	_setpoint.yaw = fsm.getOrientationYaw();
 	
-	//No need to check other commands
-	if(event.isValidCMD()) {
-		//All valid commands need to go to correct place on arena before anything else
-		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); 
-	}
 }
 
 //Returns setpoint

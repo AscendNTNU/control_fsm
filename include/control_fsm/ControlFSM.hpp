@@ -68,6 +68,7 @@ private:
 
 	///Current drone position
 	struct {
+		bool isSet = false;
 		bool validXY = false;
 		geometry_msgs::PoseStamped position;
 	} _dronePosition;
@@ -134,10 +135,12 @@ public:
 	void setPosition(const geometry_msgs::PoseStamped& pose);
 	
 	///Get current position - will return nullptr if invalid
-	const geometry_msgs::PoseStamped* getPositionXYZ() {return _dronePosition.validXY ? &_dronePosition.position : nullptr; }
+	const geometry_msgs::PoseStamped* getPositionXYZ();
 	
+	double getOrientationYaw();
+
 	/// \deprecated Get altitude (should always be correct - 1D lidar)
-	double getPositionZ() { return _dronePosition.position.pose.position.z; }
+	double getPositionZ();
 	
 	///Checks if FSM is in an "active" state
 	bool getIsActive() { return _isActive; }

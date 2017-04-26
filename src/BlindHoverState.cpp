@@ -67,6 +67,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
 		_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
 	}
+	_setpoint.yaw = fsm.getOrientationYaw();
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
