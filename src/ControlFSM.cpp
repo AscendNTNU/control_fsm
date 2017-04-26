@@ -111,6 +111,7 @@ double ControlFSM::getOrientationYaw() {
 	tf2::Matrix3x3 m(q);
 	double roll, pitch, yaw;
 	m.getRPY(roll, pitch, yaw);
+	//TODO Fix PI half fault in yaw (mavros bug)
 	return yaw;
 }
 
