@@ -8,6 +8,7 @@
 
 #define DEFAULT_DEST_REACHED_MARGIN 0.3
 #define DEFAULT_SETPOINT_REACHED_MARGIN 0.3
+#define DEFAULT_DEST_REACHED_DELAY 0.5
 
 ///Moves drone to XYZ 
 class GoToState : public StateInterface {
@@ -17,6 +18,12 @@ private:
 		bool completed = false;
 		std::function<void()> publish = [](){};
 	} _safePublisher;
+
+	struct {
+		ros::Time started;
+		bool enabled = false;
+		ros::Duration delayTime;
+	} _delayTransition;
 
 	EventData _cmd;
 	///Publisher for the current position - will start the path planner

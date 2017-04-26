@@ -142,13 +142,20 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
-	//TODO Implement GoTo state loop.
 	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
 	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
 
-	//If destination is reached, transition to another state
+	//If destination is reached, begin transition to another state
 	if(xWithinReach && yWithinReach && zWithinReach) {
+		//Hold current position for a duration - avoiding unwanted velocity before doing anything else
+		if(!_delayTransition.enabled) {
+			_delayTransition.started = ros::Time::now();
+			_delayTransition.enabled = true;
+		}
+		if(ros::Time::now() - _delayTransition.started < _delayTransition.delayTime) {
+			return;
+		} 
 		if(_cmd.isValidCMD()) {
 			switch(_cmd.commandType) {
 				case CommandType::LANDXY:
@@ -167,8 +174,11 @@ void GoToState::loopState(ControlFSM& fsm) {
 			RequestEvent posHoldEvent(RequestType::POSHOLD);
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, posHoldEvent);
 		}
+		_delayTransition.enabled = false;
 		//Destination reached, no need to excecute the rest of the function
 		return;
+	} else {
+		_delayTransition.enabled = false;
 	}
 
 	//Make sure points are published!!
@@ -181,16 +191,19 @@ void GoToState::loopState(ControlFSM& fsm) {
 		return;
 	}
 
+	//Get current setpoint from plan
 	auto currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
-
+	//Check if we are close enough to current setpoint
 	xWithinReach = (std::fabs(pPose->pose.position.x - currentPoint.x) <= _setpointReachedMargin);
 	yWithinReach = (std::fabs(pPose->pose.position.y - currentPoint.y) <= _setpointReachedMargin);
 	if(xWithinReach && yWithinReach) {
+		//If there are a new setpoint in the plan, change to it.
 		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
 			++_currentPlan.index;
 			currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
 		}
 	}
+	//Set setpoint x and y
 	_setpoint.position.x = currentPoint.x;
 	_setpoint.position.y = currentPoint.y;
 }
@@ -222,20 +235,28 @@ void GoToState::stateInit(ControlFSM& fsm) {
 	if(!n.getParam("control_planner_target", _targetPubTopic)) {
 		fsm.handleFSMWarn("No planner target topic found, using default: " + _targetPubTopic);
 	}
-	float tempDestReachedMargin = -10;
-	if(n.getParam("dest_reached_margin", tempDestReachedMargin)) {
-		if(std::fabs(_destReachedMargin - tempDestReachedMargin) > 0.001 && tempDestReachedMargin > 0) {
-			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
-			_destReachedMargin = tempDestReachedMargin;
-		}
+
+	float tempGoToHoldDestTime = -10;
+	if(n.getParam("goto_hold_dest_time", tempGoToHoldDestTime) && tempGoToHoldDestTime > 0) {
+		fsm.handleFSMInfo("GoTo destionation hold time param found: " + std::to_string(tempGoToHoldDestTime));
+		_delayTransition.delayTime = ros::Duration(tempGoToHoldDestTime);
 	} else {
-		fsm.handleFSMWarn("No param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
+		fsm.handleFSMWarn("No valid param goto_hold_dest_time found, using default: " + std::to_string(DEFAULT_DEST_REACHED_DELAY));
+		_delayTransition.delayTime = ros::Duration(DEFAULT_DEST_REACHED_DELAY);
+	}
+
+	float tempDestReachedMargin = -10;
+	if(n.getParam("dest_reached_margin", tempDestReachedMargin) && tempDestReachedMargin > 0) {
+		fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
+		_destReachedMargin = tempDestReachedMargin;
+	} else {
+		fsm.handleFSMWarn("No valid param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
 		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
 	}	
 	float tempSetpReachedMargin = -10;
 	if(n.getParam("setp_reached_margin", tempSetpReachedMargin)) {
 		if(std::fabs(_setpointReachedMargin - tempSetpReachedMargin) > 0.001 && tempSetpReachedMargin > 0) {
-			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempSetpReachedMargin));
+			fsm.handleFSMInfo("Setpoint reached param found: " + std::to_string(tempSetpReachedMargin));
 			_setpointReachedMargin = tempSetpReachedMargin;
 		}
 	} else {
