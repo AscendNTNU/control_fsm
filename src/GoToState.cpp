@@ -187,7 +187,13 @@ void GoToState::loopState(ControlFSM& fsm) {
 	}
 	
 	//Only continue if there is a valid plan available
-	if(!_currentPlan.valid || _currentPlan.plan.arrayOfPoints.size() <= 0) {
+	if(!_currentPlan.valid) {
+		return;
+	} else if(_currentPlan.plan.arrayOfPoints.size() <= 0) {
+		//A plan is recieved, but there are no points. 
+		fsm.handleFSMError("Recieved empty path plan");
+		RequestEvent abortEvent(RequestType::ABORT);
+		this->handleEvent(fsm, abortEvent);
 		return;
 	}
 
