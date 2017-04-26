@@ -49,6 +49,12 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(pPose != nullptr) {
 		_setpoint.position.x = pPose->pose.position.x;
 		_setpoint.position.y = pPose->pose.position.y;
+		//Set yaw setpoint based on current rotation
+		_setpoint.yaw = fsm.getOrientationYaw();
+	} else {
+		//Should never occur
+		RequestEvent abortEvent(RequestType::ABORT);
+		this->handleEvent(fsm, abortEvent);
 	}
 }
 
