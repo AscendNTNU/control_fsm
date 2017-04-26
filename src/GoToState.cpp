@@ -66,29 +66,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		stateInit(fsm);
 	}
 
-	float tempDestReachedMargin = -10;
-	if(_pnh->getParam("dest_reached_margin", tempDestReachedMargin)) {
-		if(std::fabs(_destReachedMargin - tempDestReachedMargin) > 0.001 && tempDestReachedMargin > 0) {
-			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
-			_destReachedMargin = tempDestReachedMargin;
-		}
-	} else {
-		fsm.handleFSMWarn("No param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
-		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
-	}
-
-	float tempSetpReachedMargin = -10;
-	if(_pnh->getParam("setp_reached_margin", tempSetpReachedMargin)) {
-		if(std::fabs(_setpointReachedMargin - tempSetpReachedMargin) > 0.001 && tempSetpReachedMargin > 0) {
-			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempSetpReachedMargin));
-			_setpointReachedMargin = tempSetpReachedMargin;
-		}
-	} else {
-		fsm.handleFSMWarn("No param dest_reached_margin found, using default: " + std::to_string(DEFAULT_SETPOINT_REACHED_MARGIN));
-		_setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
-	}
-
-
 	//Sets setpoint to current position - until planner is done
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	_setpoint.position.x = pose->pose.position.x;
@@ -117,11 +94,32 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	}
 	//Send desired goal to path planner
 	geometry_msgs::Point32 destPoint;
+	geometry_msgs::Point32 currentPos;
 	//Only x and y is used
+	ROS_INFO("X: %f, Y: %f", event.positionGoal.x, event.positionGoal.y);
 	destPoint.x = event.positionGoal.x;
 	destPoint.y = event.positionGoal.y;
+	currentPos.x = pose->pose.position.x;
+	currentPos.y = pose->pose.position.y;
 	//Send desired target to pathplanner
-	_targetPub.publish(destPoint);
+
+	/*
+	ros need a little delay after advertising for all connection to be made
+	This is a bit hacky solution to publish the target and position as soon as the 
+	publisher are ready without blocking the FSM.
+	*/
+	_safePublisher.completed = false;
+	_safePublisher.publish = [destPoint, currentPos, this]() {
+		//Only subscribes if 
+		if(_targetPub.getNumSubscribers() == 0 || _posPub.getNumSubscribers() == 0) {
+			return;
+		}
+		_targetPub.publish(destPoint);
+		_posPub.publish(currentPos);
+		_safePublisher.completed = true;
+
+	};
+	fsm.handleFSMInfo("Sent target and position to planner, waiting for result!");
 	
 
 }
@@ -131,7 +129,6 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
-
 	//Get position
 	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
 	//Should never occur, but just in case
@@ -174,6 +171,11 @@ void GoToState::loopState(ControlFSM& fsm) {
 		return;
 	}
 
+	//Make sure points are published!!
+	if(!_safePublisher.completed) {
+		_safePublisher.publish();
+	}
+	
 	//Only continue if there is a valid plan available
 	if(!_currentPlan.valid || _currentPlan.plan.arrayOfPoints.size() <= 0) {
 		return;
@@ -209,21 +211,45 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 }
 
 void GoToState::stateInit(ControlFSM& fsm) {
-		_pnh.reset(new ros::NodeHandle("~"));
-		if(!_pnh->getParam("control_planner_plan", _planSubTopic)) {
-			fsm.handleFSMWarn("No planner topic found, using default: " + _planSubTopic);
+	_pnh.reset(new ros::NodeHandle());	
+	ros::NodeHandle n("~");
+	if(!n.getParam("control_planner_plan", _planSubTopic)) {
+		fsm.handleFSMWarn("No planner plan topic found, using default: " + _planSubTopic);
+	}
+	if(!n.getParam("control_planner_position", _posPubTopic)) {
+		fsm.handleFSMWarn("No planner position topic found, using default: " + _posPubTopic);
+	}
+	if(!n.getParam("control_planner_target", _targetPubTopic)) {
+		fsm.handleFSMWarn("No planner target topic found, using default: " + _targetPubTopic);
+	}
+	float tempDestReachedMargin = -10;
+	if(n.getParam("dest_reached_margin", tempDestReachedMargin)) {
+		if(std::fabs(_destReachedMargin - tempDestReachedMargin) > 0.001 && tempDestReachedMargin > 0) {
+			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
+			_destReachedMargin = tempDestReachedMargin;
 		}
-		if(!_pnh->getParam("control_planner_position", _posPubTopic)) {
-			fsm.handleFSMWarn("No planner topic found, using default: " + _posPubTopic);
+	} else {
+		fsm.handleFSMWarn("No param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
+		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
+	}	
+	float tempSetpReachedMargin = -10;
+	if(n.getParam("setp_reached_margin", tempSetpReachedMargin)) {
+		if(std::fabs(_setpointReachedMargin - tempSetpReachedMargin) > 0.001 && tempSetpReachedMargin > 0) {
+			fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempSetpReachedMargin));
+			_setpointReachedMargin = tempSetpReachedMargin;
 		}
-		if(!_pnh->getParam("control_planner_target", _targetPubTopic)) {
-			fsm.handleFSMWarn("No planner topic found, using default: " + _targetPubTopic);
-		}
-		_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);
-		_targetPub = _pnh->advertise<geometry_msgs::Point32>(_targetPubTopic , 1);
-		_planSub = _pnh->subscribe(_planSubTopic, 1, &GoToState::pathRecievedCB, this);
-
+	} else {
+		fsm.handleFSMWarn("No param setp_reached_margin found, using default: " + std::to_string(DEFAULT_SETPOINT_REACHED_MARGIN));
+		_setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
+	}
+	
+	_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);
+	_targetPub = _pnh->advertise<geometry_msgs::Point32>(_targetPubTopic , 1);
+	_planSub = _pnh->subscribe(_planSubTopic, 1, &GoToState::pathRecievedCB, this);
+	
 }
+
+
 
 
 

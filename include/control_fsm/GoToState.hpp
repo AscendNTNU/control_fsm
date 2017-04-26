@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <ascend_msgs/PathPlannerPlan.h>
 #include <memory>
+#include <functional>
 
 #define DEFAULT_DEST_REACHED_MARGIN 0.3
 #define DEFAULT_SETPOINT_REACHED_MARGIN 0.3
@@ -12,18 +13,22 @@
 class GoToState : public StateInterface {
 private:
 
+	struct {
+		bool completed = false;
+		std::function<void()> publish = [](){};
+	} _safePublisher;
+
 	EventData _cmd;
-	///Pointer to nodehandle used by this state
-	/**Using dynamic memory to be sure the nodehandle constructor is called AFTER ros init in main */
-	std::unique_ptr<ros::NodeHandle> _pnh;
 	///Publisher for the current position - will start the path planner
 	ros::Publisher _posPub;
 	///Publisher for the desired target
 	ros::Publisher _targetPub;
-
+	///Subscriber for path plan
 	ros::Subscriber _planSub;
 	///Is state active flag
 	bool _isActive = false;
+	///Dynamic allocated nodehandle
+	std::unique_ptr<ros::NodeHandle> _pnh;
 
 	///Contains the latest flight path recieved
 	struct {
@@ -37,11 +42,11 @@ private:
 	///Margin used to determine if we are close enough to a setpoint to switch
 	float _setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
 	///Topic for path planner target
-	std::string _targetPubTopic = "/control/path_planner/target";
+	std::string _targetPubTopic = "control/path_planner/target";
 	///Topic for patk planner position
-	std::string _posPubTopic = "/control/path_planner/current_position";
+	std::string _posPubTopic = "control/path_planner/current_position";
 	///Topic for recieving planner path
-	std::string _planSubTopic = "/control/path_planner/plan";
+	std::string _planSubTopic = "control/path_planner/plan";
 	///Callback for path planner
 	void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
 public:
