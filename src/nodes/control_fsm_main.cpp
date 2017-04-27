@@ -214,6 +214,7 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 				//case req.TRACKGB: return RequestType::TRACKGB;
 				//case req.INTERGB: return RequestType::INTERGB;
 				case req.ESTIMATORADJ: return RequestType::ESTIMATORADJ;
+				case req.MANUALFLIGHT: return RequestType::MANUALFLIGHT;
 				default: return RequestType::NONE;
 			}
 		})();
