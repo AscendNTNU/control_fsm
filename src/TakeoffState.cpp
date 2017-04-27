@@ -14,7 +14,12 @@ TakeoffState::TakeoffState() {
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle events
 	if(event.isValidCMD()) {
-		_cmd = event;
+		if(_cmd.isValidCMD()) {
+			_cmd = event;
+		} else {
+			event.eventError("Finish old CMD before sending new");
+			fsm.handleFSMWarn("ABORT old cmd before sending new");
+		}
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
 			_cmd.eventError("Aborting command");

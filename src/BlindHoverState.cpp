@@ -31,6 +31,14 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 				_cmd = EventData();
 			}
 			fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
+		} else if(event.request == RequestType::ABORT){
+			if(_cmd.isValidCMD()) {
+				fsm.handleFSMInfo("Aborting CMD");
+				_cmd.eventError("ABORT");
+				_cmd = EventData();
+			} else {
+				fsm.handleFSMWarn("Can't abort blind hover");
+			}
 		} else {
 			fsm.handleFSMWarn("Invalid transition request");
 		}

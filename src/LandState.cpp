@@ -37,6 +37,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			event.eventError("ABORT should be sent before new command!");
 		} else {
 			fsm.handleFSMWarn("Not accepting CMDs before land is completed!");
+			event.eventError("Not accpeting CMDs before land is completed!");
 		}
 	}
 }
