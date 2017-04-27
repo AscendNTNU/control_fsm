@@ -87,8 +87,8 @@ int main(int argc, char** argv) {
 	//Wait for all systems to initalize and position to become valid
 	ROS_INFO("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
-		ros::spinOnce();
 		ros::Duration(0.5).sleep();
+        ros::spinOnce();
 	}
 	ROS_INFO("First position message recieved!");
 
@@ -216,6 +216,7 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 				//case req.TRACKGB: return RequestType::TRACKGB;
 				//case req.INTERGB: return RequestType::INTERGB;
 				case req.ESTIMATORADJ: return RequestType::ESTIMATORADJ;
+				case req.MANUALFLIGHT: return RequestType::MANUALFLIGHT;
 				default: return RequestType::NONE;
 			}
 		})();

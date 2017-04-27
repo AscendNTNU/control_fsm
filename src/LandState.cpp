@@ -37,6 +37,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			event.eventError("ABORT should be sent before new command!");
 		} else {
 			fsm.handleFSMWarn("Not accepting CMDs before land is completed!");
+			event.eventError("Not accpeting CMDs before land is completed!");
 		}
 	}
 }
@@ -54,7 +55,11 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	} else {
 		//Should never occur
 		RequestEvent abortEvent(RequestType::ABORT);
-		this->handleEvent(fsm, abortEvent);
+		if(_cmd.isValidCMD()) {
+			_cmd.eventError("No valid position");
+			_cmd = EventData();
+		}
+		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, abortEvent);
 	}
 }
 

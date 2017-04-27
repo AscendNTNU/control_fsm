@@ -24,7 +24,8 @@ enum class RequestType {
 	BLINDLAND, 
 	TRACKGB, //Track/follow ground robot
 	INTERGB, //Interact with ground robot (tap)
-	ESTIMATORADJ //Estimator adjust
+	ESTIMATORADJ, //Estimator adjust
+	MANUALFLIGHT
 };
 
 enum class EventType {

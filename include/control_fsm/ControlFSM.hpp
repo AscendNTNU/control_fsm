@@ -19,6 +19,7 @@
 #include "GoToState.hpp"
 #include "LandState.hpp"
 #include "BlindLandState.hpp"
+#include "ManualFlightState.hpp"
 
 ///Main FSM logic
 class ControlFSM {
@@ -37,6 +38,7 @@ private:
 	friend class GoToState;
 	friend class LandState;
 	friend class BlindLandState;
+	friend class ManualFlightState;
 	
 	//Static instances of the different states
 	static BeginState BEGINSTATE;
@@ -52,6 +54,7 @@ private:
 	static GoToState GOTOSTATE;
 	static LandState LANDSTATE;
 	static BlindLandState BLINDLANDSTATE;
+	static ManualFlightState MANUALFLIGHTSTATE;
 	/**
 	 * @brief Holds a pointer to current running state
 	 * @details Struct "vault" explanation:
