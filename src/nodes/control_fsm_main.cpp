@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
 	//Wait for all systems to initalize and position to become valid
 	ROS_INFO("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
-		ros::spinOnce();
 		ros::Duration(0.5).sleep();
+        ros::spinOnce();
 	}
 	ROS_INFO("First position message recieved!");
 
