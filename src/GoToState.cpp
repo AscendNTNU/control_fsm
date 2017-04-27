@@ -21,6 +21,7 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		if(event.request == RequestType::ABORT) {
 			if(_cmd.isValidCMD()) {
 				_cmd.eventError("ABORT");
+				_cmd = EventData();
 			}
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
 		} else if(event.request == RequestType::POSHOLD) {
@@ -58,6 +59,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(!event.positionGoal.valid) {
 		if(_cmd.isValidCMD()) {
 			event.eventError("No valid position target");
+			_cmd = EventData();
 		}
 		RequestEvent nEvent(RequestType::ABORT);
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
@@ -127,6 +129,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     	event.eventType = EventType::POSLOST;
     	if(_cmd.isValidCMD()) {
     		_cmd.eventError("No position");
+    		_cmd = EventData();
     	}
     	fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
     	return;

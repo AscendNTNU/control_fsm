@@ -3,6 +3,10 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#ifndef PI_HALF
+#define PI_HALF 1.57079632679
+#endif
+
 //TODO: Initiate static instances of the different state classes here!!
 BeginState ControlFSM::BEGINSTATE;
 PreFlightState ControlFSM::PREFLIGHTSTATE;
@@ -111,8 +115,8 @@ double ControlFSM::getOrientationYaw() {
 	tf2::Matrix3x3 m(q);
 	double roll, pitch, yaw;
 	m.getRPY(roll, pitch, yaw);
-	//TODO Fix PI half fault in yaw (mavros bug)
-	return yaw;
+	//Subtracting PI halfs to correct for a bug in mavros (90 degree offset)
+	return yaw - PI_HALF;
 }
 
 double ControlFSM::getPositionZ() {
