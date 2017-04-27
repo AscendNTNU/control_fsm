@@ -13,6 +13,8 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
 			fsm.transitionTo(ControlFSM::BEGINSTATE, this, event);
+		} else if(event.request == RequestType::MANUALFLIGHT) {
+			fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, event);
 		} else {
 			fsm.handleFSMWarn("Invalid transition request");
 		}
