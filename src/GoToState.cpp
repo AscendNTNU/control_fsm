@@ -52,6 +52,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_cmd = event;
 	//Current plan is invalid until new plan is recieved
 	_currentPlan.valid = false;
+	//Has not arrived yet
+	_delayTransition.enabled = false;
 	//TODO Implement rest of stateBegin
 	if(!event.positionGoal.valid) {
 		if(_cmd.isValidCMD()) {
@@ -61,7 +63,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 		return;
 	}
-
+	//Set up nodehandle and load all paramaters first time
 	if(_pnh == nullptr) {
 		stateInit(fsm);
 	}
@@ -73,17 +75,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 	//Z setpoint can be set right away
 	_setpoint.position.z = event.positionGoal.z;
-
-	//TODO: Test this implementation
-	double quatX = pose->pose.orientation.x;
-	double quatY = pose->pose.orientation.y;
-	double quatZ = pose->pose.orientation.z;
-	double quatW = pose->pose.orientation.w;
-	tf2::Quaternion q(quatX, quatY, quatZ, quatW);
-	tf2::Matrix3x3 m(q);
-	double roll, pitch, yaw;
-	m.getRPY(roll, pitch, yaw);
-	_setpoint.yaw = yaw;
+	//Set yaw setpoint to current orientation
+	_setpoint.yaw = fsm.getOrientationYaw();
 
 	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
 	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
@@ -96,13 +89,10 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	geometry_msgs::Point32 destPoint;
 	geometry_msgs::Point32 currentPos;
 	//Only x and y is used
-	ROS_INFO("X: %f, Y: %f", event.positionGoal.x, event.positionGoal.y);
 	destPoint.x = event.positionGoal.x;
 	destPoint.y = event.positionGoal.y;
 	currentPos.x = pose->pose.position.x;
 	currentPos.y = pose->pose.position.y;
-	//Send desired target to pathplanner
-
 	/*
 	ros need a little delay after advertising for all connection to be made
 	This is a bit hacky solution to publish the target and position as soon as the 
@@ -189,11 +179,14 @@ void GoToState::loopState(ControlFSM& fsm) {
 	//Only continue if there is a valid plan available
 	if(!_currentPlan.valid) {
 		return;
-	} else if(_currentPlan.plan.arrayOfPoints.size() <= 0) {
+	} else if(!(bool)_currentPlan.plan.feasibility || _currentPlan.plan.arrayOfPoints.size() <= 0) {
 		//A plan is recieved, but there are no points. 
 		fsm.handleFSMError("Recieved empty path plan");
 		RequestEvent abortEvent(RequestType::ABORT);
-		this->handleEvent(fsm, abortEvent);
+		if(_cmd.isValidCMD()) {
+			_cmd.eventError("No feasable path to target");
+		}
+		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, abortEvent);
 		return;
 	}
 
