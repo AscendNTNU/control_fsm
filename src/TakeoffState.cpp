@@ -91,5 +91,5 @@ void TakeoffState::loopState(ControlFSM& fsm) {
 
 const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return &_setpoint; //Will generate error
+	return &_setpoint;
 }
