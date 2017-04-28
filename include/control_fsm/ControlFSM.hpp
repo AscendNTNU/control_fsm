@@ -88,6 +88,7 @@ private:
 	///Callbacks when an info message occurs in FSM
 	std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
 
+
 protected:
 	/**
 	 * @brief Changes the current running state

@@ -61,6 +61,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 	if(event.isValidCMD()) {
 		_cmd = event;
+		_cmd.sendFeedback("Takeoff!!");
 	}
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	//If no position is available - abort takeoff

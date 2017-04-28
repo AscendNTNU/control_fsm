@@ -84,6 +84,7 @@ int main(int argc, char** argv) {
 		fsmOnInfoPub.publish(msg);
 	});
 
+
 	//Wait for all systems to initalize and position to become valid
 	ROS_INFO("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
@@ -185,6 +186,7 @@ bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::C
 
 EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	EventData event;
+	ROS_INFO("X: %f, Y: %f, Z: %f", req.x, req.y, req.z);
 	//Lambda expression returning correct eventtype
 	event.eventType = ([&]() -> EventType{
 		switch(req.eventType) {

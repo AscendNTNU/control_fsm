@@ -7,7 +7,8 @@ ENV ROS_PACKAGE_NAME=control_fsm
 RUN apt-get update -qq && apt-get install -yqq \
 	build-essential \
     ros-kinetic-mavros \
-    ros-kinetic-mavros-extras
+    ros-kinetic-mavros-extras \
+    ros-kinetic-tf2
 
 
 RUN mkdir -p $ROS_WORKSPACE_PATH/src
