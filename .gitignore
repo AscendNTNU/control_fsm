@@ -1,1 +1,7 @@
 *.un~
+msg/
+*.sublime-workspace
+html/
+latex/
+
+

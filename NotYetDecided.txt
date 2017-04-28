@@ -1,0 +1,19 @@
+
+Obstacles:
+	- How should drone act when an obstacle is moving towards the drone (close)?
+
+Manual control:
+	- How should FSM act when pilot exits OFFBOARD mode?
+		- Mabye go to an default "resuming" state?
+		- Should commands be aborted? Or should they be allowed to resume when OFFBOARD is regained.
+
+Position loss:
+	- How should drone behave if it lost position unexpected? 
+		- Go directly to blind hover?
+
+Startup procedures:
+	- What Preflight checks must be made before drone is ready?
+
+How should tracking ground robot be implemented?
+
+
