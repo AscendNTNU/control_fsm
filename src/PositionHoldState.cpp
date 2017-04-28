@@ -44,10 +44,31 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		If the mavros state message arrives "late" the drone will try to go to the old
 		position setpoints. Consider adding another state for manual flight (that always use current position as setpoint)
 		*/
+	} else if(event.eventType == EventType::OBSTACLECLOSING) {
+		//Increase altitude to a safe altitude avoding all obstacles
+		_setpoint.position.z = _safeHoverAlt;
 	}
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
+	if(!_paramsSet) {
+		ros::NodeHandle n("~");
+		double tempSafeAlt = -10;
+		if(n.getParam("safe_hover_alt", tempSafeAlt) && tempSafeAlt > 0) {
+			fsm.handleFSMInfo("Found safe hover altitude: " + std::to_string(tempSafeAlt));
+			_safeHoverAlt = tempSafeAlt;
+		} else {
+			fsm.handleFSMWarn("Couldn't find safe_hover_alt, using default: " + std::to_string(DEFAULT_SAFE_HOVER_ALT));
+			_safeHoverAlt = DEFAULT_SAFE_HOVER_ALT;
+		}
+		_paramsSet = true;
+	}
+	//No need to check other commands
+	if(event.isValidCMD()) {
+		//All valid commands need to go to correct place on arena before anything else
+		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); 
+	}
+
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
 	//GoTo blind hover if position not valid, should never occur
 	if(pose == nullptr) {
@@ -68,12 +89,9 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(!event.isValidRequest() || event.request != RequestType::ABORT) {
 		_setpoint.position.z = pose->pose.position.z;
 	}
+
+	_setpoint.yaw = fsm.getOrientationYaw();
 	
-	//No need to check other commands
-	if(event.isValidCMD()) {
-		//All valid commands need to go to correct place on arena before anything else
-		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); 
-	}
 }
 
 //Returns setpoint

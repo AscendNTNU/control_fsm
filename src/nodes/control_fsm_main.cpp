@@ -87,8 +87,8 @@ int main(int argc, char** argv) {
 	//Wait for all systems to initalize and position to become valid
 	ROS_INFO("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
-		ros::spinOnce();
 		ros::Duration(0.5).sleep();
+        ros::spinOnce();
 	}
 	ROS_INFO("First position message recieved!");
 
@@ -124,14 +124,16 @@ void localPosCB(const geometry_msgs::PoseStamped& input) {
 }
 
 void mavrosStateChangedCB(const mavros_msgs::State& state) {
-	bool offboardTrue = (state.mode == "OFFBOARD");
+	bool offboardTrue = (state.mode == std::string("OFFBOARD"));
+	bool armedTrue = (bool)state.armed;
 	//Only act if relevant states has changed
-	if(offboardTrue != isOffboard || state.armed != isArmed) {
+	if(offboardTrue != isOffboard || armedTrue != isArmed) {
 		//Check if old state was autonomous
 		//=> now in manual mode
 		if(isOffboard && isArmed) {
 			EventData manualEvent;
 			manualEvent.eventType = EventType::MANUAL;
+			ROS_INFO("Manual sent!");
 			fsm.handleEvent(manualEvent);
 		}
 		//Set current state
@@ -142,6 +144,7 @@ void mavrosStateChangedCB(const mavros_msgs::State& state) {
 		if(isArmed && isOffboard) {
 			EventData autonomousEvent;
 			autonomousEvent.eventType = EventType::AUTONOMOUS;
+			ROS_INFO("Autonomous event sent");
 			fsm.handleEvent(autonomousEvent);
 		}
 	}
@@ -213,9 +216,13 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 				//case req.TRACKGB: return RequestType::TRACKGB;
 				//case req.INTERGB: return RequestType::INTERGB;
 				case req.ESTIMATORADJ: return RequestType::ESTIMATORADJ;
+				case req.MANUALFLIGHT: return RequestType::MANUALFLIGHT;
 				default: return RequestType::NONE;
 			}
 		})();
+		if(event.request == RequestType::GOTO) {
+			event.positionGoal = PositionGoalXYZ(req.x, req.y, req.z, req.yaw);
+		}
 	} else if(event.eventType == EventType::COMMAND) {
 		//Lambda expression returning correct commandEvent
 		event = ([&]() -> EventData{

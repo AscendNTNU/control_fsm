@@ -19,6 +19,7 @@
 #include "GoToState.hpp"
 #include "LandState.hpp"
 #include "BlindLandState.hpp"
+#include "ManualFlightState.hpp"
 
 ///Main FSM logic
 class ControlFSM {
@@ -37,6 +38,7 @@ private:
 	friend class GoToState;
 	friend class LandState;
 	friend class BlindLandState;
+	friend class ManualFlightState;
 	
 	//Static instances of the different states
 	static BeginState BEGINSTATE;
@@ -52,6 +54,7 @@ private:
 	static GoToState GOTOSTATE;
 	static LandState LANDSTATE;
 	static BlindLandState BLINDLANDSTATE;
+	static ManualFlightState MANUALFLIGHTSTATE;
 	/**
 	 * @brief Holds a pointer to current running state
 	 * @details Struct "vault" explanation:
@@ -68,6 +71,7 @@ private:
 
 	///Current drone position
 	struct {
+		bool isSet = false;
 		bool validXY = false;
 		geometry_msgs::PoseStamped position;
 	} _dronePosition;
@@ -134,10 +138,12 @@ public:
 	void setPosition(const geometry_msgs::PoseStamped& pose);
 	
 	///Get current position - will return nullptr if invalid
-	const geometry_msgs::PoseStamped* getPositionXYZ() {return _dronePosition.validXY ? &_dronePosition.position : nullptr; }
+	const geometry_msgs::PoseStamped* getPositionXYZ();
 	
+	double getOrientationYaw();
+
 	/// \deprecated Get altitude (should always be correct - 1D lidar)
-	double getPositionZ() { return _dronePosition.position.pose.position.z; }
+	double getPositionZ();
 	
 	///Checks if FSM is in an "active" state
 	bool getIsActive() { return _isActive; }

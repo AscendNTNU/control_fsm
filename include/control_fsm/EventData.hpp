@@ -24,7 +24,8 @@ enum class RequestType {
 	BLINDLAND, 
 	TRACKGB, //Track/follow ground robot
 	INTERGB, //Interact with ground robot (tap)
-	ESTIMATORADJ //Estimator adjust
+	ESTIMATORADJ, //Estimator adjust
+	MANUALFLIGHT
 };
 
 enum class EventType {
@@ -35,7 +36,8 @@ enum class EventType {
 	MANUAL, //Notify system is in manual mode (DISARMED and/or not OFFBOARD)
 	POSREGAINED, //Notify position is regained
 	POSLOST, //Notify position is lost
-	GROUNDDETECTED
+	GROUNDDETECTED,
+	OBSTACLECLOSING
 };
 
 enum class CommandType {

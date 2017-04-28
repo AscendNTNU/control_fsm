@@ -31,6 +31,14 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 				_cmd = EventData();
 			}
 			fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
+		} else if(event.request == RequestType::ABORT){
+			if(_cmd.isValidCMD()) {
+				fsm.handleFSMInfo("Aborting CMD");
+				_cmd.eventError("ABORT");
+				_cmd = EventData();
+			} else {
+				fsm.handleFSMWarn("Can't abort blind hover");
+			}
 		} else {
 			fsm.handleFSMWarn("Invalid transition request");
 		}
@@ -67,6 +75,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
 		_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
 	}
+	_setpoint.yaw = fsm.getOrientationYaw();
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {

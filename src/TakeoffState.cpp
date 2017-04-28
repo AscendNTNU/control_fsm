@@ -14,7 +14,12 @@ TakeoffState::TakeoffState() {
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle events
 	if(event.isValidCMD()) {
-		_cmd = event;
+		if(_cmd.isValidCMD()) {
+			_cmd = event;
+		} else {
+			event.eventError("Finish old CMD before sending new");
+			fsm.handleFSMWarn("ABORT old cmd before sending new");
+		}
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
 			_cmd.eventError("Aborting command");
@@ -72,6 +77,8 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Set takeoff setpoint to current XY position
 	_setpoint.position.x = pose->pose.position.x;
 	_setpoint.position.y = pose->pose.position.y;
+	//Set yaw setpoint based on current rotation
+	_setpoint.yaw = fsm.getOrientationYaw();;
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
@@ -89,5 +96,5 @@ void TakeoffState::loopState(ControlFSM& fsm) {
 
 const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
-	return &_setpoint; //Will generate error
+	return &_setpoint;
 }

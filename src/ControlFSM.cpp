@@ -1,5 +1,7 @@
 #include "control_fsm/ControlFSM.hpp"
 #include <ros/ros.h>
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 //TODO: Initiate static instances of the different state classes here!!
 BeginState ControlFSM::BEGINSTATE;
@@ -15,6 +17,7 @@ InteractGBState ControlFSM::INTERACTGBSTATE;
 GoToState ControlFSM::GOTOSTATE;
 LandState ControlFSM::LANDSTATE;
 BlindLandState ControlFSM::BLINDLANDSTATE;
+ManualFlightState ControlFSM::MANUALFLIGHTSTATE;
 
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
@@ -83,9 +86,41 @@ void ControlFSM::handleFSMDebug(std::string debugMsg) {
 
 void ControlFSM::setPosition(const geometry_msgs::PoseStamped& pose) {
 	//TODO Set _dronePosition.valid to false if position is not valid
+	if(!_dronePosition.isSet) {
+		_dronePosition.isSet = true;
+	}
 	_dronePosition.position = pose;
 	_dronePosition.validXY = true; //TODO Add checks here
 }
+
+const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {
+	if(!_dronePosition.isSet) {
+		handleFSMError("Position has not been set!!");
+		return nullptr;
+	}
+	return _dronePosition.validXY ? &_dronePosition.position : nullptr;
+}
+
+double ControlFSM::getOrientationYaw() {
+	double quatX = _dronePosition.position.pose.orientation.x;
+	double quatY = _dronePosition.position.pose.orientation.y;
+	double quatZ = _dronePosition.position.pose.orientation.z;
+	double quatW = _dronePosition.position.pose.orientation.w;
+	tf2::Quaternion q(quatX, quatY, quatZ, quatW);
+	tf2::Matrix3x3 m(q);
+	double roll, pitch, yaw;
+	m.getRPY(roll, pitch, yaw);
+	return yaw;
+}
+
+double ControlFSM::getPositionZ() {
+	if(!_dronePosition.isSet) {
+		handleFSMError("Position has not been set!!");
+	}
+ 	return _dronePosition.position.pose.position.z;
+ }
+
+
 
 
 
