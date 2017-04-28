@@ -10,12 +10,7 @@ BlindLandState::BlindLandState() {
 void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.eventType == EventType::GROUNDDETECTED) {
 		//Land completed
-		if(_cmd.isValidCMD()) {
-			fsm.transitionTo(ControlFSM::IDLESTATE, this, _cmd);
-			_cmd = EventData(); 
-		} else {
-			fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
-		}
+		fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
 	} else if(event.isValidCMD()) {
 		//Blind land not part of normal operation. 
 		//Any command will be ignored!

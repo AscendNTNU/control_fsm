@@ -6,8 +6,6 @@
 #include <cmath>
 #include <geometry_msgs/Point32.h>
 #include <ascend_msgs/PathPlannerPlan.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
 
 #define DESTINATION_REACHED_THRESHOLD 0.1
 #define DEBUG
@@ -135,6 +133,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
+    //TODO Add check for yaw
 	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
 	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
