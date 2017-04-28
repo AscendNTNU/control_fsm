@@ -45,6 +45,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidCMD()) {
 		_cmd = event;
+		_cmd.sendFeedback("Landing!");
 	}
 	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
 	if(pPose != nullptr) {

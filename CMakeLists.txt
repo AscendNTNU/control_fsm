@@ -55,6 +55,7 @@ add_library(control_fsm_lib
 )
 target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
 
+
 target_link_libraries(control_fsm_lib
 	${catkin_LIBRARIES}
 )
@@ -72,9 +73,6 @@ target_compile_features(control_fsm_gazebo_test PRIVATE cxx_range_for)
 add_executable(control_fsm_gazebo_input src/nodes/control_fsm_gazebo_input)
 target_compile_features(control_fsm_gazebo_input PRIVATE cxx_range_for)
 
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(control_fsm_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(control_fsm_test
@@ -92,7 +90,6 @@ target_link_libraries(control_fsm_gazebo_test
 target_link_libraries(control_fsm_gazebo_input
 	control_fsm_lib
 )
-
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(control_fsm_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -100,3 +97,4 @@ add_dependencies(control_fsm_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 add_dependencies(control_fsm_gazebo_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_gazebo_input ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+

@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 
 #include "control_fsm/ControlFSM.hpp"
+#include "control_fsm/ActionServer.hpp"
 
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/PositionTarget.h>
@@ -92,8 +93,9 @@ int main(int argc, char** argv) {
 	}
 	ROS_INFO("First position message recieved!");
 
-	
-	
+	//Set up actionserver
+	ActionServer cmdServer(&fsm);
+
 	//Used to maintain a fixed loop rate
 	ros::Rate loopRate(SETPOINT_PUB_RATE);
 
