@@ -83,8 +83,14 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 	//If only altitude is different, no need for pathplanner
 	if(xWithinReach && yWithinReach) {
+        if(_cmd.isValidCMD()) {
+            _cmd.sendFeedback("Already at correct X and Y - no need for pathplan");
+        }
 		return;
 	}
+    if(_cmd.isValidCMD()) {
+        _cmd.sendFeedback("Planning path to target!");
+    }
 	//Send desired goal to path planner
 	geometry_msgs::Point32 destPoint;
 	geometry_msgs::Point32 currentPos;
@@ -98,6 +104,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	This is a bit hacky solution to publish the target and position as soon as the 
 	publisher are ready without blocking the FSM.
 	*/
+
 	_safePublisher.completed = false;
 	_safePublisher.publish = [destPoint, currentPos, this]() {
 		//Only subscribes if 
@@ -219,6 +226,7 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 	if(!_isActive) {
 		return;
 	}
+    _cmd.sendFeedback("New path plan recieved!");
 	_currentPlan.plan = *msg;
 	_currentPlan.valid = true;
 	_currentPlan.index = 0;

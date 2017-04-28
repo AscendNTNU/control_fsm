@@ -58,6 +58,12 @@ void ActionServer::startGoTo(const ascend_msgs::ControlFSMGoal& goal) {
 		as_.setSucceeded(result);
 	});
 
+	goToEvent.setOnFeedbackCallback([this](std::string msg) {
+		ascend_msgs::ControlFSMFeedback fb;
+		fb.progression = msg;
+		as_.publishFeedback(fb);
+	});
+
 	goToEvent.setOnErrorCallback([this](std::string msg) {
 		ROS_WARN("[Control ActionServer] CMD error: %s", msg.c_str());
 		ascend_msgs::ControlFSMResult result;
@@ -76,6 +82,13 @@ void ActionServer::startLandXY(const ascend_msgs::ControlFSMGoal& goal) {
 		actionIsRunning_ = false;
 		as_.setSucceeded(result);
 	});
+
+	landXYEvent.setOnFeedbackCallback([this](std::string msg) {
+		ascend_msgs::ControlFSMFeedback fb;
+		fb.progression = msg;
+		as_.publishFeedback(fb);
+	});
+
 	landXYEvent.setOnErrorCallback([this](std::string msg) {
 		ROS_WARN("[Control ActionServer] CMD error: %s", msg.c_str());
 		ascend_msgs::ControlFSMResult result;

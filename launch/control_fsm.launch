@@ -1,12 +1,15 @@
 <launch>
+	<arg name="topic_planner_plan" default="/control/planner/plan" />
+	<arg name="topic_planner_target" default="/control/planner/target"/>
+	<arg name="topic_robot_position" default="/control/planner/current_position"/>
 	<node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">
 		<param name="dest_reached_margin" value="0.3"/>
 		<param name="blind_hover_altitude" value="1.0"/>
 		<param name="takeoff_altitude" value="1.0"/>
 		<param name="altitude_reached_margin" value="0.1"/>
-		<param name="control_planner_plan" value="/control/planner/plan"/>
-		<param name="control_planner_position" value="/control/planner/current_position"/>
-		<param name="control_planner_target" value="/control/planner/target"/>
+		<param name="control_planner_plan" value="$(arg topic_planner_plan)"/>
+		<param name="control_planner_position" value="$(arg topic_robot_position)"/>
+		<param name="control_planner_target" value="$(arg topic_planner_target)"/>
 		<param name="setp_reached_margin" value="0.3"/>
 		<param name="control_planner_plan" value="control/planner/plan"/>
 		<param name="control_planner_position" value="control/planner/current_position"/>
@@ -15,5 +18,7 @@
 		<param name="fsm_warn_topic" value="control/fsm/on_warn"/>
 		<param name="fsm_state_changed_topic" value="control/fsm/state_changed"/>
 		<param name="status_msg_buffer_size" value="10"/>
+		<param name="goto_hold_dest_time" value="0.5"/>
+		<param name="safe_hover_alt" value="2.5"/>
 	</node>
 </launch>
