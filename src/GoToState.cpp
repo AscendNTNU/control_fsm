@@ -93,12 +93,9 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 	//Send desired goal to path planner
 	geometry_msgs::Point32 destPoint;
-	geometry_msgs::Point32 currentPos;
 	//Only x and y is used
 	destPoint.x = event.positionGoal.x;
 	destPoint.y = event.positionGoal.y;
-	currentPos.x = pose->pose.position.x;
-	currentPos.y = pose->pose.position.y;
 	/*
 	ros need a little delay after advertising for all connection to be made
 	This is a bit hacky solution to publish the target and position as soon as the 
@@ -108,11 +105,10 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_safePublisher.completed = false;
 	_safePublisher.publish = [destPoint, currentPos, this]() {
 		//Only subscribes if 
-		if(_targetPub.getNumSubscribers() == 0 || _posPub.getNumSubscribers() == 0) {
+		if(_targetPub.getNumSubscribers() == 0) {
 			return;
 		}
 		_targetPub.publish(destPoint);
-		_posPub.publish(currentPos);
 		_safePublisher.completed = true;
 
 	};
@@ -184,6 +180,11 @@ void GoToState::loopState(ControlFSM& fsm) {
 	if(!_safePublisher.completed) {
 		_safePublisher.publish();
 	}
+
+    geometry_msgs::Point32 currentPos;
+    currentPos.x = pPose->pose.position.x;
+    currentPos.y = pPose->pose.position.y;
+    _posPub.publish(currentPos);
 	
 	//Only continue if there is a valid plan available
 	if(!_currentPlan.valid) {
