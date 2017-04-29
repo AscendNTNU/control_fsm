@@ -117,7 +117,11 @@ double ControlFSM::getOrientationYaw() {
 	double roll, pitch, yaw;
 	m.getRPY(roll, pitch, yaw);
 	//Subtracting PI halfs to correct for a bug in mavros (90 degree offset)
-	return yaw - PI_HALF;
+	return yaw;
+}
+
+double ControlFSM::getMavrosCorrectedYaw() {
+	return getOrientationYaw() - PI_HALF;
 }
 
 double ControlFSM::getPositionZ() {

@@ -7,7 +7,9 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/State.h>
 #include <ascend_msgs/ControlFSMEvent.h>
+#include <ascend_msgs/PointArray.h>
 #include <std_msgs/String.h>
+#include <cmath>
 
 
 bool firstPositionRecieved = false;
@@ -16,25 +18,40 @@ bool isOffboard = false;
 
 constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 
+//Information topics
 std::string fsmOnStateChangedPubTopic = "control/fsm/state_changed";
 std::string fsmErrorPubTopic = "control/fsm/on_error";
 std::string fsmWarnPubTopic = "control/fsm/on_warn";
 std::string fsmInfoPubTopic = "control/fsm/on_info";
 int statusMsgBufferSize = 10;
 
+//Datatopics
+std::string lidarTopic = "perception/obstacles/lidar"; //Topic is not set
+std::string localPosTopic = "mavros/local_position/pose";
+std::string mavrosStateTopic = "mavros/state";
+
+//Global variables
+double obstacleTooCloseDist = 2.0;
+double safeHoverAlt = 2.5;
+
+//Statemachine
 ControlFSM fsm;
 
+//Callback definitions
 void localPosCB(const geometry_msgs::PoseStamped& input);
 void mavrosStateChangedCB(const mavros_msgs::State& state);
+void lidarCB(const ascend_msgs::PointArray& msg);
 
+//Debug service functions
 EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&);
 bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request&, ascend_msgs::ControlFSMEvent::Response&);
 
+//Loads ros parameters 
 void loadParams(ros::NodeHandle& n);
 
 
 int main(int argc, char** argv) {
-
+	//Init ros and nodehandles
 	ros::init(argc, argv, "control_fsm_main");
 	ros::NodeHandle n;
 	ros::NodeHandle np("~");
@@ -43,9 +60,10 @@ int main(int argc, char** argv) {
 	loadParams(np);
 
 	//Subscribe to neccesary topics
-	ros::Subscriber localPosSub = n.subscribe("mavros/local_position/pose", 1, localPosCB);
-	ros::Subscriber mavrosStateChangedSub = n.subscribe("mavros/state", 1, mavrosStateChangedCB);
-	
+	ros::Subscriber localPosSub = n.subscribe(localPosTopic, 1, localPosCB);
+	ros::Subscriber mavrosStateChangedSub = n.subscribe(mavrosStateTopic, 1, mavrosStateChangedCB);
+	ros::Subscriber lidarSub = n.subscribe(lidarTopic, 1, lidarCB);
+
 	//Set up neccesary publishers
 	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 1);
 	ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(fsmOnStateChangedPubTopic, statusMsgBufferSize);
@@ -93,12 +111,12 @@ int main(int argc, char** argv) {
 	}
 	ROS_INFO("First position message recieved!");
 
-	//Set up actionserver
+	//Actionserver is started when the system is ready
 	ActionServer cmdServer(&fsm);
 
 	//Used to maintain a fixed loop rate
 	ros::Rate loopRate(SETPOINT_PUB_RATE);
-
+	//Main loop
 	while(ros::ok()) {
 		//TODO Take get input from planning or other 
 		//TODO Implement actionlib
@@ -153,16 +171,19 @@ void mavrosStateChangedCB(const mavros_msgs::State& state) {
 
 bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::ControlFSMEvent::Response& resp) {
 	EventData event = generateDebugEvent(req);
+	//If request event is not valid
 	if(event.eventType == EventType::REQUEST && !event.isValidRequest()) {
 		resp.accepted = false;
 		resp.errorMsg = "Not valid request event";
 		return true;
 	} 
+	//If command event is not valid
 	if(event.eventType == EventType::COMMAND && !event.isValidCMD()) {
 		resp.accepted = false;
 		resp.errorMsg = "Not valid cmd event";
 		return true;
 	}
+	//If there is no valid event
 	if(event.eventType == EventType::NONE) {
 		resp.accepted = false;
 		resp.errorMsg = "No valid event";
@@ -171,10 +192,13 @@ bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::C
 
 	if(event.isValidCMD()) {
 		event.setOnCompleteCallback([](){
-			ROS_INFO("Manual CMD finished");
+			ROS_INFO("[Control FSM Debug] Manual CMD finished");
+		});
+		event.setOnFeedbackCallback([](std::string msg){
+			ROS_INFO("[Control FSM Debug] Manual CMD feedback: %s", msg.c_str());
 		});
 		event.setOnErrorCallback([](std::string errMsg) {
-			ROS_WARN("Manual CMD error: %s", errMsg.c_str());
+			ROS_WARN("[Control FSM Debug] Manual CMD error: %s", errMsg.c_str());
 		});
 	}
 	fsm.handleEvent(event);
@@ -267,4 +291,48 @@ void loadParams(ros::NodeHandle& n) {
 		ROS_WARN("Param status_msg_buffer_size not found");
 	}
 	ROS_INFO("Status msg buffer size: %i", statusMsgBufferSize);
+	if(!n.getParam("obstacle_too_close_dist", obstacleTooCloseDist)) {
+		ROS_WARN("Param obstacle_too_close_dist not found");
+	}
+	ROS_INFO("Obstacle too close distance: %f", obstacleTooCloseDist);
+	if(!n.getParam("safe_hover_alt", safeHoverAlt)) {
+		ROS_WARN("Param safe_hover_alt not found");
+	}
+	ROS_INFO("Safe hover altitude: %f", safeHoverAlt);
+	if(!n.getParam("lidar_topic", lidarTopic)) {
+		ROS_WARN("Param lidar_topic not found");
+	}
+	ROS_INFO(": %s", lidarTopic.c_str());
+
+}
+
+void lidarCB(const ascend_msgs::PointArray& msg) {
+	static bool isTooClose = false;
+	auto points = msg.points;
+	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
+	if(pPose == nullptr) {
+		//No valid XY position available, no way to determine distance to GB
+		return;
+	}
+	//No need to check obstacles if they're too close
+	if(pPose->pose.position.z >= safeHoverAlt) {
+		return;
+	}
+
+	double droneX = pPose->pose.position.x;
+	double droneY = pPose->pose.position.y;
+	for(int i = 0; i < points.size(); ++i) {
+		double distSquared = std::pow(droneX - points[i].x, 2) + std::pow(droneY - points[i].y, 2);
+		if(distSquared < std::pow(obstacleTooCloseDist, 2)) {
+			if(!isTooClose) {
+				EventData event;
+				event.eventType = EventType::OBSTACLECLOSING;
+				fsm.handleEvent(event);
+				isTooClose = true;
+			}
+			//If one is close enough, no need to check the rest
+			return;
+		}
+	}
+	isTooClose = false;
 }

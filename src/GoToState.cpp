@@ -7,8 +7,7 @@
 #include <geometry_msgs/Point32.h>
 #include <ascend_msgs/PathPlannerPlan.h>
 
-#define DESTINATION_REACHED_THRESHOLD 0.1
-#define DEBUG
+constexpr double PI_HALF = 1.57079632679;
 
 GoToState::GoToState() {
 	_setpoint.type_mask = default_mask;
@@ -75,8 +74,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 	//Z setpoint can be set right away
 	_setpoint.position.z = event.positionGoal.z;
-	//Set yaw setpoint to current orientation
-	_setpoint.yaw = fsm.getOrientationYaw();
+	//Set yaw setpoint to desired target yaw
+	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 
 	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
 	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
@@ -140,13 +139,16 @@ void GoToState::loopState(ControlFSM& fsm) {
 	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
 	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
-
+	bool yawWithinReach = (std::fabs(fsm.getOrientationYaw() - _cmd.positionGoal.yaw) <= _yawReachedMargin);
 	//If destination is reached, begin transition to another state
-	if(xWithinReach && yWithinReach && zWithinReach) {
+	if(xWithinReach && yWithinReach && zWithinReach && yawWithinReach) {
 		//Hold current position for a duration - avoiding unwanted velocity before doing anything else
 		if(!_delayTransition.enabled) {
 			_delayTransition.started = ros::Time::now();
 			_delayTransition.enabled = true;
+			if(_cmd.isValidCMD()) {
+				_cmd.sendFeedback("Dest reached letting position set before transitioning!");
+			}
 		}
 		if(ros::Time::now() - _delayTransition.started < _delayTransition.delayTime) {
 			return;
@@ -180,12 +182,20 @@ void GoToState::loopState(ControlFSM& fsm) {
 	if(!_safePublisher.completed) {
 		_safePublisher.publish();
 	}
-
-    geometry_msgs::Point32 currentPos;
-    currentPos.x = pPose->pose.position.x;
-    currentPos.y = pPose->pose.position.y;
-    _posPub.publish(currentPos);
-	
+	//Only run pathplanner if neccesary.
+	if(xWithinReach && yWithinReach) {
+		_setpoint.position.x = _cmd.positionGoal.x;
+		_setpoint.position.y = _cmd.positionGoal.y;
+		_setpoint.position.z = _cmd.positionGoal.z;
+		_setpoint.yaw = _cmd.positionGoal.yaw - PI_HALF;
+		return;
+	} else {
+		//Send current position to path planner
+    	geometry_msgs::Point32 currentPos;
+	    currentPos.x = pPose->pose.position.x;
+	    currentPos.y = pPose->pose.position.y;
+	    _posPub.publish(currentPos);
+	}
 	//Only continue if there is a valid plan available
 	if(!_currentPlan.valid) {
 		return;
@@ -272,6 +282,16 @@ void GoToState::stateInit(ControlFSM& fsm) {
 	} else {
 		fsm.handleFSMWarn("No param setp_reached_margin found, using default: " + std::to_string(DEFAULT_SETPOINT_REACHED_MARGIN));
 		_setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
+	}
+	float tempYawReachedMargin = -10;
+	if(n.getParam("yaw_reached_margin", tempYawReachedMargin)) {
+		if(std::fabs(_yawReachedMargin - tempYawReachedMargin) > 0.0001 && tempYawReachedMargin > 0) {
+			fsm.handleFSMInfo("Yaw reached param found: " + std::to_string(tempYawReachedMargin));
+			_yawReachedMargin = tempYawReachedMargin;
+		}
+	} else {
+		fsm.handleFSMWarn("No param yaw_reached_margin found, using default: " + std::to_string(DEFAULT_YAW_REACHED_MARGIN));
+		_yawReachedMargin = DEFAULT_YAW_REACHED_MARGIN;
 	}
 	
 	_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);

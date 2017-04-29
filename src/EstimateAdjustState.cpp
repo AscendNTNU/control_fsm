@@ -44,7 +44,7 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
 }
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	_setpoint.yaw = fsm.getOrientationYaw();
+	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 
 }
 

@@ -9,6 +9,7 @@
 #define DEFAULT_DEST_REACHED_MARGIN 0.3
 #define DEFAULT_SETPOINT_REACHED_MARGIN 0.3
 #define DEFAULT_DEST_REACHED_DELAY 0.5
+#define DEFAULT_YAW_REACHED_MARGIN 0.02
 
 ///Moves drone to XYZ 
 class GoToState : public StateInterface {
@@ -48,6 +49,8 @@ private:
 	float _destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
 	///Margin used to determine if we are close enough to a setpoint to switch
 	float _setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
+	///Margin used to determine if we are close enough to target yaw
+	float _yawReachedMargin = DEFAULT_YAW_REACHED_MARGIN;
 	///Topic for path planner target
 	std::string _targetPubTopic = "control/path_planner/target";
 	///Topic for patk planner position

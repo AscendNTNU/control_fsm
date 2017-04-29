@@ -141,7 +141,11 @@ public:
 	///Get current position - will return nullptr if invalid
 	const geometry_msgs::PoseStamped* getPositionXYZ();
 	
+	///Returns actual yaw based on orientation from pose
 	double getOrientationYaw();
+
+	///Return yaw with pi_half offset correction due to bug in mavros
+	double getMavrosCorrectedYaw();
 
 	/// \deprecated Get altitude (should always be correct - 1D lidar)
 	double getPositionZ();

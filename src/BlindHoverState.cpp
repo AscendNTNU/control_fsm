@@ -50,7 +50,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 	//If full position is valid - no need to blind hover
 	if(fsm.getPositionXYZ() != nullptr) {
-		if(event.eventType == EventType::COMMAND) {
+		if(event.isValidCMD()) {
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event); //Pass command on to next state
 		} else {
 			RequestEvent rEvent(RequestType::POSHOLD);
@@ -75,7 +75,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
 		_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
 	}
-	_setpoint.yaw = fsm.getOrientationYaw();
+	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
