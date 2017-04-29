@@ -103,7 +103,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	*/
 
 	_safePublisher.completed = false;
-	_safePublisher.publish = [destPoint, currentPos, this]() {
+	_safePublisher.publish = [destPoint, this]() {
 		//Only subscribes if 
 		if(_targetPub.getNumSubscribers() == 0) {
 			return;
