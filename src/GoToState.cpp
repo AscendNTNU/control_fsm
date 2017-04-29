@@ -7,7 +7,9 @@
 #include <geometry_msgs/Point32.h>
 #include <ascend_msgs/PathPlannerPlan.h>
 
+constexpr double PI = 3.14159265359;
 constexpr double PI_HALF = 1.57079632679;
+
 
 GoToState::GoToState() {
 	_setpoint.type_mask = default_mask;
@@ -68,17 +70,17 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	}
 
 	//Sets setpoint to current position - until planner is done
-	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
-	_setpoint.position.x = pose->pose.position.x;
-	_setpoint.position.y = pose->pose.position.y;
+	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
+	_setpoint.position.x = pPose->pose.position.x;
+	_setpoint.position.y = pPose->pose.position.y;
 
 	//Z setpoint can be set right away
 	_setpoint.position.z = event.positionGoal.z;
 	//Set yaw setpoint to desired target yaw
 	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 
-	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
-	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
+	bool xWithinReach = (std::fabs(pPose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
+	bool yWithinReach = (std::fabs(pPose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
 
 	//If only altitude is different, no need for pathplanner
 	if(xWithinReach && yWithinReach) {
@@ -135,7 +137,6 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
-    //TODO Add check for yaw
 	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
 	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
@@ -150,9 +151,11 @@ void GoToState::loopState(ControlFSM& fsm) {
 				_cmd.sendFeedback("Dest reached letting position set before transitioning!");
 			}
 		}
+		//Delay transition
 		if(ros::Time::now() - _delayTransition.started < _delayTransition.delayTime) {
 			return;
 		} 
+		//Transition to correct state
 		if(_cmd.isValidCMD()) {
 			switch(_cmd.commandType) {
 				case CommandType::LANDXY:
@@ -178,24 +181,29 @@ void GoToState::loopState(ControlFSM& fsm) {
 		_delayTransition.enabled = false;
 	}
 
-	//Make sure points are published!!
-	if(!_safePublisher.completed) {
-		_safePublisher.publish();
-	}
+	//If the destination is not reached, the path planner will run
+
+	
 	//Only run pathplanner if neccesary.
 	if(xWithinReach && yWithinReach) {
 		_setpoint.position.x = _cmd.positionGoal.x;
 		_setpoint.position.y = _cmd.positionGoal.y;
 		_setpoint.position.z = _cmd.positionGoal.z;
+		//Subtracting PI_HALF due to Mavros offset bug
 		_setpoint.yaw = _cmd.positionGoal.yaw - PI_HALF;
 		return;
 	} else {
+		//Make sure target point is published!!
+		if(!_safePublisher.completed) {
+			_safePublisher.publish();
+		}
 		//Send current position to path planner
     	geometry_msgs::Point32 currentPos;
 	    currentPos.x = pPose->pose.position.x;
 	    currentPos.y = pPose->pose.position.y;
 	    _posPub.publish(currentPos);
 	}
+
 	//Only continue if there is a valid plan available
 	if(!_currentPlan.valid) {
 		return;
@@ -212,14 +220,17 @@ void GoToState::loopState(ControlFSM& fsm) {
 
 	//Get current setpoint from plan
 	auto currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
+	double xPos = pPose->pose.position.x;
+	double yPos = pPose->pose.position.y;
 	//Check if we are close enough to current setpoint
-	xWithinReach = (std::fabs(pPose->pose.position.x - currentPoint.x) <= _setpointReachedMargin);
-	yWithinReach = (std::fabs(pPose->pose.position.y - currentPoint.y) <= _setpointReachedMargin);
+	xWithinReach = (std::fabs(xPos - currentPoint.x) <= _setpointReachedMargin);
+	yWithinReach = (std::fabs(yPos - currentPoint.y) <= _setpointReachedMargin);
 	if(xWithinReach && yWithinReach) {
 		//If there are a new setpoint in the plan, change to it.
 		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
 			++_currentPlan.index;
 			currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
+			_setpoint.yaw = calculatePathYaw(xPos, yPos, currentPoint.x, currentPoint.y) - PI_HALF;
 		}
 	}
 	//Set setpoint x and y
@@ -300,6 +311,24 @@ void GoToState::stateInit(ControlFSM& fsm) {
 	
 }
 
+double GoToState::calculatePathYaw(double x1, double y1, double x2, double y2) {
+	double dx = x2 - x1;
+	double dy = y2 - y1;
+	double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
+
+	if(angle > 3 * PI / 4) {
+		angle = PI;
+	} else if(angle > PI/4) {
+		angle = PI/2.0;
+	} else {
+		angle = 0;
+	}
+	if(dy < 0) {
+		angle *= -1;
+	}
+
+	return angle;
+}
 
 
 
