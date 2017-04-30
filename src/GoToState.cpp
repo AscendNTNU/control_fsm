@@ -6,6 +6,7 @@
 #include <cmath>
 #include <geometry_msgs/Point32.h>
 #include <ascend_msgs/PathPlannerPlan.h>
+#include "control_fsm/FSMConfig.hpp"
 
 constexpr double PI_HALF = 1.57079632679;
 
@@ -135,7 +136,6 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
-    //TODO Add check for yaw
 	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
 	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
@@ -244,55 +244,13 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 
 void GoToState::stateInit(ControlFSM& fsm) {
 	_pnh.reset(new ros::NodeHandle());	
-	ros::NodeHandle n("~");
-	if(!n.getParam("control_planner_plan", _planSubTopic)) {
-		fsm.handleFSMWarn("No planner plan topic found, using default: " + _planSubTopic);
-	}
-	if(!n.getParam("control_planner_position", _posPubTopic)) {
-		fsm.handleFSMWarn("No planner position topic found, using default: " + _posPubTopic);
-	}
-	if(!n.getParam("control_planner_target", _targetPubTopic)) {
-		fsm.handleFSMWarn("No planner target topic found, using default: " + _targetPubTopic);
-	}
-
-	float tempGoToHoldDestTime = -10;
-	if(n.getParam("goto_hold_dest_time", tempGoToHoldDestTime) && tempGoToHoldDestTime > 0) {
-		fsm.handleFSMInfo("GoTo destionation hold time param found: " + std::to_string(tempGoToHoldDestTime));
-		_delayTransition.delayTime = ros::Duration(tempGoToHoldDestTime);
-	} else {
-		fsm.handleFSMWarn("No valid param goto_hold_dest_time found, using default: " + std::to_string(DEFAULT_DEST_REACHED_DELAY));
-		_delayTransition.delayTime = ros::Duration(DEFAULT_DEST_REACHED_DELAY);
-	}
-
-	float tempDestReachedMargin = -10;
-	if(n.getParam("dest_reached_margin", tempDestReachedMargin) && tempDestReachedMargin > 0) {
-		fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
-		_destReachedMargin = tempDestReachedMargin;
-	} else {
-		fsm.handleFSMWarn("No valid param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
-		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
-	}	
-	float tempSetpReachedMargin = -10;
-	if(n.getParam("setp_reached_margin", tempSetpReachedMargin)) {
-		if(std::fabs(_setpointReachedMargin - tempSetpReachedMargin) > 0.001 && tempSetpReachedMargin > 0) {
-			fsm.handleFSMInfo("Setpoint reached param found: " + std::to_string(tempSetpReachedMargin));
-			_setpointReachedMargin = tempSetpReachedMargin;
-		}
-	} else {
-		fsm.handleFSMWarn("No param setp_reached_margin found, using default: " + std::to_string(DEFAULT_SETPOINT_REACHED_MARGIN));
-		_setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
-	}
-	float tempYawReachedMargin = -10;
-	if(n.getParam("yaw_reached_margin", tempYawReachedMargin)) {
-		if(std::fabs(_yawReachedMargin - tempYawReachedMargin) > 0.0001 && tempYawReachedMargin > 0) {
-			fsm.handleFSMInfo("Yaw reached param found: " + std::to_string(tempYawReachedMargin));
-			_yawReachedMargin = tempYawReachedMargin;
-		}
-	} else {
-		fsm.handleFSMWarn("No param yaw_reached_margin found, using default: " + std::to_string(DEFAULT_YAW_REACHED_MARGIN));
-		_yawReachedMargin = DEFAULT_YAW_REACHED_MARGIN;
-	}
-	
+	_planSubTopic = FSMConfig::PathPlannerPlanTopic;
+	_targetPubTopic = FSMConfig::PathPlannerTargetTopic;
+	_posPubTopic = FSMConfig::PathPlannerPosTopic;
+	_delayTransition.delayTime = ros::Duration(FSMConfig::GoToHoldDestTime);
+	_destReachedMargin = FSMConfig::DestReachedMargin;
+	_setpointReachedMargin = FSMConfig::SetpointReachedMargin;	
+	_yawReachedMargin = FSMConfig::YawReachedMargin;
 	_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);
 	_targetPub = _pnh->advertise<geometry_msgs::Point32>(_targetPubTopic , 1);
 	_planSub = _pnh->subscribe(_planSubTopic, 1, &GoToState::pathRecievedCB, this);

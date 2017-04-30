@@ -64,16 +64,20 @@ private:
 	 *	they still wont have access to the pointer.
 	 */
 	struct {
-	friend class ControlFSM;
+		friend class ControlFSM;
 	private:
 		StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
 	} _stateVault;
 
 	///Current drone position
 	struct {
-		bool isSet = false;
-		bool validXY = false;
+		//Not all states needs direct access to position and flags
+		friend class ControlFSM;
+		friend class EstimateAdjustState;
+	private:
 		geometry_msgs::PoseStamped position;
+		bool isSet = false;
+		bool validXY = true; //Assumes XY is valid if not set otherwise
 	} _dronePosition;
 	
 	///Is drone in an active state?
@@ -140,7 +144,7 @@ public:
 	
 	///Get current position - will return nullptr if invalid
 	const geometry_msgs::PoseStamped* getPositionXYZ();
-	
+
 	///Returns actual yaw based on orientation from pose
 	double getOrientationYaw();
 
@@ -155,10 +159,13 @@ public:
 
 	///Sets new callback function for onStateChanged
 	void setOnStateChangedCB(std::function<void()> cb) { _onStateChanged = cb; }
+
 	///Sets new callback function for onFSMError
 	void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {_onFSMError = cb; }
+	
 	///Sets new callback function for onFSMError
 	void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {_onFSMWarn = cb; }
+	
 	///Sets new callback function for onFSMError
 	void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
 };

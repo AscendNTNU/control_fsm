@@ -2,7 +2,7 @@
 
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/ActionServer.hpp"
-
+#include "control_fsm/FSMConfig.hpp"
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/State.h>
@@ -57,19 +57,19 @@ int main(int argc, char** argv) {
 	ros::NodeHandle np("~");
 
 	//Load ros params
-	loadParams(np);
+	FSMConfig::loadParams();
 
 	//Subscribe to neccesary topics
 	ros::Subscriber localPosSub = n.subscribe(localPosTopic, 1, localPosCB);
 	ros::Subscriber mavrosStateChangedSub = n.subscribe(mavrosStateTopic, 1, mavrosStateChangedCB);
-	ros::Subscriber lidarSub = n.subscribe(lidarTopic, 1, lidarCB);
+	ros::Subscriber lidarSub = n.subscribe(FSMConfig::LidarTopic, 1, lidarCB);
 
 	//Set up neccesary publishers
 	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 1);
-	ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(fsmOnStateChangedPubTopic, statusMsgBufferSize);
-	ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(fsmErrorPubTopic, statusMsgBufferSize);
-	ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(fsmInfoPubTopic, statusMsgBufferSize);
-	ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(fsmWarnPubTopic, statusMsgBufferSize);
+	ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::FSMStateChangedTopic, statusMsgBufferSize);
+	ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::FSMErrorTopic, statusMsgBufferSize);
+	ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, statusMsgBufferSize);
+	ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, statusMsgBufferSize);
 
 	//Set up services
 	ros::ServiceServer debugServiceServer = n.advertiseService("control_fsm_debug", handleDebugEvent);
@@ -267,45 +267,6 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	return event;
 }
 
-void loadParams(ros::NodeHandle& n) {
-	if(!n.getParam("fsm_error_topic", fsmErrorPubTopic)) {
-		ROS_WARN("Param fsm_error_topic not found");
-	}
-	ROS_INFO("FSM error topic: %s", fsmErrorPubTopic.c_str());
-
-	if(!n.getParam("fsm_warn_topic", fsmWarnPubTopic)) {
-		ROS_WARN("Param fsm_warn_topic not found");
-	}
-	ROS_INFO("FSM warn topic: %s", fsmWarnPubTopic.c_str());
-
-	if(!n.getParam("fsm_info_topic", fsmInfoPubTopic)) {
-		ROS_WARN("Param fsm_info_topic not found");
-	}
-	ROS_INFO("FSM info topic: %s", fsmInfoPubTopic.c_str());
-
-	if(!n.getParam("fsm_state_changed_topic", fsmOnStateChangedPubTopic)) {
-		ROS_WARN("Param fsm_state_changed_topic not found");
-	}
-	ROS_INFO("FSM state changed topic: %s", fsmOnStateChangedPubTopic.c_str());
-	if(!n.getParam("status_msg_buffer_size", statusMsgBufferSize)) {
-		ROS_WARN("Param status_msg_buffer_size not found");
-	}
-	ROS_INFO("Status msg buffer size: %i", statusMsgBufferSize);
-	if(!n.getParam("obstacle_too_close_dist", obstacleTooCloseDist)) {
-		ROS_WARN("Param obstacle_too_close_dist not found");
-	}
-	ROS_INFO("Obstacle too close distance: %f", obstacleTooCloseDist);
-	if(!n.getParam("safe_hover_alt", safeHoverAlt)) {
-		ROS_WARN("Param safe_hover_alt not found");
-	}
-	ROS_INFO("Safe hover altitude: %f", safeHoverAlt);
-	if(!n.getParam("lidar_topic", lidarTopic)) {
-		ROS_WARN("Param lidar_topic not found");
-	}
-	ROS_INFO(": %s", lidarTopic.c_str());
-
-}
-
 void lidarCB(const ascend_msgs::PointArray& msg) {
 	static bool isTooClose = false;
 	auto points = msg.points;
@@ -315,7 +276,7 @@ void lidarCB(const ascend_msgs::PointArray& msg) {
 		return;
 	}
 	//No need to check obstacles if they're too close
-	if(pPose->pose.position.z >= safeHoverAlt) {
+	if(pPose->pose.position.z >= FSMConfig::SafeHoverAltitude) {
 		return;
 	}
 
@@ -323,7 +284,7 @@ void lidarCB(const ascend_msgs::PointArray& msg) {
 	double droneY = pPose->pose.position.y;
 	for(int i = 0; i < points.size(); ++i) {
 		double distSquared = std::pow(droneX - points[i].x, 2) + std::pow(droneY - points[i].y, 2);
-		if(distSquared < std::pow(obstacleTooCloseDist, 2)) {
+		if(distSquared < std::pow(FSMConfig::ObstacleTooCloseDist, 2)) {
 			if(!isTooClose) {
 				EventData event;
 				event.eventType = EventType::OBSTACLECLOSING;
