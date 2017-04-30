@@ -59,7 +59,7 @@ private:
 	std::string _planSubTopic = "control/path_planner/plan";
 	///Callback for path planner
 	void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
-	///Returns a yaw that is a multiple of 90 degrees
+	///Returns a yaw that is a multiple of 90 degrees 
 	double calculatePathYaw(double x1, double y1, double x2, double y2);
 public:
 	GoToState();

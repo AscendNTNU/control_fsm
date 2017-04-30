@@ -53,8 +53,7 @@ struct PositionGoalXYZ {
 	double x;
 	double y;
 	double z;
-	double yaw;
-	PositionGoalXYZ(double posX, double posY, double posZ, double rotYaw) : x(posX), y(posY), z(posZ), yaw(rotYaw), valid(true) {}
+	PositionGoalXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
 	PositionGoalXYZ() : valid(false) {}
 };
 
@@ -100,8 +99,8 @@ private:
 	//Altitude to go to before landing
 	const double _goToAltitude = 1.0f;
 public:
-	LandXYCMDEvent(double x, double y, double yaw) {
-		positionGoal = PositionGoalXYZ(x, y, _goToAltitude, yaw);
+	LandXYCMDEvent(double x, double y) {
+		positionGoal = PositionGoalXYZ(x, y, _goToAltitude);
 		eventType = EventType::COMMAND;
 		commandType = CommandType::LANDXY;
 	}
@@ -110,8 +109,8 @@ public:
 ///Wrapper class for GoToXYZ CMD events
 class GoToXYZCMDEvent : public EventData {
 public:
-	GoToXYZCMDEvent(double x, double y, double z, double yaw) {
-		positionGoal = PositionGoalXYZ(x,y,z,yaw);
+	GoToXYZCMDEvent(double x, double y, double z) {
+		positionGoal = PositionGoalXYZ(x,y,z);
 		eventType = EventType::COMMAND;
 		commandType = CommandType::GOTOXYZ;
 	}
