@@ -50,7 +50,7 @@ void ActionServer::preemptCB() {
 
 //If goal is goto, send valid goto cmd to fsm
 void ActionServer::startGoTo(const ascend_msgs::ControlFSMGoal& goal) {
-	GoToXYZCMDEvent goToEvent(goal.x, goal.y, goal.y, goal.yaw);
+	GoToXYZCMDEvent goToEvent(goal.x, goal.y, goal.y);
 	goToEvent.setOnCompleteCallback([this]() {
 		ascend_msgs::ControlFSMResult result;
 		result.finished = true;
@@ -75,7 +75,7 @@ void ActionServer::startGoTo(const ascend_msgs::ControlFSMGoal& goal) {
 }
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(const ascend_msgs::ControlFSMGoal& goal) {
-	LandXYCMDEvent landXYEvent(goal.x, goal.y, goal.yaw);
+	LandXYCMDEvent landXYEvent(goal.x, goal.y);
 	landXYEvent.setOnCompleteCallback([this]() {
 		ascend_msgs::ControlFSMResult result;
 		result.finished = true;

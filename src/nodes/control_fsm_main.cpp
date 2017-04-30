@@ -247,14 +247,14 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 			}
 		})();
 		if(event.request == RequestType::GOTO) {
-			event.positionGoal = PositionGoalXYZ(req.x, req.y, req.z, req.yaw);
+			event.positionGoal = PositionGoalXYZ(req.x, req.y, req.z);
 		}
 	} else if(event.eventType == EventType::COMMAND) {
 		//Lambda expression returning correct commandEvent
 		event = ([&]() -> EventData{
 			switch(req.commandType) {
-				case req.LANDXY: return LandXYCMDEvent(req.x, req.y, req.yaw);
-				case req.GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z, req.yaw);
+				case req.LANDXY: return LandXYCMDEvent(req.x, req.y);
+				case req.GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
 				//case req.LANDGB: return LandGBCMDEvent();
 				default:
 					EventData e;

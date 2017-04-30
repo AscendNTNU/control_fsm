@@ -139,7 +139,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
 	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
-	bool yawWithinReach = (std::fabs(fsm.getOrientationYaw() - _cmd.positionGoal.yaw) <= _yawReachedMargin);
+	bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - _setpoint.yaw) <= _yawReachedMargin);
 	//If destination is reached, begin transition to another state
 	if(xWithinReach && yWithinReach && zWithinReach && yawWithinReach) {
 		//Hold current position for a duration - avoiding unwanted velocity before doing anything else
@@ -187,7 +187,6 @@ void GoToState::loopState(ControlFSM& fsm) {
 		_setpoint.position.x = _cmd.positionGoal.x;
 		_setpoint.position.y = _cmd.positionGoal.y;
 		_setpoint.position.z = _cmd.positionGoal.z;
-		_setpoint.yaw = _cmd.positionGoal.yaw - PI_HALF;
 		return;
 	} else {
 		//Send current position to path planner
