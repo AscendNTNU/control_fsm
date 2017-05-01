@@ -12,8 +12,6 @@
 		<param name="control_planner_position" value="$(arg topic_robot_position)"/>
 		<param name="control_planner_target" value="$(arg topic_planner_target)"/>
 		<param name="setp_reached_margin" value="0.3"/>
-		<param name="control_planner_plan" value="control/planner/plan"/>
-		<param name="control_planner_position" value="control/planner/current_position"/>
 		<param name="fsm_error_topic" value="control/fsm/on_error"/>
 		<param name="fsm_info_topic" value="control/fsm/on_info"/>
 		<param name="fsm_warn_topic" value="control/fsm/on_warn"/>
@@ -23,5 +21,6 @@
 		<param name="safe_hover_alt" value="2.5"/>
 		<param name="obstacle_too_close_dist" value="2.0"/>
 		<param name="lidar_topic" value="$(arg topic_lidar)"/>
+		<param name="yaw_reached_margin" value="0.02"/>
 	</node>
 </launch>

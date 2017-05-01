@@ -4,6 +4,7 @@
 #include "control_fsm/ControlFSM.hpp"
 #include <cmath>
 #include <string>
+#include "control_fsm/FSMConfig.hpp"
 
 TakeoffState::TakeoffState() {
 	_setpoint = mavros_msgs::PositionTarget();
@@ -36,28 +37,9 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Set relevant parameters
 	//Takeoff altitude
-	ros::NodeHandle _nh("~");
-	float temp_takeoff_alt = -10;
-	if(_nh.getParam("takeoff_altitude", temp_takeoff_alt)) {
-		if(std::fabs(_setpoint.position.z - temp_takeoff_alt) > 0.01 && temp_takeoff_alt > 0) {
-			fsm.handleFSMInfo("Takeoff altitude param found: " + std::to_string(temp_takeoff_alt));
-			_setpoint.position.z = temp_takeoff_alt;
-		}
-	} else {
-		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
-		_setpoint.position.z = DEFAULT_TAKEOFF_ALTITUDE;
-	}
+	_setpoint.position.z = FSMConfig::TakeoffAltitude;
 	//Takeoff finished threshold
-	float temp_alt_margin = -10;
-	if(_nh.getParam("altitude_reached_margin", temp_alt_margin)) {
-		if(std::fabs(_altitude_reached_margin - temp_alt_margin) > 0.001 && temp_alt_margin > 0) {
-			fsm.handleFSMInfo("Takeoff altitude threshold param found: " + std::to_string(temp_alt_margin) );
-			_altitude_reached_margin = temp_alt_margin;
-		}
-	} else {
-		fsm.handleFSMWarn("No takeoff altitude param found, using default: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE_REACHED_MARGIN));
-		_altitude_reached_margin = DEFAULT_TAKEOFF_ALTITUDE_REACHED_MARGIN;
-	}
+	_altitude_reached_margin = FSMConfig::AltitudeReachedMargin;
 
 	if(event.isValidCMD()) {
 		_cmd = event;
