@@ -77,11 +77,13 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Set yaw setpoint to desired target yaw
 	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 
-	bool xWithinReach = (std::fabs(pose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
-	bool yWithinReach = (std::fabs(pose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
+	//Calculate the square distance from drone to target
+	double deltaX = pose->pose.position.x - event.positionGoal.x;
+	double deltaY = pose->pose.position.y - event.positionGoal.y;
+	double posXYDistSquare = std::pow(deltaX, 2) + std::pow(deltaY, 2);
 
 	//If only altitude is different, no need for pathplanner
-	if(xWithinReach && yWithinReach) {
+	if(posXYDistSquare <= std::pow(_destReachedMargin, 2)) {
         if(_cmd.isValidCMD()) {
             _cmd.sendFeedback("Already at correct X and Y - no need for pathplan");
         }
@@ -98,12 +100,13 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	/*
 	ros need a little delay after advertising for all connection to be made
 	This is a bit hacky solution to publish the target and position as soon as the 
-	publisher are ready without blocking the FSM.
+	publisher are ready without blocking the FSM. This guarantees it will be published when
+	the planner is listening
 	*/
 
 	_safePublisher.completed = false;
 	_safePublisher.publish = [destPoint, this]() {
-		//Only subscribes if 
+		//Only publish if the path planner is listening
 		if(_targetPub.getNumSubscribers() == 0) {
 			return;
 		}
@@ -135,13 +138,15 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
+    double deltaX = pPose->pose.position.x - _cmd.positionGoal.x;
+    double deltaY = pPose->pose.position.y - _cmd.positionGoal.y;
+    double deltaZ = pPose->pose.position.z - _cmd.positionGoal.z;
     //TODO Add check for yaw
-	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
-	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
+	bool xyWithinReach = (std::abs(deltaX, 2) + std::abs(deltaY, 2)) <= std::pow(_destReachedMargin, 2);
 	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
 	bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - _setpoint.yaw) <= _yawReachedMargin);
 	//If destination is reached, begin transition to another state
-	if(xWithinReach && yWithinReach && zWithinReach && yawWithinReach) {
+	if(xyWithinReach && zWithinReach && yawWithinReach) {
 		//Hold current position for a duration - avoiding unwanted velocity before doing anything else
 		if(!_delayTransition.enabled) {
 			_delayTransition.started = ros::Time::now();
@@ -183,7 +188,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 		_safePublisher.publish();
 	}
 	//Only run pathplanner if neccesary.
-	if(xWithinReach && yWithinReach) {
+	if(xyWithinReach) {
 		_setpoint.position.x = _cmd.positionGoal.x;
 		_setpoint.position.y = _cmd.positionGoal.y;
 		_setpoint.position.z = _cmd.positionGoal.z;
@@ -212,9 +217,9 @@ void GoToState::loopState(ControlFSM& fsm) {
 	//Get current setpoint from plan
 	auto currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
 	//Check if we are close enough to current setpoint
-	xWithinReach = (std::fabs(pPose->pose.position.x - currentPoint.x) <= _setpointReachedMargin);
-	yWithinReach = (std::fabs(pPose->pose.position.y - currentPoint.y) <= _setpointReachedMargin);
-	if(xWithinReach && yWithinReach) {
+	deltaX = pPose->pose.position.x - currentPoint.x;
+	deltaY = pPose->pose.position.y - currentPoint.y;
+	if(std::pow(deltaX, 2) + std::pow(deltaY, 2) <= std::pow(_setpointReachedMargin, 2)) {
 		//If there are a new setpoint in the plan, change to it.
 		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
 			++_currentPlan.index;
