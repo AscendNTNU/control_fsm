@@ -38,7 +38,7 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
 		_setpoint.position.x = pPose->pose.position.x;
 		_setpoint.position.y = pPose->pose.position.y;
 		_setpoint.position.z = pPose->pose.position.z;
-		_setpoint.yaw = fsm.getOrientationYaw();
+		_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 	}
 }
 

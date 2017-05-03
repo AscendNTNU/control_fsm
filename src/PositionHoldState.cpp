@@ -3,6 +3,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
+#include "control_fsm/FSMConfig.hpp"
 
 //Constructor sets default setpoint type mask
 PositionHoldState::PositionHoldState() {
@@ -52,15 +53,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(!_paramsSet) {
-		ros::NodeHandle n("~");
-		double tempSafeAlt = -10;
-		if(n.getParam("safe_hover_alt", tempSafeAlt) && tempSafeAlt > 0) {
-			fsm.handleFSMInfo("Found safe hover altitude: " + std::to_string(tempSafeAlt));
-			_safeHoverAlt = tempSafeAlt;
-		} else {
-			fsm.handleFSMWarn("Couldn't find safe_hover_alt, using default: " + std::to_string(DEFAULT_SAFE_HOVER_ALT));
-			_safeHoverAlt = DEFAULT_SAFE_HOVER_ALT;
-		}
+		_safeHoverAlt = FSMConfig::SafeHoverAltitude;
 		_paramsSet = true;
 	}
 	//No need to check other commands
@@ -90,7 +83,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		_setpoint.position.z = pose->pose.position.z;
 	}
 
-	_setpoint.yaw = fsm.getOrientationYaw();
+	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 	
 }
 

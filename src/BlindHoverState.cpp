@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
+#include "control_fsm/FSMConfig.hpp"
 
 #define DEFAULT_BLIND_HOVER_ALTITUDE 1.0f	
 
@@ -50,7 +51,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 	//If full position is valid - no need to blind hover
 	if(fsm.getPositionXYZ() != nullptr) {
-		if(event.eventType == EventType::COMMAND) {
+		if(event.isValidCMD()) {
 			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event); //Pass command on to next state
 		} else {
 			RequestEvent rEvent(RequestType::POSHOLD);
@@ -62,20 +63,8 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 		_cmd = event;
 	}
 
-	//Set relevant parameters
-	//Takeoff altitude
-	ros::NodeHandle _nh("~");
-	float temp_blind_hover_alt = -10;
-	if(_nh.getParam("blind_hover_altitude", temp_blind_hover_alt)) {
-		if(std::fabs(_setpoint.position.z - temp_blind_hover_alt) > 0.01 && temp_blind_hover_alt > 0) {
-			fsm.handleFSMInfo("Takeoff altitude param found: " + std::to_string(temp_blind_hover_alt));
-			_setpoint.position.z = temp_blind_hover_alt;
-		}
-	} else {
-		fsm.handleFSMWarn("No takeoff altitude param found, using default altitude: " + std::to_string(DEFAULT_TAKEOFF_ALTITUDE));
-		_setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
-	}
-	_setpoint.yaw = fsm.getOrientationYaw();
+	_setpoint.position.z = FSMConfig::BlindHoverAlt;
+	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {

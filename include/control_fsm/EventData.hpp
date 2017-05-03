@@ -7,7 +7,7 @@ This class should contain all information a state might need to make a correct d
 */
 
 
-//Request to go to a certain state
+///Request types - "ask" fsm to do transition (or abort)
 enum class RequestType {
 	NONE,
 	ABORT,
@@ -28,6 +28,7 @@ enum class RequestType {
 	MANUALFLIGHT
 };
 
+///Event types - what type of event is it?
 enum class EventType {
 	NONE,
 	REQUEST, //Simple transition request
@@ -40,6 +41,7 @@ enum class EventType {
 	OBSTACLECLOSING
 };
 
+///Command types - what command is it?
 enum class CommandType {
     NONE, //Not part of a command
     LANDXY, //Request part of command to land at XY
@@ -53,8 +55,7 @@ struct PositionGoalXYZ {
 	double x;
 	double y;
 	double z;
-	double yaw;
-	PositionGoalXYZ(double posX, double posY, double posZ, double rotYaw) : x(posX), y(posY), z(posZ), yaw(rotYaw), valid(true) {}
+	PositionGoalXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
 	PositionGoalXYZ() : valid(false) {}
 };
 
@@ -70,9 +71,14 @@ private:
 	//Callback function for sendig feedback during cmd execution
 	std::function<void(std::string)> _onFeedback = [](std::string){};
 public:
+
+	///If event is a request - what type?
 	RequestType request = RequestType::NONE; //No request as default
+	///What type of event is it?
 	EventType eventType = EventType::NONE; //No event as default
+	///Whats the target (if needed by event)
 	PositionGoalXYZ positionGoal = PositionGoalXYZ(); //Invalid position as default
+	///If event is a command, what type?
     CommandType commandType = CommandType::NONE; //No command as default
 
     ///Setter function for complete callback
@@ -85,7 +91,7 @@ public:
     void finishCMD() const { _onComplete(); }
     ///CMD error (calls _onError callback)
     void eventError(std::string errorMsg) const { _onError(errorMsg); }
-
+    ///Sends CMD feedback via _onFeedback callback
     void sendFeedback(std::string msg) const { _onFeedback(msg); }
     ///Checks if this event is a valid cmd type
     bool isValidCMD() const { return (eventType == EventType::COMMAND && commandType != CommandType::NONE); }
@@ -100,8 +106,8 @@ private:
 	//Altitude to go to before landing
 	const double _goToAltitude = 1.0f;
 public:
-	LandXYCMDEvent(double x, double y, double yaw) {
-		positionGoal = PositionGoalXYZ(x, y, _goToAltitude, yaw);
+	LandXYCMDEvent(double x, double y) {
+		positionGoal = PositionGoalXYZ(x, y, _goToAltitude);
 		eventType = EventType::COMMAND;
 		commandType = CommandType::LANDXY;
 	}
@@ -110,8 +116,8 @@ public:
 ///Wrapper class for GoToXYZ CMD events
 class GoToXYZCMDEvent : public EventData {
 public:
-	GoToXYZCMDEvent(double x, double y, double z, double yaw) {
-		positionGoal = PositionGoalXYZ(x,y,z,yaw);
+	GoToXYZCMDEvent(double x, double y, double z) {
+		positionGoal = PositionGoalXYZ(x,y,z);
 		eventType = EventType::COMMAND;
 		commandType = CommandType::GOTOXYZ;
 	}

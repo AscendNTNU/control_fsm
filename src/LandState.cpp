@@ -52,7 +52,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		_setpoint.position.x = pPose->pose.position.x;
 		_setpoint.position.y = pPose->pose.position.y;
 		//Set yaw setpoint based on current rotation
-		_setpoint.yaw = fsm.getOrientationYaw();
+		_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 	} else {
 		//Should never occur
 		RequestEvent abortEvent(RequestType::ABORT);
