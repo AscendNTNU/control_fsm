@@ -55,7 +55,16 @@ private:
 	float _yawReachedMargin = DEFAULT_YAW_REACHED_MARGIN;
 	///Callback for path planner
 	void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
-	///Returns a yaw that is a multiple of 90 degrees 
+	/**
+	 * @brief Returns a yaw that is a multiple of 90 degrees 
+	 * @details Drone should fly as straight forward as possible
+	 * , but yaw should be a multiple of 90 degrees.
+	 * This method assumes dx and dy != 0 at the same time
+	 * @param dx difference in x
+	 * @param dy difference in y
+	 * 
+	 * @return Yaw angle in radians - not mavros corrected
+	 */
 	double calculatePathYaw(double dx, double dy);
 public:
 	GoToState();

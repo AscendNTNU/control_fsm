@@ -288,6 +288,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
 //and is as close to the path direction as possible 
+//NOTE - method assumes dx and dy is not equal to zero
 double GoToState::calculatePathYaw(double dx, double dy) {
 	//Avoids division by zero
 	if(std::fabs(dx + dy) < 0.001) {
