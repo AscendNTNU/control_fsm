@@ -6,6 +6,7 @@
 #include <cmath>
 #include <geometry_msgs/Point32.h>
 #include <ascend_msgs/PathPlannerPlan.h>
+#include "control_fsm/FSMConfig.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double PI_HALF = 1.57079632679;
@@ -79,11 +80,13 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Set yaw setpoint to desired target yaw
 	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 
-	bool xWithinReach = (std::fabs(pPose->pose.position.x - event.positionGoal.x) < _destReachedMargin);
-	bool yWithinReach = (std::fabs(pPose->pose.position.y - event.positionGoal.y) < _destReachedMargin);
+	//Calculate the square distance from drone to target
+	double deltaX = pPose->pose.position.x - event.positionGoal.x;
+	double deltaY = pPose->pose.position.y - event.positionGoal.y;
+	double posXYDistSquare = std::pow(deltaX, 2) + std::pow(deltaY, 2);
 
 	//If only altitude is different, no need for pathplanner
-	if(xWithinReach && yWithinReach) {
+	if(posXYDistSquare <= std::pow(_destReachedMargin, 2)) {
         if(_cmd.isValidCMD()) {
             _cmd.sendFeedback("Already at correct X and Y - no need for pathplan");
         }
@@ -100,12 +103,13 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	/*
 	ros need a little delay after advertising for all connection to be made
 	This is a bit hacky solution to publish the target and position as soon as the 
-	publisher are ready without blocking the FSM.
+	publisher are ready without blocking the FSM. This guarantees it will be published when
+	the planner is listening
 	*/
 
 	_safePublisher.completed = false;
 	_safePublisher.publish = [destPoint, this]() {
-		//Only subscribes if 
+		//Only publish if the path planner is listening
 		if(_targetPub.getNumSubscribers() == 0) {
 			return;
 		}
@@ -137,12 +141,15 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
-	bool xWithinReach = (std::fabs(pPose->pose.position.x - _cmd.positionGoal.x) <= _destReachedMargin);
-	bool yWithinReach = (std::fabs(pPose->pose.position.y - _cmd.positionGoal.y) <= _destReachedMargin);
-	bool zWithinReach = (std::fabs(pPose->pose.position.z - _cmd.positionGoal.z) <= _destReachedMargin);
+    double deltaX = pPose->pose.position.x - _cmd.positionGoal.x;
+    double deltaY = pPose->pose.position.y - _cmd.positionGoal.y;
+    double deltaZ = pPose->pose.position.z - _cmd.positionGoal.z;
+    //TODO Add check for yaw
+	bool xyWithinReach = (std::pow(deltaX, 2) + std::pow(deltaY, 2)) <= std::pow(_destReachedMargin, 2);
+	bool zWithinReach = (deltaZ <= FSMConfig::AltitudeReachedMargin);
 	bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - _setpoint.yaw) <= _yawReachedMargin);
 	//If destination is reached, begin transition to another state
-	if(xWithinReach && yWithinReach && zWithinReach && yawWithinReach) {
+	if(xyWithinReach && zWithinReach && yawWithinReach) {
 		//Hold current position for a duration - avoiding unwanted velocity before doing anything else
 		if(!_delayTransition.enabled) {
 			_delayTransition.started = ros::Time::now();
@@ -185,7 +192,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 
 	
 	//Only run pathplanner if neccesary.
-	if(xWithinReach && yWithinReach) {
+	if(xyWithinReach) {
 		_setpoint.position.x = _cmd.positionGoal.x;
 		_setpoint.position.y = _cmd.positionGoal.y;
 		_setpoint.position.z = _cmd.positionGoal.z;
@@ -221,9 +228,9 @@ void GoToState::loopState(ControlFSM& fsm) {
 	double xPos = pPose->pose.position.x;
 	double yPos = pPose->pose.position.y;
 	//Check if we are close enough to current setpoint
-	xWithinReach = (std::fabs(xPos - currentPoint.x) <= _setpointReachedMargin);
-	yWithinReach = (std::fabs(yPos - currentPoint.y) <= _setpointReachedMargin);
-	if(xWithinReach && yWithinReach) {
+	deltaX = pPose->pose.position.x - currentPoint.x;
+	deltaY = pPose->pose.position.y - currentPoint.y;
+	if(std::pow(deltaX, 2) + std::pow(deltaY, 2) <= std::pow(_setpointReachedMargin, 2)) {
 		//If there are a new setpoint in the plan, change to it.
 		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
 			++_currentPlan.index;
@@ -254,55 +261,13 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 
 void GoToState::stateInit(ControlFSM& fsm) {
 	_pnh.reset(new ros::NodeHandle());	
-	ros::NodeHandle n("~");
-	if(!n.getParam("control_planner_plan", _planSubTopic)) {
-		fsm.handleFSMWarn("No planner plan topic found, using default: " + _planSubTopic);
-	}
-	if(!n.getParam("control_planner_position", _posPubTopic)) {
-		fsm.handleFSMWarn("No planner position topic found, using default: " + _posPubTopic);
-	}
-	if(!n.getParam("control_planner_target", _targetPubTopic)) {
-		fsm.handleFSMWarn("No planner target topic found, using default: " + _targetPubTopic);
-	}
-
-	float tempGoToHoldDestTime = -10;
-	if(n.getParam("goto_hold_dest_time", tempGoToHoldDestTime) && tempGoToHoldDestTime > 0) {
-		fsm.handleFSMInfo("GoTo destionation hold time param found: " + std::to_string(tempGoToHoldDestTime));
-		_delayTransition.delayTime = ros::Duration(tempGoToHoldDestTime);
-	} else {
-		fsm.handleFSMWarn("No valid param goto_hold_dest_time found, using default: " + std::to_string(DEFAULT_DEST_REACHED_DELAY));
-		_delayTransition.delayTime = ros::Duration(DEFAULT_DEST_REACHED_DELAY);
-	}
-
-	float tempDestReachedMargin = -10;
-	if(n.getParam("dest_reached_margin", tempDestReachedMargin) && tempDestReachedMargin > 0) {
-		fsm.handleFSMInfo("Destination reached param found: " + std::to_string(tempDestReachedMargin));
-		_destReachedMargin = tempDestReachedMargin;
-	} else {
-		fsm.handleFSMWarn("No valid param dest_reached_margin found, using default: " + std::to_string(DEFAULT_DEST_REACHED_MARGIN));
-		_destReachedMargin = DEFAULT_DEST_REACHED_MARGIN;
-	}	
-	float tempSetpReachedMargin = -10;
-	if(n.getParam("setp_reached_margin", tempSetpReachedMargin)) {
-		if(std::fabs(_setpointReachedMargin - tempSetpReachedMargin) > 0.001 && tempSetpReachedMargin > 0) {
-			fsm.handleFSMInfo("Setpoint reached param found: " + std::to_string(tempSetpReachedMargin));
-			_setpointReachedMargin = tempSetpReachedMargin;
-		}
-	} else {
-		fsm.handleFSMWarn("No param setp_reached_margin found, using default: " + std::to_string(DEFAULT_SETPOINT_REACHED_MARGIN));
-		_setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
-	}
-	float tempYawReachedMargin = -10;
-	if(n.getParam("yaw_reached_margin", tempYawReachedMargin)) {
-		if(std::fabs(_yawReachedMargin - tempYawReachedMargin) > 0.0001 && tempYawReachedMargin > 0) {
-			fsm.handleFSMInfo("Yaw reached param found: " + std::to_string(tempYawReachedMargin));
-			_yawReachedMargin = tempYawReachedMargin;
-		}
-	} else {
-		fsm.handleFSMWarn("No param yaw_reached_margin found, using default: " + std::to_string(DEFAULT_YAW_REACHED_MARGIN));
-		_yawReachedMargin = DEFAULT_YAW_REACHED_MARGIN;
-	}
-	
+	_planSubTopic = FSMConfig::PathPlannerPlanTopic;
+	_targetPubTopic = FSMConfig::PathPlannerTargetTopic;
+	_posPubTopic = FSMConfig::PathPlannerPosTopic;
+	_delayTransition.delayTime = ros::Duration(FSMConfig::GoToHoldDestTime);
+	_destReachedMargin = FSMConfig::DestReachedMargin;
+	_setpointReachedMargin = FSMConfig::SetpointReachedMargin;	
+	_yawReachedMargin = FSMConfig::YawReachedMargin;
 	_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);
 	_targetPub = _pnh->advertise<geometry_msgs::Point32>(_targetPubTopic , 1);
 	_planSub = _pnh->subscribe(_planSubTopic, 1, &GoToState::pathRecievedCB, this);
