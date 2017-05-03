@@ -31,6 +31,8 @@ private:
 	ros::Publisher _posPub;
 	///Publisher for the desired target
 	ros::Publisher _targetPub;
+	///Publisher for obstacles
+	ros::Publisher _obsPub;
 	///Subscriber for path plan
 	ros::Subscriber _planSub;
 	///Is state active flag
@@ -51,14 +53,10 @@ private:
 	float _setpointReachedMargin = DEFAULT_SETPOINT_REACHED_MARGIN;
 	///Margin used to determine if we are close enough to target yaw
 	float _yawReachedMargin = DEFAULT_YAW_REACHED_MARGIN;
-	///Topic for path planner target
-	std::string _targetPubTopic = "control/path_planner/target";
-	///Topic for patk planner position
-	std::string _posPubTopic = "control/path_planner/current_position";
-	///Topic for recieving planner path
-	std::string _planSubTopic = "control/path_planner/plan";
 	///Callback for path planner
 	void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
+	///Returns a yaw that is a multiple of 90 degrees 
+	double calculatePathYaw(double dx, double dy);
 public:
 	GoToState();
 	void stateInit(ControlFSM& fsm);
