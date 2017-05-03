@@ -260,17 +260,21 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 }
 
 void GoToState::stateInit(ControlFSM& fsm) {
-	_pnh.reset(new ros::NodeHandle());	
-	_planSubTopic = FSMConfig::PathPlannerPlanTopic;
-	_targetPubTopic = FSMConfig::PathPlannerTargetTopic;
-	_posPubTopic = FSMConfig::PathPlannerPosTopic;
+	//Create new nodehandle
+	if(_pnh == nullptr) {
+		_pnh.reset(new ros::NodeHandle());	
+	}
+	//Set state variables
 	_delayTransition.delayTime = ros::Duration(FSMConfig::GoToHoldDestTime);
 	_destReachedMargin = FSMConfig::DestReachedMargin;
 	_setpointReachedMargin = FSMConfig::SetpointReachedMargin;	
 	_yawReachedMargin = FSMConfig::YawReachedMargin;
-	_posPub = _pnh->advertise<geometry_msgs::Point32>(_posPubTopic, 1);
-	_targetPub = _pnh->advertise<geometry_msgs::Point32>(_targetPubTopic , 1);
-	_planSub = _pnh->subscribe(_planSubTopic, 1, &GoToState::pathRecievedCB, this);
+
+	//Set all neccesary publishers and subscribers
+	_posPub = _pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
+	_obsPub = _pnh->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
+	_targetPub = _pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
+	_planSub = _pnh->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
 	
 }
 
