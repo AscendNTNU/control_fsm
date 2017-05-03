@@ -1,4 +1,7 @@
 #include "control_fsm/FSMConfig.hpp"
+#include <assert.h>
+
+#define NDEBUG
 
 double FSMConfig::DestReachedMargin = 0.3;
 double FSMConfig::BlindHoverAlt = 1.0;
@@ -9,6 +12,7 @@ double FSMConfig::YawReachedMargin = 0.02;
 std::string FSMConfig::PathPlannerPlanTopic = "control/planner/plan";
 std::string FSMConfig::PathPlannerPosTopic = "control/planner/position";
 std::string FSMConfig::PathPlannerTargetTopic = "control/planner/target";
+std::string FSMConfig::PathPlannerObsTopic = "control/planner/obstacles";
 std::string FSMConfig::FSMErrorTopic = "control/fsm/on_error";
 std::string FSMConfig::FSMWarnTopic = "control/fsm/on_warn";
 std::string FSMConfig::FSMInfoTopic = "control/fsm/on_info";
@@ -38,22 +42,29 @@ void FSMConfig::loadParams() {
 			ROS_WARN("[Control FSM] Load param failed: %s, using %d", name.c_str(), var);
 		}
 	};
-	getDoubleParam("dest_reached_margin", DestReachedMargin);
+
+	//Global params (used by multiple states)
 	getDoubleParam("blind_hover_altitude", BlindHoverAlt);
 	getDoubleParam("takeoff_altitude", TakeoffAltitude);
 	getDoubleParam("altitude_reached_margin", AltitudeReachedMargin);
-	getDoubleParam("setp_reached_margin", SetpointReachedMargin);
 	getDoubleParam("yaw_reached_margin", YawReachedMargin);
+	getDoubleParam("safe_hover_alt", SafeHoverAltitude);
+	getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
+	//GoTo params
+	getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
+	getDoubleParam("setp_reached_margin", SetpointReachedMargin);
+	getDoubleParam("dest_reached_margin", DestReachedMargin);
+	//Planner params
 	getStringParam("control_planner_plan", PathPlannerPlanTopic);
 	getStringParam("control_planner_position", PathPlannerPosTopic);
 	getStringParam("control_planner_target", PathPlannerTargetTopic);
+	getStringParam("control_planner_obstacles", PathPlannerObsTopic);
+	//FSM debug params
 	getStringParam("fsm_error_topic", FSMErrorTopic);
 	getStringParam("fsm_warn_topic", FSMWarnTopic);
 	getStringParam("fsm_info_topic", FSMInfoTopic);
 	getStringParam("fsm_state_changed_topic", FSMStateChangedTopic);
 	getIntParam("status_msg_buffer_size", FSMStatusBufferSize);
-	getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
-	getDoubleParam("safe_hover_alt", SafeHoverAltitude);
-	getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
+	//Lidar topics
 	getStringParam("lidar_topic", LidarTopic);
 }
