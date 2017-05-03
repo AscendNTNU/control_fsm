@@ -37,6 +37,8 @@ public:
 	static int FSMStatusBufferSize;
 	///Time gotostate waits before transitioning
 	static double GoToHoldDestTime;
+	///Distance used to determine if goto yaw should be calculated
+	static double NoYawCorrectDist;
 	///Altitude where the drone is safe from all obstacles
 	static double SafeHoverAltitude;
 	///Drone safezone

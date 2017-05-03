@@ -24,5 +24,6 @@
 		<param name="obstacle_too_close_dist" value="2.0"/>
 		<param name="lidar_topic" value="$(arg topic_lidar)"/>
 		<param name="yaw_reached_margin" value="0.02"/>
+		<param name="no_yaw_correct_dist" value="0.2"/>
 	</node>
 </launch>

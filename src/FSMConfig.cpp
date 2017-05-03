@@ -9,6 +9,7 @@ double FSMConfig::TakeoffAltitude = 1.0;
 double FSMConfig::AltitudeReachedMargin = 0.1;
 double FSMConfig::SetpointReachedMargin = 0.3;
 double FSMConfig::YawReachedMargin = 0.02;
+double FSMConfig::NoYawCorrectDist = 0.2;
 std::string FSMConfig::PathPlannerPlanTopic = "control/planner/plan";
 std::string FSMConfig::PathPlannerPosTopic = "control/planner/position";
 std::string FSMConfig::PathPlannerTargetTopic = "control/planner/target";
@@ -54,6 +55,7 @@ void FSMConfig::loadParams() {
 	getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
 	getDoubleParam("setp_reached_margin", SetpointReachedMargin);
 	getDoubleParam("dest_reached_margin", DestReachedMargin);
+	getDoubleParam("no_yaw_correct_dist", NoYawCorrectDist);
 	//Planner params
 	getStringParam("control_planner_plan", PathPlannerPlanTopic);
 	getStringParam("control_planner_position", PathPlannerPosTopic);

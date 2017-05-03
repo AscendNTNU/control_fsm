@@ -106,7 +106,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	publisher are ready without blocking the FSM. This guarantees it will be published when
 	the planner is listening
 	*/
-
 	_safePublisher.completed = false;
 	_safePublisher.publish = [destPoint, this]() {
 		//Only publish if the path planner is listening
@@ -144,7 +143,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     double deltaX = pPose->pose.position.x - _cmd.positionGoal.x;
     double deltaY = pPose->pose.position.y - _cmd.positionGoal.y;
     double deltaZ = pPose->pose.position.z - _cmd.positionGoal.z;
-    //TODO Add check for yaw
+
 	bool xyWithinReach = (std::pow(deltaX, 2) + std::pow(deltaY, 2)) <= std::pow(_destReachedMargin, 2);
 	bool zWithinReach = (deltaZ <= FSMConfig::AltitudeReachedMargin);
 	bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - _setpoint.yaw) <= _yawReachedMargin);
@@ -188,9 +187,9 @@ void GoToState::loopState(ControlFSM& fsm) {
 		_delayTransition.enabled = false;
 	}
 
-	//If the destination is not reached, the path planner will run
+	/**********************************************************/
+	//If the destination is not reached, the loop will continue will run
 
-	
 	//Only run pathplanner if neccesary.
 	if(xyWithinReach) {
 		_setpoint.position.x = _cmd.positionGoal.x;
@@ -235,7 +234,13 @@ void GoToState::loopState(ControlFSM& fsm) {
 		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
 			++_currentPlan.index;
 			currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
-			_setpoint.yaw = calculatePathYaw(xPos, yPos, currentPoint.x, currentPoint.y) - PI_HALF;
+			double dx = currentPoint.x - xPos;
+			double dy = currentPoint.y - yPos;
+			//Only change yaw if drone needs to travel a larger distance
+			if(std::pow(dx, 2) + std::pow(dy, 2) > std::pow(FSMConfig::NoYawCorrectDist, 2)) {
+				//-PI_HALF due to mavros bug
+				_setpoint.yaw = calculatePathYaw(dx, dy) - PI_HALF;
+			}
 		}
 	}
 	//Set setpoint x and y
@@ -243,11 +248,13 @@ void GoToState::loopState(ControlFSM& fsm) {
 	_setpoint.position.y = currentPoint.y;
 }
 
+//Returns valid setpoint
 const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
 }
 
+//New pathplan is recieved
 void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg) {
 	//Ignore callback if state is not active
 	if(!_isActive) {
@@ -259,6 +266,7 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 	_currentPlan.index = 0;
 }
 
+//Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
 	//Create new nodehandle
 	if(_pnh == nullptr) {
@@ -278,9 +286,12 @@ void GoToState::stateInit(ControlFSM& fsm) {
 	
 }
 
-double GoToState::calculatePathYaw(double x1, double y1, double x2, double y2) {
-	double dx = x2 - x1;
-	double dy = y2 - y1;
+//Calculates a yaw setpoints that is a multiple of 90 degrees
+//and is as close to the path direction as possible 
+double GoToState::calculatePathYaw(double dx, double dy) {
+	if(dx + dy < 0.001) {
+		return 0;
+	}
 	double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
 
 	if(angle > 3 * PI / 4) {

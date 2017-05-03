@@ -56,7 +56,7 @@ private:
 	///Callback for path planner
 	void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
 	///Returns a yaw that is a multiple of 90 degrees 
-	double calculatePathYaw(double x1, double y1, double x2, double y2);
+	double calculatePathYaw(double dx, double dy);
 public:
 	GoToState();
 	void stateInit(ControlFSM& fsm);
