@@ -17,7 +17,12 @@
 	"folders":
 	[
 		{
-			"path": "."
+			"path": ".",
+			"folder_exclude_patterns": 
+			[	
+				".idea",
+				"cmake-build-debug"
+			]
 		}
 	]
 }
