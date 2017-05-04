@@ -3,5 +3,7 @@ msg/
 *.sublime-workspace
 html/
 latex/
+.idea/
+cmake-build-debug/
 
 
