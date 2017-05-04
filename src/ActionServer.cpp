@@ -20,14 +20,15 @@ void ActionServer::goalCB() {
 	}
 
 	auto goal = *(as_.acceptNewGoal());
+	typedef ascend_msgs::ControlFSMActionGoal::_goal_type GOALTYPE;
 	switch(goal.goalType) {
-		case goal.GOTOXYZ:
+		case GOALTYPE::GOTOXYZ:
 			startGoTo(goal);
 			break;
-		case goal.LANDXY:
+		case GOALTYPE::LANDXY:
 			startLandXY(goal);
 			break;
-		/* case goal.LANDGB:
+		/* case GOALTYPE::LANDGB:
 			startLandGB(goal);
 			break; */
 		default:

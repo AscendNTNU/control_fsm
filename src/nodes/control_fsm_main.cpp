@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 	ROS_INFO("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
 		ros::Duration(0.5).sleep();
-        ros::spinOnce();
+		ros::spinOnce();
 	}
 	ROS_INFO("First position message recieved!");
 
@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
 		setpointPub.publish(*pSetpoint);
 
 		//Sleep for remaining time
- 		loopRate.sleep();
+		loopRate.sleep();
 	}
 
 	return 0;
@@ -213,12 +213,13 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	ROS_INFO("X: %f, Y: %f, Z: %f", req.x, req.y, req.z);
 	//Lambda expression returning correct eventtype
 	event.eventType = ([&]() -> EventType{
+		typedef ascend_msgs::ControlFSMEvent::Request REQ;
 		switch(req.eventType) {
-			case req.REQUEST: return EventType::REQUEST;
-			case req.COMMAND: return EventType::COMMAND;
-			case req.AUTONOMOUS: return EventType::AUTONOMOUS;
-			case req.MANUAL: return EventType::MANUAL;
-			case req.GROUNDDETECTED: return EventType::GROUNDDETECTED;
+			case REQ::REQUEST: return EventType::REQUEST;
+			case REQ::COMMAND: return EventType::COMMAND;
+			case REQ::AUTONOMOUS: return EventType::AUTONOMOUS;
+			case REQ::MANUAL: return EventType::MANUAL;
+			case REQ::GROUNDDETECTED: return EventType::GROUNDDETECTED;
 			default: return EventType::NONE;
 		}
 	})();
@@ -226,23 +227,24 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	if(event.eventType == EventType::REQUEST) {
 		//Lambda expression returning correct requesttype
 		event.request = ([&]() -> RequestType {
+			typedef ascend_msgs::ControlFSMEvent::Request REQ;
 			switch(req.requestType) {
-				case req.ABORT: return RequestType::ABORT;
-				case req.BEGIN: return RequestType::BEGIN;
-				case req.END: return RequestType::END;
-				case req.PREFLIGHT: return RequestType::PREFLIGHT;
-				case req.IDLE: return RequestType::IDLE;
-				case req.SHUTDOWN: return RequestType::SHUTDOWN;
-				case req.TAKEOFF: return RequestType::TAKEOFF;
-				case req.BLINDHOVER: return RequestType::BLINDHOVER;
-				case req.POSHOLD: return RequestType::POSHOLD;
-				case req.GOTO: return RequestType::GOTO;
-				case req.LAND: return RequestType::LAND;
-				case req.BLINDLAND: return RequestType::BLINDLAND;
-				//case req.TRACKGB: return RequestType::TRACKGB;
-				//case req.INTERGB: return RequestType::INTERGB;
-				case req.ESTIMATORADJ: return RequestType::ESTIMATORADJ;
-				case req.MANUALFLIGHT: return RequestType::MANUALFLIGHT;
+				case REQ::ABORT: return RequestType::ABORT;
+				case REQ::BEGIN: return RequestType::BEGIN;
+				case REQ::END: return RequestType::END;
+				case REQ::PREFLIGHT: return RequestType::PREFLIGHT;
+				case REQ::IDLE: return RequestType::IDLE;
+				case REQ::SHUTDOWN: return RequestType::SHUTDOWN;
+				case REQ::TAKEOFF: return RequestType::TAKEOFF;
+				case REQ::BLINDHOVER: return RequestType::BLINDHOVER;
+				case REQ::POSHOLD: return RequestType::POSHOLD;
+				case REQ::GOTO: return RequestType::GOTO;
+				case REQ::LAND: return RequestType::LAND;
+				case REQ::BLINDLAND: return RequestType::BLINDLAND;
+				//case REQ::TRACKGB: return RequestType::TRACKGB;
+				//case REQ::INTERGB: return RequestType::INTERGB;
+				case REQ::ESTIMATORADJ: return RequestType::ESTIMATORADJ;
+				case REQ::MANUALFLIGHT: return RequestType::MANUALFLIGHT;
 				default: return RequestType::NONE;
 			}
 		})();
@@ -252,10 +254,11 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	} else if(event.eventType == EventType::COMMAND) {
 		//Lambda expression returning correct commandEvent
 		event = ([&]() -> EventData{
+			typedef ascend_msgs::ControlFSMEvent::Request REQ;
 			switch(req.commandType) {
-				case req.LANDXY: return LandXYCMDEvent(req.x, req.y);
-				case req.GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
-				//case req.LANDGB: return LandGBCMDEvent();
+				case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
+				case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
+				//case REQ::LANDGB: return LandGBCMDEvent();
 				default:
 					EventData e;
 					e.eventType = EventType::COMMAND;
