@@ -1,6 +1,4 @@
 #include "control_fsm/ShutdownState.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
-#include <ros/ros.h>
 #include "control_fsm/ControlFSM.hpp"
 
 ShutdownState::ShutdownState() {

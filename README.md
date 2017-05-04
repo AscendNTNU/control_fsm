@@ -33,7 +33,7 @@ Run:
 ```
 doxygen Doxyfile
 ```
-to generate documentation
+to generate documentation (html and latex)
 
 
 

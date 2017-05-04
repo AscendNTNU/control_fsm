@@ -78,7 +78,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Z setpoint can be set right away
 	_setpoint.position.z = event.positionGoal.z;
 	//Set yaw setpoint to desired target yaw
-	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
+	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 
 	//Calculate the square distance from drone to target
 	double deltaX = pPose->pose.position.x - event.positionGoal.x;
@@ -290,8 +290,9 @@ void GoToState::stateInit(ControlFSM& fsm) {
 //and is as close to the path direction as possible 
 //NOTE - method assumes dx and dy is not equal to zero
 double GoToState::calculatePathYaw(double dx, double dy) {
-	//Avoids division by zero
-	if(std::fabs(dx + dy) < 0.001) {
+	//Avoid fatal error if dx and dy is too small
+	//If method is used correctly this should NEVER be a problem
+	if(std::fabs(dx * dx + dy * dy) < 0.001) {
 		return 0;
 	}
 	/*

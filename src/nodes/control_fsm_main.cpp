@@ -12,27 +12,18 @@
 #include <cmath>
 
 
+
 bool firstPositionRecieved = false;
 bool isArmed = false;
 bool isOffboard = false;
+bool preflightFinished = false;
 
+//How often is setpoints published to flightcontroller?
 constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 
-//Information topics
-std::string fsmOnStateChangedPubTopic = "control/fsm/state_changed";
-std::string fsmErrorPubTopic = "control/fsm/on_error";
-std::string fsmWarnPubTopic = "control/fsm/on_warn";
-std::string fsmInfoPubTopic = "control/fsm/on_info";
-int statusMsgBufferSize = 10;
-
-//Datatopics
-std::string lidarTopic = "perception/obstacles/lidar"; //Topic is not set
+//Mavros topics -
 std::string localPosTopic = "mavros/local_position/pose";
 std::string mavrosStateTopic = "mavros/state";
-
-//Global variables
-double obstacleTooCloseDist = 2.0;
-double safeHoverAlt = 2.5;
 
 //Statemachine
 ControlFSM fsm;
@@ -66,10 +57,10 @@ int main(int argc, char** argv) {
 
 	//Set up neccesary publishers
 	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 1);
-	ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::FSMStateChangedTopic, statusMsgBufferSize);
-	ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::FSMErrorTopic, statusMsgBufferSize);
-	ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, statusMsgBufferSize);
-	ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, statusMsgBufferSize);
+	ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::FSMStateChangedTopic, FSMConfig::FSMStatusBufferSize);
+	ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::FSMErrorTopic, FSMConfig::FSMStatusBufferSize);
+	ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, FSMConfig::FSMStatusBufferSize);
+	ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, FSMConfig::FSMStatusBufferSize);
 
 	//Set up services
 	ros::ServiceServer debugServiceServer = n.advertiseService("control_fsm_debug", handleDebugEvent);
@@ -104,23 +95,26 @@ int main(int argc, char** argv) {
 
 
 	//Wait for all systems to initalize and position to become valid
-	ROS_INFO("Waiting for first position msg!");
+	fsm.handleFSMInfo("Waiting for first position msg!");
 	while(ros::ok() && !firstPositionRecieved) {
 		ros::Duration(0.5).sleep();
 		ros::spinOnce();
 	}
-	ROS_INFO("First position message recieved!");
+	fsm.handleFSMInfo("First position message recieved!");
 
 	//Actionserver is started when the system is ready
 	ActionServer cmdServer(&fsm);
 
+    preflightFinished = true;
+
+    //Preflight is finished and system is ready for use!
+    /**************************************************/
+    fsm.handleFSMInfo("FSM is ready!");
 	//Used to maintain a fixed loop rate
 	ros::Rate loopRate(SETPOINT_PUB_RATE);
 	//Main loop
 	while(ros::ok()) {
-		//TODO Take get input from planning or other 
-		//TODO Implement actionlib
-
+        //Get latest messages
 		ros::spinOnce(); //Handle all incoming messages - generates fsm events
 		fsm.loopCurrentState(); //Run current FSM state loop
 
@@ -159,8 +153,8 @@ void mavrosStateChangedCB(const mavros_msgs::State& state) {
 		isOffboard = offboardTrue;
 		isArmed = state.armed;
 
-		//If it is armed and in offboard - notify AUTONOMOUS mode
-		if(isArmed && isOffboard) {
+		//If it is armed and in offboard and all preflight checks has completed - notify AUTONOMOUS mode
+		if(isArmed && isOffboard && preflightFinished) {
 			EventData autonomousEvent;
 			autonomousEvent.eventType = EventType::AUTONOMOUS;
 			ROS_INFO("Autonomous event sent");
@@ -170,6 +164,9 @@ void mavrosStateChangedCB(const mavros_msgs::State& state) {
 }
 
 bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::ControlFSMEvent::Response& resp) {
+    if(!preflightFinished) {
+        fsm.handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
+    }
 	EventData event = generateDebugEvent(req);
 	//If request event is not valid
 	if(event.eventType == EventType::REQUEST && !event.isValidRequest()) {
@@ -192,7 +189,7 @@ bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::C
 
 	if(event.isValidCMD()) {
 		event.setOnCompleteCallback([](){
-			ROS_INFO("[Control FSM Debug] Manual CMD finished");
+			ROS_INFO("[Control FSM Debug] Manual CMD finished");
 		});
 		event.setOnFeedbackCallback([](std::string msg){
 			ROS_INFO("[Control FSM Debug] Manual CMD feedback: %s", msg.c_str());
@@ -210,7 +207,6 @@ bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::C
 
 EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	EventData event;
-	ROS_INFO("X: %f, Y: %f, Z: %f", req.x, req.y, req.z);
 	//Lambda expression returning correct eventtype
 	event.eventType = ([&]() -> EventType{
 		typedef ascend_msgs::ControlFSMEvent::Request REQ;

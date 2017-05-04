@@ -9,7 +9,6 @@ LandState::LandState() {
 }
 
 void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	//TODO Should land ever need to handle commands? ABORT request should be sent before new command 
 	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
 			if(_cmd.isValidCMD()) {
@@ -52,7 +51,8 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		_setpoint.position.x = pPose->pose.position.x;
 		_setpoint.position.y = pPose->pose.position.y;
 		//Set yaw setpoint based on current rotation
-		_setpoint.yaw = fsm.getMavrosCorrectedYaw();
+		//TODO Make sure this cast works fine
+		_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 	} else {
 		//Should never occur
 		RequestEvent abortEvent(RequestType::ABORT);

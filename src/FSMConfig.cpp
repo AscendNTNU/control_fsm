@@ -1,8 +1,6 @@
 #include "control_fsm/FSMConfig.hpp"
 #include <assert.h>
 
-#define NDEBUG
-
 double FSMConfig::DestReachedMargin = 0.3;
 double FSMConfig::BlindHoverAlt = 1.0;
 double FSMConfig::TakeoffAltitude = 1.0;
