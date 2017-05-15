@@ -31,20 +31,20 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void EstimateAdjustState::loopState(ControlFSM& fsm) {
     //TODO Transition to blindhover as soon as position is invalid
     bool posInvalid = true;
-    
+
     if(posInvalid) {
-        if(_cmd.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
-            _cmd = EventData();
-        } else {
-            RequestEvent event(RequestType::BLINDHOVER);
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
-        }
-    }
+		if(_cmd.isValidCMD()) {
+			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
+			_cmd = EventData();
+		} else {
+			RequestEvent event(RequestType::BLINDHOVER);
+			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
+		}
+	}
 }
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
+	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 
 }
 

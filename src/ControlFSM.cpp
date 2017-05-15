@@ -96,7 +96,6 @@ void ControlFSM::setPosition(const geometry_msgs::PoseStamped& pose) {
 		_dronePosition.isSet = true;
 	}
 	_dronePosition.position = pose;
-	_dronePosition.validXY = true; //TODO Add checks here
 }
 
 const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {

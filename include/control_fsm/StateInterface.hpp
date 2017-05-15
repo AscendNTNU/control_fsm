@@ -20,6 +20,8 @@ class StateInterface {
 protected:
 	mavros_msgs::PositionTarget _setpoint;
 public:
+
+	//Consider adding stateInit method to function as a constructor for the static instances
 	
 	///Virtual destructor - override if needed
 	virtual ~StateInterface() {}

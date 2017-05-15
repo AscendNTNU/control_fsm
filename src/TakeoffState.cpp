@@ -61,7 +61,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	_setpoint.position.x = pose->pose.position.x;
 	_setpoint.position.y = pose->pose.position.y;
 	//Set yaw setpoint based on current rotation
-	_setpoint.yaw = fsm.getMavrosCorrectedYaw();;
+	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();;
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {

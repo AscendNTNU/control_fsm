@@ -6,7 +6,7 @@ ShutdownState::ShutdownState() {
 }
 
 void ShutdownState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	fsm.handleFSMDebug("Shutdown state, all events are ignored!");
+	fsm.handleFSMWarn("Shutdown state, all events are ignored!");
 }
 
 void ShutdownState::loopState(ControlFSM& fsm) {

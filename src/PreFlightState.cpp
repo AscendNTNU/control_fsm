@@ -27,9 +27,8 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PreFlightState::stateBegin(ControlFSM &fsm, const EventData &event) {
-	fsm.handleFSMInfo("Preflight mode: Arm and set OFFBOARD too proceed to IDLE!");
+	fsm.handleFSMInfo("Preflight mode: Arm and set OFFBOARD to proceed to IDLE!");
 }
-
 
 //Returns setpoint
 const mavros_msgs::PositionTarget* PreFlightState::getSetpoint() { 

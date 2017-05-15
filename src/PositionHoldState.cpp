@@ -46,6 +46,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		position setpoints. Consider adding another state for manual flight (that always use current position as setpoint)
 		*/
 	} else if(event.eventType == EventType::OBSTACLECLOSING) {
+		//TODO Implement better safe hover procedure - should state check for obstacles itself? 
 		//Increase altitude to a safe altitude avoding all obstacles
 		_setpoint.position.z = _safeHoverAlt;
 	}

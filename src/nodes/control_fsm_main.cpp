@@ -22,9 +22,9 @@ bool preflightFinished = false;
 constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 
 //Mavros topics -
-std::string localPosTopic = "mavros/local_position/pose";
-std::string mavrosStateTopic = "mavros/state";
-
+constexpr char localPosTopic[] = "mavros/local_position/pose";
+constexpr char mavrosStateTopic[] = "mavros/state";
+constexpr char mavrosSetpointTopic[] = "mavros/setpoint_raw/local";
 //Statemachine
 ControlFSM fsm;
 
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 	ros::Subscriber lidarSub = n.subscribe(FSMConfig::LidarTopic, 1, lidarCB);
 
 	//Set up neccesary publishers
-	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>("mavros/setpoint_raw/local", 1);
+	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
 	ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::FSMStateChangedTopic, FSMConfig::FSMStatusBufferSize);
 	ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::FSMErrorTopic, FSMConfig::FSMStatusBufferSize);
 	ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, FSMConfig::FSMStatusBufferSize);
@@ -95,12 +95,18 @@ int main(int argc, char** argv) {
 
 
 	//Wait for all systems to initalize and position to become valid
-	fsm.handleFSMInfo("Waiting for first position msg!");
-	while(ros::ok() && !firstPositionRecieved) {
+	fsm.handleFSMInfo("Waiting for necessary data streams!");
+	while(ros::ok()) {
 		ros::Duration(0.5).sleep();
 		ros::spinOnce();
+		//Make sure all critical datastreams are up and running before continuing
+		if(!firstPositionRecieved) continue;
+		if(mavrosStateChangedSub.getNumPublishers() <= 0) continue;
+		//Uncomment this when lidar datastream is ready!
+		//if(lidarSub.getNumPublishers() <= 0) continue;
+		break;
 	}
-	fsm.handleFSMInfo("First position message recieved!");
+	fsm.handleFSMInfo("Necessary data streams are ready!");
 
 	//Actionserver is started when the system is ready
 	ActionServer cmdServer(&fsm);
@@ -209,7 +215,7 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	EventData event;
 	//Lambda expression returning correct eventtype
 	event.eventType = ([&]() -> EventType{
-		typedef ascend_msgs::ControlFSMEvent::Request REQ;
+		using REQ = ascend_msgs::ControlFSMEvent::Request;
 		switch(req.eventType) {
 			case REQ::REQUEST: return EventType::REQUEST;
 			case REQ::COMMAND: return EventType::COMMAND;
@@ -223,7 +229,7 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	if(event.eventType == EventType::REQUEST) {
 		//Lambda expression returning correct requesttype
 		event.request = ([&]() -> RequestType {
-			typedef ascend_msgs::ControlFSMEvent::Request REQ;
+			using REQ = ascend_msgs::ControlFSMEvent::Request;
 			switch(req.requestType) {
 				case REQ::ABORT: return RequestType::ABORT;
 				case REQ::BEGIN: return RequestType::BEGIN;
@@ -250,7 +256,7 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	} else if(event.eventType == EventType::COMMAND) {
 		//Lambda expression returning correct commandEvent
 		event = ([&]() -> EventData{
-			typedef ascend_msgs::ControlFSMEvent::Request REQ;
+			using REQ = ascend_msgs::ControlFSMEvent::Request;
 			switch(req.commandType) {
 				case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
 				case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
