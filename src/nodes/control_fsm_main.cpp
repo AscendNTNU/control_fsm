@@ -31,8 +31,6 @@ ControlFSM fsm;
 //Callback definitions
 void localPosCB(const geometry_msgs::PoseStamped& input);
 void mavrosStateChangedCB(const mavros_msgs::State& state);
-void lidarCB(const ascend_msgs::PointArray& msg);
-
 //Debug service functions
 EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&);
 bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request&, ascend_msgs::ControlFSMEvent::Response&);
@@ -53,7 +51,6 @@ int main(int argc, char** argv) {
 	//Subscribe to neccesary topics
 	ros::Subscriber localPosSub = n.subscribe(localPosTopic, 1, localPosCB);
 	ros::Subscriber mavrosStateChangedSub = n.subscribe(mavrosStateTopic, 1, mavrosStateChangedCB);
-	ros::Subscriber lidarSub = n.subscribe(FSMConfig::LidarTopic, 1, lidarCB);
 
 	//Set up neccesary publishers
 	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
@@ -272,33 +269,3 @@ EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	return event;
 }
 
-void lidarCB(const ascend_msgs::PointArray& msg) {
-	static bool isTooClose = false;
-	auto points = msg.points;
-	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-	if(pPose == nullptr) {
-		//No valid XY position available, no way to determine distance to GB
-		return;
-	}
-	//No need to check obstacles if they're too close
-	if(pPose->pose.position.z >= FSMConfig::SafeHoverAltitude) {
-		return;
-	}
-
-	double droneX = pPose->pose.position.x;
-	double droneY = pPose->pose.position.y;
-	for(int i = 0; i < points.size(); ++i) {
-		double distSquared = std::pow(droneX - points[i].x, 2) + std::pow(droneY - points[i].y, 2);
-		if(distSquared < std::pow(FSMConfig::ObstacleTooCloseDist, 2)) {
-			if(!isTooClose) {
-				EventData event;
-				event.eventType = EventType::OBSTACLECLOSING;
-				fsm.handleEvent(event);
-				isTooClose = true;
-			}
-			//If one is close enough, no need to check the rest
-			return;
-		}
-	}
-	isTooClose = false;
-}

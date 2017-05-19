@@ -4,6 +4,9 @@
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
 #include "control_fsm/FSMConfig.hpp"
+#include <ascend_msgs/PointArray.h>
+#include <ros/ros.h>
+
 
 //Constructor sets default setpoint type mask
 PositionHoldState::PositionHoldState() {
@@ -12,6 +15,7 @@ PositionHoldState::PositionHoldState() {
 
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
+	_isActive = true;
 	if(event.isValidCMD()) {
 		//All valid command needs to go via the GOTO state
 		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
@@ -45,18 +49,18 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		If the mavros state message arrives "late" the drone will try to go to the old
 		position setpoints. Consider adding another state for manual flight (that always use current position as setpoint)
 		*/
-	} else if(event.eventType == EventType::OBSTACLECLOSING) {
-		//TODO Implement better safe hover procedure - should state check for obstacles itself? 
-		//Increase altitude to a safe altitude avoding all obstacles
-		_setpoint.position.z = _safeHoverAlt;
 	}
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	if(!_paramsSet) {
-		_safeHoverAlt = FSMConfig::SafeHoverAltitude;
-		_paramsSet = true;
+	if(_pFsm == nullptr) {
+		_pFsm = &fsm;
 	}
+	if(_pnh == nullptr) {
+		_pnh.reset(new ros::NodeHandle());
+		_lidarSub = _pnh->subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
+	}
+	_safeHoverAlt = FSMConfig::SafeHoverAltitude;
 	//No need to check other commands
 	if(event.isValidCMD()) {
 		//All valid commands need to go to correct place on arena before anything else
@@ -86,6 +90,45 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
 	
+}
+
+void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
+	//Only check if neccesary
+	if(!_isActive || _setpoint.position.z >= _safeHoverAlt) {
+		return;
+	}
+	if(_pFsm == nullptr) {
+		ROS_ERROR("FSM pointer = nullptr! Critical!");
+		return; //Avoids nullpointer exception
+	}
+	auto points = msg->points;
+	const geometry_msgs::PoseStamped* pPose = _pFsm->getPositionXYZ();
+	//Should never happen!
+	if(pPose == nullptr) {
+		//No valid XY position available, no way to determine distance to GB
+		_pFsm->handleFSMError("Position not available! Should not happen!");
+		return;
+	}
+	//No need to check obstacles if they're too close
+	if(pPose->pose.position.z >= FSMConfig::SafeHoverAltitude) {
+		return;
+	}
+
+	double droneX = pPose->pose.position.x;
+	double droneY = pPose->pose.position.y;
+	for(int i = 0; i < points.size(); ++i) {
+		double distSquared = std::pow(droneX - points[i].x, 2) + std::pow(droneY - points[i].y, 2);
+		if(distSquared < std::pow(FSMConfig::ObstacleTooCloseDist, 2)) {
+			_setpoint.position.z = _safeHoverAlt;
+			return; //No need to check the rest!
+		}
+	}
+
+
+}
+
+void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
+	_isActive = false;
 }
 
 //Returns setpoint
