@@ -41,6 +41,7 @@ private:
 	friend class ManualFlightState;
 	
 	//Static instances of the different states
+	//Also add them to _allStates vector in constructor
 	static BeginState BEGINSTATE;
 	static PreFlightState PREFLIGHTSTATE;
 	static IdleState IDLESTATE;
@@ -56,7 +57,7 @@ private:
 	static BlindLandState BLINDLANDSTATE;
 	static ManualFlightState MANUALFLIGHTSTATE;
 	///Only one instance of ControlFSM is allowed - used to check
-	static bool isUsed = false;
+	static bool isUsed;
 
 	/**
 	 * @brief Holds a pointer to current running state
@@ -85,6 +86,9 @@ private:
 	
 	///Is drone in an active state?
 	bool _isActive = false;
+
+	///Has FSM been initiated?
+	bool _isReady = false;
 
 	///Vector of all states
 	std::vector<StateInterface*> _allStates;
@@ -178,6 +182,9 @@ public:
 	
 	///Sets new callback function for onFSMError
 	void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
+
+	///Initializes all states
+	void init();
 };
 
 #endif

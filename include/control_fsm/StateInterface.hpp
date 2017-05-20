@@ -22,7 +22,7 @@ protected:
 public:
 
 	///Used for state setup
-	virtual void stateInit(ControlFSM& fsm);
+	virtual void stateInit(ControlFSM& fsm) {};
 
 	///Virtual destructor - override if needed
 	virtual ~StateInterface() {}

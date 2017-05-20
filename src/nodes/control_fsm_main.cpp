@@ -50,6 +50,9 @@ int main(int argc, char** argv) {
 	//Load ros params
 	FSMConfig::loadParams();
 
+	///Init fsm
+	fsm.init();
+
 	//Subscribe to neccesary topics
 	ros::Subscriber localPosSub = n.subscribe(localPosTopic, 1, localPosCB);
 	ros::Subscriber mavrosStateChangedSub = n.subscribe(mavrosStateTopic, 1, mavrosStateChangedCB);

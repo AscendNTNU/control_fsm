@@ -23,6 +23,8 @@ LandState ControlFSM::LANDSTATE;
 BlindLandState ControlFSM::BLINDLANDSTATE;
 ManualFlightState ControlFSM::MANUALFLIGHTSTATE;
 
+bool ControlFSM::isUsed = false;
+
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
 	//Only current running state is allowed to change state
@@ -132,7 +134,7 @@ double ControlFSM::getPositionZ() {
 
 ControlFSM::ControlFSM() {
 	//Only one instance of ControlFSM is allowed
-	assert(ControlFSM::isUsed);
+	assert(!ControlFSM::isUsed);
 
 	//Add all states to _allStates vector for easy access
 	_allStates.push_back(&BEGINSTATE);
@@ -152,6 +154,15 @@ ControlFSM::ControlFSM() {
 
 	_stateVault._pCurrentState = &BEGINSTATE;
 	ControlFSM::isUsed = true;
+}
+
+void ControlFSM::init() {
+	//Only init once
+	if(_isReady) return;
+	for(StateInterface* p : _allStates) {
+		p->stateInit(*this);
+	}
+	_isReady = true;
 }
 
 
