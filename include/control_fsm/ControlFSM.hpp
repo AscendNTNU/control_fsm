@@ -93,6 +93,9 @@ private:
 	///Vector of all states
 	std::vector<StateInterface*> _allStates;
 
+	///Shared nodehandle for all states
+	std::unique_ptr<ros::NodeHandle> _pnh;
+
 	///Callback when a transition is made
 	std::function<void()> _onStateChanged = [](){};
 	///Callback when an error occurs in FSM
@@ -185,6 +188,8 @@ public:
 
 	///Initializes all states
 	void init();
+	///Checks if all states are ready
+	bool isReady();
 };
 
 #endif

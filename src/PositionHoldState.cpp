@@ -56,10 +56,6 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	if(_pFsm == nullptr) {
 		_pFsm = &fsm;
 	}
-	if(_pnh == nullptr) {
-		_pnh.reset(new ros::NodeHandle());
-		_lidarSub = _pnh->subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
-	}
 	_safeHoverAlt = FSMConfig::SafeHoverAltitude;
 	//No need to check other commands
 	if(event.isValidCMD()) {
@@ -90,6 +86,16 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 	
+}
+
+void PositionHoldState::stateInit(ControlFSM &fsm) {
+	_lidarSub = fsm._pnh->subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
+}
+
+bool PositionHoldState::stateIsReady() {
+	//Skipping check is allowed in debug mode
+	if(!FSMConfig::RequireAllDataStreams) return true;
+	return _lidarSub.getNumPublishers() > 0;
 }
 
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {

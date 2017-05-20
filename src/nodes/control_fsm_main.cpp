@@ -102,8 +102,7 @@ int main(int argc, char** argv) {
 		//Make sure all critical datastreams are up and running before continuing
 		if(!firstPositionRecieved) continue;
 		if(mavrosStateChangedSub.getNumPublishers() <= 0) continue;
-		//Uncomment this when lidar datastream is ready!
-		//if(lidarSub.getNumPublishers() <= 0) continue;
+		if(!fsm.isReady()) continue; //Checks if all states are ready
 		break;
 	}
 	fsm.handleFSMInfo("Necessary data streams are ready!");

@@ -159,10 +159,18 @@ ControlFSM::ControlFSM() {
 void ControlFSM::init() {
 	//Only init once
 	if(_isReady) return;
+	_pnh.reset(new ros::NodeHandle());
 	for(StateInterface* p : _allStates) {
 		p->stateInit(*this);
 	}
 	_isReady = true;
+}
+
+bool ControlFSM::isReady() {
+	for(StateInterface* p : _allStates) {
+		if(!p->stateIsReady()) return false;
+	}
+	return true;
 }
 
 

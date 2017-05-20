@@ -96,22 +96,13 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Only x and y is used
 	destPoint.x = static_cast<float>(event.positionGoal.x);
 	destPoint.y = static_cast<float>(event.positionGoal.y);
-	/*
-	ros need a little delay after advertising for all connection to be made
-	This is a bit hacky solution to publish the target and position as soon as the 
-	publisher are ready without blocking the FSM. This guarantees it will be published when
-	the planner is listening
-	*/
-	_safePublisher.completed = false;
-	_safePublisher.publish = [destPoint, this]() {
-		//Only publish if the path planner is listening
-		if(_targetPub.getNumSubscribers() == 0) {
-			return;
-		}
-		_targetPub.publish(destPoint);
-		_safePublisher.completed = true;
 
-	};
+	if(_targetPub.getNumSubscribers() <= 0) {
+		fsm.handleFSMError("Planner not listening for target!");
+	}
+
+	//Publish target
+	_targetPub.publish(destPoint);
 	fsm.handleFSMInfo("Sent target and position to planner, waiting for result!");
 	
 
@@ -264,10 +255,6 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
-	//Create new nodehandle
-	if(_pnh == nullptr) {
-		_pnh.reset(new ros::NodeHandle());
-	}
 
 	//TODO Uneccesary variables - FSMConfig can be used directly
 	//Set state variables
@@ -277,11 +264,10 @@ void GoToState::stateInit(ControlFSM& fsm) {
 	_yawReachedMargin = (float) FSMConfig::YawReachedMargin;
 
 	//Set all neccesary publishers and subscribers
-	_posPub = _pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
-	_obsPub = _pnh->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
-	_targetPub = _pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
-	_planSub = _pnh->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
-	
+	_posPub = fsm._pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
+	_obsPub = fsm._pnh->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
+	_targetPub = fsm._pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
+	_planSub = fsm._pnh->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
@@ -312,6 +298,17 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 	}
 
 	return angle;
+}
+
+bool GoToState::stateIsReady() {
+	//Skipping check is allowed for debugging
+	if(!FSMConfig::RequireAllDataStreams) return true;
+	//Makes sure path planner is listening for input
+	if(_planSub.getNumPublishers() <= 0) return false;
+	if(_targetPub.getNumSubscribers() <= 0) return false;
+	if(_posPub.getNumSubscribers() <= 0) return false;
+	if(_obsPub.getNumSubscribers() <= 0) return false;
+	return true;
 }
 
 

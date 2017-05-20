@@ -47,6 +47,8 @@ public:
 	static std::string LidarTopic;
 	///Load paramaters
 	static void loadParams();
+	///Finished drone will require all datastreams to be available
+	static bool RequireAllDataStreams;
 
 };
 

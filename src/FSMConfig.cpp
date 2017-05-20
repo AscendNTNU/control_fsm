@@ -21,6 +21,7 @@ double FSMConfig::GoToHoldDestTime = 0.5;
 double FSMConfig::SafeHoverAltitude = 2.0;
 double FSMConfig::ObstacleTooCloseDist = 2.0;
 std::string FSMConfig::LidarTopic = "perception/obstacles/lidar";
+bool FSMConfig::RequireAllDataStreams = true;
 
 void FSMConfig::loadParams() {
 	ros::NodeHandle n("~");
@@ -42,6 +43,12 @@ void FSMConfig::loadParams() {
 		}
 	};
 
+	auto getBoolParam = [&](const std::string& name, bool& var) {
+		if(!n.getParam(name, var)) {
+			ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
+		}
+	};
+
 	//Global params (used by multiple states)
 	getDoubleParam("blind_hover_altitude", BlindHoverAlt);
 	getDoubleParam("takeoff_altitude", TakeoffAltitude);
@@ -49,6 +56,7 @@ void FSMConfig::loadParams() {
 	getDoubleParam("yaw_reached_margin", YawReachedMargin);
 	getDoubleParam("safe_hover_alt", SafeHoverAltitude);
 	getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
+	getBoolParam("require_all_streams", RequireAllDataStreams);
 	//GoTo params
 	getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
 	getDoubleParam("setp_reached_margin", SetpointReachedMargin);
@@ -67,4 +75,5 @@ void FSMConfig::loadParams() {
 	getIntParam("status_msg_buffer_size", FSMStatusBufferSize);
 	//Lidar topics
 	getStringParam("lidar_topic", LidarTopic);
+
 }

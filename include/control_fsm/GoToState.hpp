@@ -37,8 +37,6 @@ private:
 	ros::Subscriber _planSub;
 	///Is state active flag
 	bool _isActive = false;
-	///Dynamic allocated nodehandle
-	std::unique_ptr<ros::NodeHandle> _pnh;
 
 	///Contains the latest flight path recieved
 	struct {
@@ -75,6 +73,7 @@ public:
 	void stateEnd(ControlFSM& fsm, const EventData& event) override;
 	std::string getStateName() const { return "GoTo";}
 	const mavros_msgs::PositionTarget* getSetpoint();
+	bool stateIsReady() override;
 };
 
 #endif
