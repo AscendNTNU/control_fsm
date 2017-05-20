@@ -28,7 +28,7 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
+	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 }
 
 void BlindLandState::loopState(ControlFSM& fsm) {

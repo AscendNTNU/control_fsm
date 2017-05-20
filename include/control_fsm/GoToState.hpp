@@ -37,8 +37,6 @@ private:
 	ros::Subscriber _planSub;
 	///Is state active flag
 	bool _isActive = false;
-	///Dynamic allocated nodehandle
-	std::unique_ptr<ros::NodeHandle> _pnh;
 
 	///Contains the latest flight path recieved
 	struct {
@@ -68,13 +66,14 @@ private:
 	double calculatePathYaw(double dx, double dy);
 public:
 	GoToState();
-	void stateInit(ControlFSM& fsm);
+	void stateInit(ControlFSM& fsm) override;
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
 	void stateBegin(ControlFSM& fsm, const EventData& event) override;
 	void loopState(ControlFSM& fsm) override;
 	void stateEnd(ControlFSM& fsm, const EventData& event) override;
 	std::string getStateName() const { return "GoTo";}
 	const mavros_msgs::PositionTarget* getSetpoint();
+	bool stateIsReady() override;
 };
 
 #endif

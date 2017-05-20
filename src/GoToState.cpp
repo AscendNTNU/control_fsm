@@ -65,10 +65,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 		return;
 	}
-	//Set up nodehandle and load all paramaters first time
-	if(_pnh == nullptr) {
-		stateInit(fsm);
-	}
 
 	//Sets setpoint to current position - until planner is done
 	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
@@ -98,24 +94,15 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//Send desired goal to path planner
 	geometry_msgs::Point32 destPoint;
 	//Only x and y is used
-	destPoint.x = event.positionGoal.x;
-	destPoint.y = event.positionGoal.y;
-	/*
-	ros need a little delay after advertising for all connection to be made
-	This is a bit hacky solution to publish the target and position as soon as the 
-	publisher are ready without blocking the FSM. This guarantees it will be published when
-	the planner is listening
-	*/
-	_safePublisher.completed = false;
-	_safePublisher.publish = [destPoint, this]() {
-		//Only publish if the path planner is listening
-		if(_targetPub.getNumSubscribers() == 0) {
-			return;
-		}
-		_targetPub.publish(destPoint);
-		_safePublisher.completed = true;
+	destPoint.x = static_cast<float>(event.positionGoal.x);
+	destPoint.y = static_cast<float>(event.positionGoal.y);
 
-	};
+	if(_targetPub.getNumSubscribers() <= 0) {
+		fsm.handleFSMError("Planner not listening for target!");
+	}
+
+	//Publish target
+	_targetPub.publish(destPoint);
 	fsm.handleFSMInfo("Sent target and position to planner, waiting for result!");
 	
 
@@ -140,10 +127,10 @@ void GoToState::loopState(ControlFSM& fsm) {
     	return;
     }
 
+	//Check if destination is reached!
     double deltaX = pPose->pose.position.x - _cmd.positionGoal.x;
     double deltaY = pPose->pose.position.y - _cmd.positionGoal.y;
     double deltaZ = pPose->pose.position.z - _cmd.positionGoal.z;
-
 	bool xyWithinReach = (std::pow(deltaX, 2) + std::pow(deltaY, 2)) <= std::pow(_destReachedMargin, 2);
 	bool zWithinReach = (deltaZ <= FSMConfig::AltitudeReachedMargin);
 	bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - _setpoint.yaw) <= _yawReachedMargin);
@@ -154,7 +141,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 			_delayTransition.started = ros::Time::now();
 			_delayTransition.enabled = true;
 			if(_cmd.isValidCMD()) {
-				_cmd.sendFeedback("Dest reached letting position set before transitioning!");
+				_cmd.sendFeedback("Destination reached, letting drone slow down before transitioning!");
 			}
 		}
 		//Delay transition
@@ -203,8 +190,8 @@ void GoToState::loopState(ControlFSM& fsm) {
 		}
 		//Send current position to path planner
     	geometry_msgs::Point32 currentPos;
-	    currentPos.x = pPose->pose.position.x;
-	    currentPos.y = pPose->pose.position.y;
+	    currentPos.x = static_cast<float>(pPose->pose.position.x);
+	    currentPos.y = static_cast<float>(pPose->pose.position.y);
 	    _posPub.publish(currentPos);
 	}
 
@@ -223,23 +210,23 @@ void GoToState::loopState(ControlFSM& fsm) {
 	}
 
 	//Get current setpoint from plan
-	auto currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
-	double xPos = pPose->pose.position.x;
-	double yPos = pPose->pose.position.y;
+	auto& currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index]; //geometry_msgs::Point32
+	auto& xPos = pPose->pose.position.x;
+	auto& yPos = pPose->pose.position.y;
 	//Check if we are close enough to current setpoint
-	deltaX = pPose->pose.position.x - currentPoint.x;
-	deltaY = pPose->pose.position.y - currentPoint.y;
+	deltaX = xPos - currentPoint.x;
+	deltaY = yPos - currentPoint.y;
 	if(std::pow(deltaX, 2) + std::pow(deltaY, 2) <= std::pow(_setpointReachedMargin, 2)) {
 		//If there are a new setpoint in the plan, change to it.
 		if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
 			++_currentPlan.index;
 			currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
-			double dx = currentPoint.x - xPos;
-			double dy = currentPoint.y - yPos;
-			//Only change yaw if drone needs to travel a larger distance
-			if(std::pow(dx, 2) + std::pow(dy, 2) > std::pow(FSMConfig::NoYawCorrectDist, 2)) {
+			deltaX = currentPoint.x - xPos;
+			deltaY = currentPoint.y - yPos;
+			//Only change yaw if drone needs to travel a large distance
+			if(std::pow(deltaX, 2) + std::pow(deltaY, 2) > std::pow(FSMConfig::NoYawCorrectDist, 2)) {
 				//-PI_HALF due to mavros bug
-				_setpoint.yaw = calculatePathYaw(dx, dy) - PI_HALF;
+				_setpoint.yaw = static_cast<float>(calculatePathYaw(deltaX, deltaY) - PI_HALF);
 			}
 		}
 	}
@@ -268,22 +255,19 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
 
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
-	//Create new nodehandle
-	if(_pnh == nullptr) {
-		_pnh.reset(new ros::NodeHandle());	
-	}
+
+	//TODO Uneccesary variables - FSMConfig can be used directly
 	//Set state variables
 	_delayTransition.delayTime = ros::Duration(FSMConfig::GoToHoldDestTime);
-	_destReachedMargin = FSMConfig::DestReachedMargin;
-	_setpointReachedMargin = FSMConfig::SetpointReachedMargin;	
-	_yawReachedMargin = FSMConfig::YawReachedMargin;
+	_destReachedMargin = (float) FSMConfig::DestReachedMargin;
+	_setpointReachedMargin = (float) FSMConfig::SetpointReachedMargin;
+	_yawReachedMargin = (float) FSMConfig::YawReachedMargin;
 
 	//Set all neccesary publishers and subscribers
-	_posPub = _pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
-	_obsPub = _pnh->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
-	_targetPub = _pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
-	_planSub = _pnh->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
-	
+	_posPub = fsm._pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
+	_obsPub = fsm._pnh->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
+	_targetPub = fsm._pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
+	_planSub = fsm._pnh->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
@@ -300,6 +284,7 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 	*/
 	double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
 
+	//Select closest multiple of 90 degrees
 	if(angle > 3 * PI / 4) {
 		angle = PI;
 	} else if(angle > PI/4) {
@@ -307,12 +292,23 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 	} else {
 		angle = 0;
 	}
-	//
+	//Invert if dy is negative
 	if(dy < 0) {
 		angle *= -1;
 	}
 
 	return angle;
+}
+
+bool GoToState::stateIsReady() {
+	//Skipping check is allowed for debugging
+	if(!FSMConfig::RequireAllDataStreams) return true;
+	//Makes sure path planner is listening for input
+	if(_planSub.getNumPublishers() <= 0) return false;
+	if(_targetPub.getNumSubscribers() <= 0) return false;
+	if(_posPub.getNumSubscribers() <= 0) return false;
+	if(_obsPub.getNumSubscribers() <= 0) return false;
+	return true;
 }
 
 
