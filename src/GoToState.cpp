@@ -65,10 +65,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
 		return;
 	}
-	//Set up nodehandle and load all paramaters first time
-	if(_pnh == nullptr) {
-		stateInit(fsm);
-	}
 
 	//Sets setpoint to current position - until planner is done
 	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();

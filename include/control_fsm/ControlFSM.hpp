@@ -55,6 +55,9 @@ private:
 	static LandState LANDSTATE;
 	static BlindLandState BLINDLANDSTATE;
 	static ManualFlightState MANUALFLIGHTSTATE;
+	///Only one instance of ControlFSM is allowed - used to check
+	static bool isUsed = false;
+
 	/**
 	 * @brief Holds a pointer to current running state
 	 * @details Struct "vault" explanation:
@@ -83,6 +86,9 @@ private:
 	///Is drone in an active state?
 	bool _isActive = false;
 
+	///Vector of all states
+	std::vector<StateInterface*> _allStates;
+
 	///Callback when a transition is made
 	std::function<void()> _onStateChanged = [](){};
 	///Callback when an error occurs in FSM
@@ -91,6 +97,10 @@ private:
 	std::function<void(const std::string&)> _onFSMWarn = [](const std::string& msg){};
 	///Callbacks when an info message occurs in FSM
 	std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
+	///Copy constructor deleted
+	ControlFSM(const ControlFSM&) = delete;
+	///Assignment operator deleted
+	ControlFSM& operator=(const ControlFSM&) = delete;
 
 
 protected:
@@ -106,7 +116,7 @@ protected:
 public:
 	
 	///Constructor sets default/starting state
-	ControlFSM() { _stateVault._pCurrentState = &BEGINSTATE; }
+	ControlFSM();
 	
 	///Destructor not used to anything specific.
 	~ControlFSM() {}

@@ -128,7 +128,31 @@ double ControlFSM::getPositionZ() {
 		handleFSMError("Position has not been set!!");
 	}
  	return _dronePosition.position.pose.position.z;
- }
+}
+
+ControlFSM::ControlFSM() {
+	//Only one instance of ControlFSM is allowed
+	assert(ControlFSM::isUsed);
+
+	//Add all states to _allStates vector for easy access
+	_allStates.push_back(&BEGINSTATE);
+	_allStates.push_back(&PREFLIGHTSTATE);
+	_allStates.push_back(&IDLESTATE);
+	_allStates.push_back(&TAKEOFFSTATE);
+	_allStates.push_back(&BLINDHOVERSTATE);
+	_allStates.push_back(&POSITIONHOLDSTATE);
+	_allStates.push_back(&SHUTDOWNSTATE);
+	_allStates.push_back(&ESTIMATEADJUSTSTATE);
+	_allStates.push_back(&TRACKGBSTATE);
+	_allStates.push_back(&INTERACTGBSTATE);
+	_allStates.push_back(&GOTOSTATE);
+	_allStates.push_back(&LANDSTATE);
+	_allStates.push_back(&BLINDLANDSTATE);
+	_allStates.push_back(&MANUALFLIGHTSTATE);
+
+	_stateVault._pCurrentState = &BEGINSTATE;
+	ControlFSM::isUsed = true;
+}
 
 
 
