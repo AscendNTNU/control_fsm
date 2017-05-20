@@ -88,7 +88,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 		_setpoint.position.z = pose->pose.position.z;
 	}
 
-	_setpoint.yaw = fsm.getMavrosCorrectedYaw();
+	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 	
 }
 

@@ -68,7 +68,7 @@ private:
 	double calculatePathYaw(double dx, double dy);
 public:
 	GoToState();
-	void stateInit(ControlFSM& fsm);
+	void stateInit(ControlFSM& fsm) override;
 	void handleEvent(ControlFSM& fsm, const EventData& event) override;
 	void stateBegin(ControlFSM& fsm, const EventData& event) override;
 	void loopState(ControlFSM& fsm) override;

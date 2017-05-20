@@ -21,8 +21,9 @@ protected:
 	mavros_msgs::PositionTarget _setpoint;
 public:
 
-	//Consider adding stateInit method to function as a constructor for the static instances
-	
+	///Used for state setup
+	virtual void stateInit(ControlFSM& fsm) {};
+
 	///Virtual destructor - override if needed
 	virtual ~StateInterface() {}
 
