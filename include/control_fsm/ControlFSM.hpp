@@ -190,6 +190,8 @@ public:
 	void init();
 	///Checks if all states are ready
 	bool isReady();
+
+	void startPreflight();
 };
 
 #endif

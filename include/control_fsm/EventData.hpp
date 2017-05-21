@@ -46,7 +46,7 @@ enum class CommandType {
     NONE, //Not part of a command
     LANDXY, //Request part of command to land at XY
     GOTOXYZ, //Reqeust part of going to specified XYZ
-    LANDGB //Request part of interacting with ground robot
+    //LANDGB //Request part of interacting with ground robot
 };
 
 ///Defines a position goal

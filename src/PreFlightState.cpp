@@ -12,7 +12,7 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		fsm.handleFSMWarn("Drone is not yet active - commands ignored");
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			fsm.transitionTo(ControlFSM::BEGINSTATE, this, event);
+			fsm.handleFSMWarn("Can't abort preflight!");
 		} else if(event.request == RequestType::MANUALFLIGHT) {
 			fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, event);
 		} else {

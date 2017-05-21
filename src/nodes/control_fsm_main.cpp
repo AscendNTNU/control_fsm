@@ -115,6 +115,7 @@ int main(int argc, char** argv) {
     //Preflight is finished and system is ready for use!
     /**************************************************/
     fsm.handleFSMInfo("FSM is ready!");
+	fsm.startPreflight(); //Transition to preflight!
 	//Used to maintain a fixed loop rate
 	ros::Rate loopRate(SETPOINT_PUB_RATE);
 	//Main loop
