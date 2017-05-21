@@ -54,6 +54,14 @@ public:
 	///Returning a valid setpoint from state 
 	/**Be aware - it's return by const pointer - only return address of _setpoint.*/
 	virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
+
+    ///Aborting current operation
+    virtual void abort(ControlFSM& fsm) = 0;
+
+    ///Handles incoming command
+    virtual void handleCMD(ControlFSM& fsm, const EventData& event) = 0;
+
+
 };
 
 #endif

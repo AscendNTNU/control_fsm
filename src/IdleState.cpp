@@ -13,7 +13,7 @@ IdleState::IdleState() {
 void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//All commands needs to get to position hold first
 	if(event.isValidCMD()) {
-		fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::TAKEOFF) {
 			fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
@@ -29,5 +29,17 @@ const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
 	//Sets timestamp, and returns _setpoint as const pointer
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void IdleState::abort(ControlFSM &fsm) {
+	fsm.handleFSMWarn("Can't abort idle!");
+}
+
+void IdleState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
+	} else {
+		fsm.handleFSMError("Invalid CMD");
+	}
 }
 

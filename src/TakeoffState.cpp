@@ -15,17 +15,10 @@ TakeoffState::TakeoffState() {
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle events
 	if(event.isValidCMD()) {
-		if(_cmd.isValidCMD()) {
-			_cmd = event;
-		} else {
-			event.eventError("Finish old CMD before sending new");
-			fsm.handleFSMWarn("ABORT old cmd before sending new");
-		}
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
-		if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
-			_cmd.eventError("Aborting command");
-			_cmd = EventData(); //Aborting commands, but will still continue takeoff
-			fsm.handleFSMInfo("Command aborted, but takeoff can't be aborted");
+		if(event.request == RequestType::ABORT) {
+			abort(fsm);
 		} else {
 			fsm.handleFSMWarn("Illegal transition request");
 		}
@@ -80,4 +73,25 @@ void TakeoffState::loopState(ControlFSM& fsm) {
 const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void TakeoffState::abort(ControlFSM &fsm) {
+	if(_cmd.isValidCMD()) {
+		_cmd.eventError("Aborting command");
+		_cmd = EventData(); //Aborting commands, but will still continue takeoff
+		fsm.handleFSMInfo("Command aborted, but takeoff can't be aborted");
+	}
+}
+
+void TakeoffState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		if(!_cmd.isValidCMD()) {
+			_cmd = event;
+		} else {
+			event.eventError("CMD rejected!");
+			fsm.handleFSMWarn("ABORT old cmd before sending new");
+		}
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }

@@ -19,12 +19,7 @@ BlindHoverState::BlindHoverState() {
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	//TODO Handle incoming events when blind hovering
 	if(event.isValidCMD()) {
-		if(!_cmd.isValidCMD()) {
-			_cmd = event; //Hold event until position is regained.
-		} else {
-			event.eventError("CMD rejected!");
-			fsm.handleFSMWarn("ABORT old command first");
-		}
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::BLINDLAND) {
 			if(_cmd.isValidCMD()) {
@@ -83,4 +78,27 @@ void BlindHoverState::loopState(ControlFSM& fsm) {
 const mavros_msgs::PositionTarget* BlindHoverState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void BlindHoverState::abort(ControlFSM &fsm) {
+	if(_cmd.isValidCMD()) {
+		fsm.handleFSMInfo("Aborting CMD");
+		_cmd.eventError("ABORT");
+		_cmd = EventData();
+	} else {
+		fsm.handleFSMWarn("Can't abort blind hover");
+	}
+}
+
+void BlindHoverState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		if(!_cmd.isValidCMD()) {
+			_cmd = event; //Hold event until position is regained.
+		} else {
+			event.eventError("CMD rejected!");
+			fsm.handleFSMWarn("ABORT old command first");
+		}
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }

@@ -8,11 +8,10 @@ PreFlightState::PreFlightState() {
 //Only check for an abort event
 void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidCMD()) {
-		event.eventError("CMD rejected!");
-		fsm.handleFSMWarn("Drone is not yet active - commands ignored");
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			fsm.transitionTo(ControlFSM::BEGINSTATE, this, event);
+			abort(fsm);
 		} else if(event.request == RequestType::MANUALFLIGHT) {
 			fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, event);
 		} else {
@@ -34,6 +33,19 @@ void PreFlightState::stateBegin(ControlFSM &fsm, const EventData &event) {
 const mavros_msgs::PositionTarget* PreFlightState::getSetpoint() { 
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint; 
+}
+
+void PreFlightState::abort(ControlFSM &fsm) {
+	fsm.handleFSMWarn("Nothing to abort!");
+}
+
+void PreFlightState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		event.eventError("CMD rejected!");
+		fsm.handleFSMWarn("Not accepting commands in preflight!");
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }
 
 

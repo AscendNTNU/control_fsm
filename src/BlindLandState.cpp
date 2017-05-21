@@ -12,13 +12,10 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		//Land completed
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
 	} else if(event.isValidCMD()) {
-		//Blind land not part of normal operation. 
-		//Any command will be ignored!
-		event.eventError("CMD rejected!");
-		fsm.handleFSMWarn("Blind land not part of normal operation! Ignoring commands!");
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			fsm.handleFSMWarn("Can't ABORT blind land!");
+			abort(fsm);
 		} else {
 			fsm.handleFSMWarn("Illegal transition request!");
 		}
@@ -38,6 +35,19 @@ void BlindLandState::loopState(ControlFSM& fsm) {
 const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void BlindLandState::abort(ControlFSM &fsm) {
+	fsm.handleFSMWarn("Can't ABORT blind land!");
+}
+
+void BlindLandState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		fsm.handleFSMWarn("Command rejected! Blind land not part of normal operation!");
+		event.eventError("CMD rejected!");
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }
 
 

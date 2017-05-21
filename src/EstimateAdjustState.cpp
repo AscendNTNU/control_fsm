@@ -9,17 +9,10 @@ EstimateAdjustState::EstimateAdjustState() {
 
 void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
-        if(_cmd.isValidCMD()) {
-            event.eventError("ABORT old CMD first!");
-            fsm.handleFSMWarn("ABORT old CMD before sending new!");
-        } else { 
-            _cmd = event;
-        }
+        handleCMD(fsm, event);
     } else if(event.eventType == EventType::REQUEST) {
-        if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
-            _cmd = EventData();
-            _cmd.eventError("ABORT request!");
-            fsm.handleFSMDebug("ABORTING command, but estimateadjust cant be aborted!");
+        if(event.request == RequestType::ABORT) {
+            abort(fsm);
         } else {
             fsm.handleFSMWarn("Illegal transition request");
         }
@@ -51,5 +44,26 @@ void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
 const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void EstimateAdjustState::abort(ControlFSM &fsm) {
+    if(_cmd.isValidCMD()) {
+        _cmd = EventData();
+        _cmd.eventError("ABORT request!");
+        fsm.handleFSMDebug("ABORTING command, but estimateadjust cant be aborted!");
+    }
+}
+
+void EstimateAdjustState::handleCMD(ControlFSM &fsm, const EventData &event) {
+    if(event.isValidCMD()) {
+        if(_cmd.isValidCMD()) {
+            event.eventError("CMD rejected!");
+            fsm.handleFSMWarn("ABORT old CMD before sending new!");
+        } else {
+            _cmd = event;
+        }
+    } else {
+        fsm.handleFSMError("Invalid CMD!");
+    }
 }
 

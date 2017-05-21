@@ -10,8 +10,7 @@ BeginState::BeginState() {
 //Begin state only waits for preflight request
 void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidCMD()) {
-		event.eventError("CMD rejected!");
-		fsm.handleFSMWarn("Drone is not yet active - commands ignored");
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::PREFLIGHT) {
 			fsm.transitionTo(ControlFSM::PREFLIGHTSTATE, this, event);
@@ -27,6 +26,19 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
 const mavros_msgs::PositionTarget* BeginState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now(); 
  	return &_setpoint;
+}
+
+void BeginState::abort(ControlFSM &fsm) {
+	fsm.handleFSMWarn("Can't abort begin");
+}
+
+void BeginState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		event.eventError("Event ignored!");
+		fsm.handleFSMWarn("Drone is not yet active - events ignored!");
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }
 
 

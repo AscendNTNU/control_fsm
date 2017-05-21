@@ -12,6 +12,10 @@ public:
     void loopState(ControlFSM& fsm) override;
     //Returns setpoint
 	const mavros_msgs::PositionTarget* getSetpoint() override;
+
+	void abort(ControlFSM &fsm) override;
+
+	void handleCMD(ControlFSM &fsm, const EventData &event) override;
 };
 
 #endif

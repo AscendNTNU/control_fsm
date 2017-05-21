@@ -22,3 +22,16 @@ const mavros_msgs::PositionTarget* ShutdownState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
 }
+
+void ShutdownState::abort(ControlFSM &fsm) {
+	fsm.handleFSMWarn("Nothing to abort!");
+}
+
+void ShutdownState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		event.eventError("CMD rejected!");
+		fsm.handleFSMWarn("Not accepting commands in shutdown!");
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
+}

@@ -11,11 +11,7 @@ LandState::LandState() {
 void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			if(_cmd.isValidCMD()) {
-				_cmd.eventError("ABORT request sent. Aborting command");
-				_cmd = EventData();
-			}
-			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+			abort(fsm);
 			return;
 		} else {
 			fsm.handleFSMWarn("Illegal transition request!");
@@ -31,13 +27,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		}
 		fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
 	} else if(event.isValidCMD()) {
-		if(_cmd.isValidCMD()) {
-			fsm.handleFSMWarn("ABORT should be sent before new command!");
-			event.eventError("ABORT should be sent before new command!");
-		} else {
-			fsm.handleFSMWarn("Not accepting CMDs before land is completed!");
-			event.eventError("Not accpeting CMDs before land is completed!");
-		}
+		handleCMD(fsm, event);
 	}
 }
 
@@ -72,4 +62,27 @@ void LandState::loopState(ControlFSM& fsm) {
 const mavros_msgs::PositionTarget* LandState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void LandState::abort(ControlFSM &fsm) {
+	if(_cmd.isValidCMD()) {
+		_cmd.eventError("ABORT request sent. Aborting command");
+		_cmd = EventData();
+	}
+	RequestEvent event(RequestType::ABORT);
+	fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+}
+
+void LandState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		if(_cmd.isValidCMD()) {
+			fsm.handleFSMWarn("ABORT should be sent before new command!");
+			event.eventError("CMD rejected!");
+		} else {
+			fsm.handleFSMWarn("Not accepting CMDs before land is completed!");
+			event.eventError("CMD rejected!");
+		}
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }

@@ -19,11 +19,7 @@ GoToState::GoToState() {
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			if(_cmd.isValidCMD()) {
-				_cmd.eventError("ABORT");
-				_cmd = EventData();
-			}
-			fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+			abort(fsm);
 		} else if(event.request == RequestType::POSHOLD) {
 			if(_cmd.isValidCMD()) {
 				fsm.handleFSMWarn("ABORT CMD before sending manual request!");
@@ -40,11 +36,7 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			fsm.handleFSMWarn("Illegal transiton request");
 		}
 	} else if(event.isValidCMD()) {
-		if(_cmd.isValidCMD()) {
-			event.eventError("ABORT request should be sent before new command");
-		} else {
-			fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition to itself
-		}
+		handleCMD(fsm, event);
 	}
 }
 
@@ -309,6 +301,27 @@ bool GoToState::stateIsReady() {
 	if(_posPub.getNumSubscribers() <= 0) return false;
 	if(_obsPub.getNumSubscribers() <= 0) return false;
 	return true;
+}
+
+void GoToState::abort(ControlFSM &fsm) {
+	if(_cmd.isValidCMD()) {
+		_cmd.eventError("ABORT");
+		_cmd = EventData();
+	}
+	RequestEvent event(RequestType::ABORT);
+	fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+}
+
+void GoToState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if (event.isValidCMD()) {
+		if (_cmd.isValidCMD()) {
+			event.eventError("ABORT request should be sent before new command");
+		} else {
+			fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition to itself
+		}
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }
 
 

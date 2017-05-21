@@ -17,8 +17,7 @@ PositionHoldState::PositionHoldState() {
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	_isActive = true;
 	if(event.isValidCMD()) {
-		//All valid command needs to go via the GOTO state
-		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		switch(event.request) {
 			case RequestType::GOTO:
@@ -141,4 +140,17 @@ void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
 const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
+}
+
+void PositionHoldState::abort(ControlFSM &fsm) {
+	fsm.handleFSMWarn("Nothing to abort!");
+}
+
+void PositionHoldState::handleCMD(ControlFSM &fsm, const EventData &event) {
+	if(event.isValidCMD()) {
+		//All valid command needs to go via the GOTO state
+		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+	} else {
+		fsm.handleFSMError("Invalid CMD!");
+	}
 }
