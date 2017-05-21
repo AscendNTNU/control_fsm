@@ -146,9 +146,11 @@ void GoToState::loopState(ControlFSM& fsm) {
 				case CommandType::LANDXY:
 					fsm.transitionTo(ControlFSM::LANDSTATE, this, _cmd);
 					break;
+				/*
 				case CommandType::LANDGB:
 					fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, _cmd);
 					break;
+				*/
 				case CommandType::GOTOXYZ:
 					_cmd.finishCMD();
 					RequestEvent doneEvent(RequestType::POSHOLD);

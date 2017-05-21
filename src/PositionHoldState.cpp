@@ -29,10 +29,12 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			case RequestType::BLINDLAND:
 				fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
 				break;
-			case RequestType::TRACKGB:
+
+			/*case RequestType::TRACKGB:
 				fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
 				break;
-			case RequestType::ESTIMATORADJ:
+			*/
+			 case RequestType::ESTIMATORADJ:
 				fsm.transitionTo(ControlFSM::ESTIMATEADJUSTSTATE, this, event);
 				break;
 			default:
@@ -88,6 +90,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
+	_pFsm = &fsm;
 	_lidarSub = fsm._pnh->subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
 }
 

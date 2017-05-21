@@ -173,6 +173,12 @@ bool ControlFSM::isReady() {
 	return true;
 }
 
+void ControlFSM::startPreflight() {
+	if(!isReady()) return;
+	RequestEvent event(RequestType::PREFLIGHT);
+	transitionTo(PREFLIGHTSTATE, &BEGINSTATE, event);
+}
+
 
 
 
