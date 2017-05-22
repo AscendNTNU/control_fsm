@@ -19,7 +19,7 @@ GoToState::GoToState() {
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			abort(fsm);
+			handleAbort(fsm);
 		} else if(event.request == RequestType::POSHOLD) {
 			if(_cmd.isValidCMD()) {
 				fsm.handleFSMWarn("ABORT CMD before sending manual request!");
@@ -305,7 +305,7 @@ bool GoToState::stateIsReady() {
 	return true;
 }
 
-void GoToState::abort(ControlFSM &fsm) {
+void GoToState::handleAbort(ControlFSM &fsm) {
 	if(_cmd.isValidCMD()) {
 		_cmd.eventError("ABORT");
 		_cmd = EventData();

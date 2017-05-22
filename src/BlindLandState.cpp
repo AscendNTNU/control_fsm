@@ -15,7 +15,7 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			abort(fsm);
+			handleAbort(fsm);
 		} else {
 			fsm.handleFSMWarn("Illegal transition request!");
 		}
@@ -37,7 +37,7 @@ const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {
 	return &_setpoint;
 }
 
-void BlindLandState::abort(ControlFSM &fsm) {
+void BlindLandState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Can't ABORT blind land!");
 }
 

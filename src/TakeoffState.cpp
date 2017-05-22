@@ -18,7 +18,7 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			abort(fsm);
+			handleAbort(fsm);
 		} else {
 			fsm.handleFSMWarn("Illegal transition request");
 		}
@@ -75,7 +75,7 @@ const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 	return &_setpoint;
 }
 
-void TakeoffState::abort(ControlFSM &fsm) {
+void TakeoffState::handleAbort(ControlFSM &fsm) {
 	if(_cmd.isValidCMD()) {
 		_cmd.eventError("Aborting command");
 		_cmd = EventData(); //Aborting commands, but will still continue takeoff

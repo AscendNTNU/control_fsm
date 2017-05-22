@@ -23,7 +23,7 @@ const mavros_msgs::PositionTarget* ShutdownState::getSetpoint() {
 	return &_setpoint;
 }
 
-void ShutdownState::abort(ControlFSM &fsm) {
+void ShutdownState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Nothing to abort!");
 }
 

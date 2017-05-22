@@ -48,7 +48,7 @@ const mavros_msgs::PositionTarget* ManualFlightState::getSetpoint() {
 	return &_setpoint; 
 }
 
-void ManualFlightState::abort(ControlFSM &fsm) {
+void ManualFlightState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Nothing to abort!");
 }
 

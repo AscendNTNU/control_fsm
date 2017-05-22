@@ -12,7 +12,7 @@ public:
 	std::string getStateName() const override { return "TrackGroundRobot"; }
 	const mavros_msgs::PositionTarget* getSetpoint() override;
 
-	void abort(ControlFSM &fsm) override;
+	void handleAbort(ControlFSM &fsm) override;
 
 	void handleCMD(ControlFSM &fsm, const EventData &event) override;
 };

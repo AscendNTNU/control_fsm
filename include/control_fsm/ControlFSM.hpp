@@ -188,10 +188,15 @@ public:
 
 	///Initializes all states
 	void init();
+
 	///Checks if all states are ready
 	bool isReady();
 
+	///Set state to preflight
 	void startPreflight();
+
+	///Sends abort to current running state
+	void abortCurrentState();
 };
 
 #endif

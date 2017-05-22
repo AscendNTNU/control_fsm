@@ -12,8 +12,7 @@ ActionServer::ActionServer(ControlFSM* pFsm) : as_(nh_, "controlNodeActionServer
 void ActionServer::goalCB() {
 	//Check if an action is already running
 	if(actionIsRunning_) {
-		RequestEvent abortEvent(RequestType::ABORT);
-		pFsm_->handleEvent(abortEvent);
+		pFsm_->abortCurrentState();
 		if(actionIsRunning_) {
 			ROS_WARN("[Control Action Server] CMD not stopping after abort - bug!");
 		}
@@ -40,8 +39,7 @@ void ActionServer::goalCB() {
 //Preempt action and send abort to fsm
 void ActionServer::preemptCB() {
 	if(actionIsRunning_) {
-		RequestEvent abortEvent(RequestType::ABORT);
-		pFsm_->handleEvent(abortEvent);
+		pFsm_->abortCurrentState();
 		if(actionIsRunning_) {
 			ROS_WARN("[Control Action Server] CMD not properly terminated on abort - bug!");
 		}

@@ -23,7 +23,7 @@ const mavros_msgs::PositionTarget* InteractGBState::getSetpoint() {
 	return &_setpoint;
 }
 
-void InteractGBState::abort(ControlFSM &fsm) {
+void InteractGBState::handleAbort(ControlFSM &fsm) {
 	//TODO Implement
 }
 

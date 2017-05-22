@@ -77,7 +77,7 @@ public:
 
 	void handleCMD(ControlFSM &fsm, const EventData &event) override;
 
-	void abort(ControlFSM &fsm) override;
+	void handleAbort(ControlFSM &fsm) override;
 };
 
 #endif

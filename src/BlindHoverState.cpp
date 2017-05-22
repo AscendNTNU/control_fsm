@@ -80,7 +80,7 @@ const mavros_msgs::PositionTarget* BlindHoverState::getSetpoint() {
 	return &_setpoint;
 }
 
-void BlindHoverState::abort(ControlFSM &fsm) {
+void BlindHoverState::handleAbort(ControlFSM &fsm) {
 	if(_cmd.isValidCMD()) {
 		fsm.handleFSMInfo("Aborting CMD");
 		_cmd.eventError("ABORT");

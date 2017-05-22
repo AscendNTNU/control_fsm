@@ -11,7 +11,7 @@ LandState::LandState() {
 void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			abort(fsm);
+			handleAbort(fsm);
 			return;
 		} else {
 			fsm.handleFSMWarn("Illegal transition request!");
@@ -64,7 +64,7 @@ const mavros_msgs::PositionTarget* LandState::getSetpoint() {
 	return &_setpoint;
 }
 
-void LandState::abort(ControlFSM &fsm) {
+void LandState::handleAbort(ControlFSM &fsm) {
 	if(_cmd.isValidCMD()) {
 		_cmd.eventError("ABORT request sent. Aborting command");
 		_cmd = EventData();

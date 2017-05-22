@@ -23,7 +23,7 @@ const mavros_msgs::PositionTarget* TrackGBState::getSetpoint() {
 	return &_setpoint;
 }
 
-void TrackGBState::abort(ControlFSM &fsm) {
+void TrackGBState::handleAbort(ControlFSM &fsm) {
 	//TODO Implement
 }
 

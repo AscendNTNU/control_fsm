@@ -17,7 +17,7 @@ PositionHoldState::PositionHoldState() {
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	_isActive = true;
 	if(event.isValidCMD()) {
-		handleCMD(fsm, event);
+		this->handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		switch(event.request) {
 			case RequestType::GOTO:
@@ -145,7 +145,7 @@ const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
 	return &_setpoint;
 }
 
-void PositionHoldState::abort(ControlFSM &fsm) {
+void PositionHoldState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Nothing to abort!");
 }
 

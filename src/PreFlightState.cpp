@@ -11,7 +11,7 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 		handleCMD(fsm, event);
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::ABORT) {
-			abort(fsm);
+			handleAbort(fsm);
 		} else if(event.request == RequestType::MANUALFLIGHT) {
 			fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, event);
 		} else {
@@ -35,7 +35,7 @@ const mavros_msgs::PositionTarget* PreFlightState::getSetpoint() {
 	return &_setpoint; 
 }
 
-void PreFlightState::abort(ControlFSM &fsm) {
+void PreFlightState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Nothing to abort!");
 }
 

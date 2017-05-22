@@ -31,7 +31,7 @@ const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
 	return &_setpoint;
 }
 
-void IdleState::abort(ControlFSM &fsm) {
+void IdleState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Can't abort idle!");
 }
 

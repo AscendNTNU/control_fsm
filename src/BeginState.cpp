@@ -28,7 +28,7 @@ const mavros_msgs::PositionTarget* BeginState::getSetpoint() {
  	return &_setpoint;
 }
 
-void BeginState::abort(ControlFSM &fsm) {
+void BeginState::handleAbort(ControlFSM &fsm) {
 	fsm.handleFSMWarn("Can't abort begin");
 }
 

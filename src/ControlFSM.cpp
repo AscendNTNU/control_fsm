@@ -179,6 +179,11 @@ void ControlFSM::startPreflight() {
 	transitionTo(PREFLIGHTSTATE, &BEGINSTATE, event);
 }
 
+void ControlFSM::abortCurrentState() {
+	//Run state's abort method
+	getState()->handleAbort(*this);
+}
+
 
 
 

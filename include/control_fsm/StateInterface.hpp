@@ -56,7 +56,7 @@ public:
 	virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
 
     ///Aborting current operation
-    virtual void abort(ControlFSM& fsm) = 0;
+    virtual void handleAbort(ControlFSM &fsm) = 0;
 
     ///Handles incoming command
     virtual void handleCMD(ControlFSM& fsm, const EventData& event) = 0;
