@@ -29,6 +29,7 @@ roslaunch control_fsm control_fsm.launch
 4. The actionserver will then become active
 5. Preflight is finsihed. The FSM will then transition to preflight mode automaticly and wait for an AUTONOMOUS event (drone is in OFFBOARD mode and ARMED). All other events are ignored
 6. The node will loop at 30Hz and publish setpoints to mavros
+
 **Design pattern inspiration:**
 http://gameprogrammingpatterns.com/state.html
 
