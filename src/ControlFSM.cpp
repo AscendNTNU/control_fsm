@@ -22,7 +22,6 @@ GoToState ControlFSM::GOTOSTATE;
 LandState ControlFSM::LANDSTATE;
 BlindLandState ControlFSM::BLINDLANDSTATE;
 ManualFlightState ControlFSM::MANUALFLIGHTSTATE;
-
 bool ControlFSM::isUsed = false;
 
 //Change the current running state - be carefull to only change into an allowed state
