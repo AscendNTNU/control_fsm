@@ -17,6 +17,8 @@ void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	} else if(event.isValidRequest()) {
 		if(event.request == RequestType::TAKEOFF) {
 			fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
+		} else if(event.request == RequestType ::ABORT) {
+			handleAbort(fsm);
 		} else {
 			fsm.handleFSMWarn("Invalid transition request");
 		}
@@ -32,7 +34,7 @@ const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
 }
 
 void IdleState::handleAbort(ControlFSM &fsm) {
-	fsm.handleFSMWarn("Can't abort idle!");
+	fsm.handleFSMWarn("Nothing to abort!");
 }
 
 void IdleState::handleCMD(ControlFSM &fsm, const EventData &event) {

@@ -23,9 +23,7 @@ public:
 	const mavros_msgs::PositionTarget* getSetpoint() override;
 	void obsCB(const ascend_msgs::PointArray::ConstPtr& msg);
 	bool stateIsReady() override;
-
 	void handleAbort(ControlFSM &fsm) override;
-
 	void handleCMD(ControlFSM &fsm, const EventData &event) override;
 };
 
