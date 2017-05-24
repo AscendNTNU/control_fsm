@@ -102,6 +102,7 @@ bool PositionHoldState::stateIsReady() {
 }
 
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
+	//TODO TEST!!!
 	//Only check if neccesary
 	if(!_isActive || _setpoint.position.z >= _safeHoverAlt) {
 		return;
