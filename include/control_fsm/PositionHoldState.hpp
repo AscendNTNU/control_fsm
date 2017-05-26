@@ -12,7 +12,6 @@ private:
 	ros::Subscriber _lidarSub;
 	bool _isActive = false;
 	double _safeHoverAlt = DEFAULT_SAFE_HOVER_ALT;
-	ControlFSM* _pFsm = nullptr;
 public:
 	PositionHoldState();
 	void stateInit(ControlFSM& fsm) override;
@@ -21,7 +20,7 @@ public:
 	void stateEnd(ControlFSM& fsm, const EventData& eventData) override;
 	std::string getStateName() const override { return "Position hold"; }
 	const mavros_msgs::PositionTarget* getSetpoint() override;
-	void obsCB(const ascend_msgs::PointArray::ConstPtr& msg);
+	void obsCB(const ascend_msgs::PointArray::ConstPtr& msg, ControlFSM& fsm);
 	bool stateIsReady() override;
 	void handleAbort(ControlFSM &fsm) override;
 	void handleCMD(ControlFSM &fsm, const EventData &event) override;

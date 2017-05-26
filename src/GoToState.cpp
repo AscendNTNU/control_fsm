@@ -258,10 +258,10 @@ void GoToState::stateInit(ControlFSM& fsm) {
 	_yawReachedMargin = (float) FSMConfig::YawReachedMargin;
 
 	//Set all neccesary publishers and subscribers
-	_posPub = fsm._pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
-	_obsPub = fsm._pnh->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
-	_targetPub = fsm._pnh->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
-	_planSub = fsm._pnh->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
+	_posPub = fsm._pNodeHandler->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
+	_obsPub = fsm._pNodeHandler->advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
+	_targetPub = fsm._pNodeHandler->advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
+	_planSub = fsm._pNodeHandler->subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees

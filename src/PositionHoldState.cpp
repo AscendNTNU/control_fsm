@@ -1,5 +1,6 @@
 #include "control_fsm/PositionHoldState.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
+#include <boost/function.hpp>
 #include <geometry_msgs/PoseStamped.h>
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/EventData.hpp"
@@ -54,9 +55,6 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	if(_pFsm == nullptr) {
-		_pFsm = &fsm;
-	}
 	_safeHoverAlt = FSMConfig::SafeHoverAltitude;
 	//No need to check other commands
 	if(event.isValidCMD()) {
@@ -91,8 +89,11 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
-	_pFsm = &fsm;
-	_lidarSub = fsm._pnh->subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
+    //Since ControlFSM owns the nodehandle, the callback won't be called unless an controlFSM instance exists.
+    //No need to worry about undefined reference to fsm
+    using RosCallback = const boost::function<void(const ascend_msgs::PointArray::ConstPtr&)>;
+    RosCallback cb = boost::bind(&PositionHoldState::obsCB, this, _1, boost::ref(fsm));
+	_lidarSub = fsm._pNodeHandler->subscribe(FSMConfig::LidarTopic, 1, cb);
 }
 
 bool PositionHoldState::stateIsReady() {
@@ -101,21 +102,23 @@ bool PositionHoldState::stateIsReady() {
 	return _lidarSub.getNumPublishers() > 0;
 }
 
-void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
+void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg, ControlFSM& fsm) {
 	//Only check if neccesary
 	if(!_isActive || _setpoint.position.z >= _safeHoverAlt) {
 		return;
 	}
+    /*
 	if(_pFsm == nullptr) {
 		ROS_ERROR("FSM pointer = nullptr! Critical!");
 		return; //Avoids nullpointer exception
 	}
+     */
 	auto points = msg->points;
-	const geometry_msgs::PoseStamped* pPose = _pFsm->getPositionXYZ();
+	const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
 	//Should never happen!
 	if(pPose == nullptr) {
 		//No valid XY position available, no way to determine distance to GB
-		_pFsm->handleFSMError("Position not available! Should not happen!");
+		fsm.handleFSMError("Position not available! Should not happen!");
 		return;
 	}
 	//No need to check obstacles if they're too close

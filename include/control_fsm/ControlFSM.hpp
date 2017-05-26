@@ -94,7 +94,7 @@ private:
 	std::vector<StateInterface*> _allStates;
 
 	///Shared nodehandle for all states
-	std::unique_ptr<ros::NodeHandle> _pnh;
+	std::unique_ptr<ros::NodeHandle> _pNodeHandler;
 
 	///Callback when a transition is made
 	std::function<void()> _onStateChanged = [](){};
