@@ -61,7 +61,8 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	//No need to check other commands
 	if(event.isValidCMD()) {
 		//All valid commands need to go to correct place on arena before anything else
-		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); 
+		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+		return;
 	}
 
 	const geometry_msgs::PoseStamped* pose = fsm.getPositionXYZ();
