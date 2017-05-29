@@ -93,7 +93,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
 	_pFsm = &fsm;
-	_lidarSub = fsm._pnh->subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
+	_lidarSub = fsm._nodeHandler.subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
 }
 
 bool PositionHoldState::stateIsReady() {

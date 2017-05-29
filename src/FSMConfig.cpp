@@ -16,6 +16,8 @@ std::string FSMConfig::FSMErrorTopic = "control/fsm/on_error";
 std::string FSMConfig::FSMWarnTopic = "control/fsm/on_warn";
 std::string FSMConfig::FSMInfoTopic = "control/fsm/on_info";
 std::string FSMConfig::FSMStateChangedTopic = "control/fsm/state_changed";
+std::string FSMConfig::MavrosLocalPosTopic = "mavros/local_position/pose";
+std::string FSMConfig::MavrosStateChangedTopic = "mavros/state";
 int FSMConfig::FSMStatusBufferSize = 10;
 double FSMConfig::GoToHoldDestTime = 0.5;
 double FSMConfig::SafeHoverAltitude = 2.0;
@@ -75,5 +77,8 @@ void FSMConfig::loadParams() {
 	getIntParam("status_msg_buffer_size", FSMStatusBufferSize);
 	//Lidar topics
 	getStringParam("lidar_topic", LidarTopic);
+	//FSM topics
+	getStringParam("local_position_topic", MavrosLocalPosTopic);
+	getStringParam("mavros_state_topic", MavrosStateChangedTopic);
 
 }

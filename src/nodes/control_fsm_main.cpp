@@ -25,15 +25,10 @@ constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 constexpr char localPosTopic[] = "mavros/local_position/pose";
 constexpr char mavrosStateTopic[] = "mavros/state";
 constexpr char mavrosSetpointTopic[] = "mavros/setpoint_raw/local";
-//Statemachine
-ControlFSM fsm;
 
-//Callback definitions
-void localPosCB(const geometry_msgs::PoseStamped& input);
-void mavrosStateChangedCB(const mavros_msgs::State& state);
 //Debug service functions
 EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&);
-bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request&, ascend_msgs::ControlFSMEvent::Response&);
+bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request&, ascend_msgs::ControlFSMEvent::Response&, ControlFSM&);
 
 //Loads ros parameters 
 void loadParams(ros::NodeHandle& n);
@@ -48,12 +43,8 @@ int main(int argc, char** argv) {
 	//Load ros params
 	FSMConfig::loadParams();
 
-	///Init fsm
-	fsm.init();
-
-	//Subscribe to neccesary topics
-	ros::Subscriber localPosSub = n.subscribe(localPosTopic, 1, localPosCB);
-	ros::Subscriber mavrosStateChangedSub = n.subscribe(mavrosStateTopic, 1, mavrosStateChangedCB);
+	//Statemachine instance
+	ControlFSM fsm;
 
 	//Set up neccesary publishers
 	ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
@@ -63,7 +54,8 @@ int main(int argc, char** argv) {
 	ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, FSMConfig::FSMStatusBufferSize);
 
 	//Set up services
-	ros::ServiceServer debugServiceServer = n.advertiseService("control_fsm_debug", handleDebugEvent);
+	using DebugCB = boost::function<ascend_msgs::ControlFSMEvent::Request, ascend_msgs::ControlFSMEvent::Response>;
+	ros::ServiceServer debugServiceServer = n.advertiseService("control_fsm_debug", boost::bind<DebugCB>(handleDebugEvent, _1, _2, boost::ref(fsm)));
 
 	//Spin once to get first messages
 	ros::spinOnce();
@@ -101,7 +93,6 @@ int main(int argc, char** argv) {
 		ros::spinOnce();
 		//Make sure all critical datastreams are up and running before continuing
 		if(!firstPositionRecieved) continue;
-		if(mavrosStateChangedSub.getNumPublishers() <= 0) continue;
 		if(!fsm.isReady()) continue; //Checks if all states are ready
 		break;
 	}
@@ -135,41 +126,7 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-void localPosCB(const geometry_msgs::PoseStamped& input) {
-	fsm.setPosition(input);
-	if(!firstPositionRecieved) {
-		firstPositionRecieved = true;
-	}
-}
-
-void mavrosStateChangedCB(const mavros_msgs::State& state) {
-	bool offboardTrue = (state.mode == std::string("OFFBOARD"));
-	bool armedTrue = (bool)state.armed;
-	//Only act if relevant states has changed
-	if(offboardTrue != isOffboard || armedTrue != isArmed) {
-		//Check if old state was autonomous
-		//=> now in manual mode
-		if(isOffboard && isArmed) {
-			EventData manualEvent;
-			manualEvent.eventType = EventType::MANUAL;
-			ROS_INFO("Manual sent!");
-			fsm.handleEvent(manualEvent);
-		}
-		//Set current state
-		isOffboard = offboardTrue;
-		isArmed = state.armed;
-
-		//If it is armed and in offboard and all preflight checks has completed - notify AUTONOMOUS mode
-		if(isArmed && isOffboard && preflightFinished) {
-			EventData autonomousEvent;
-			autonomousEvent.eventType = EventType::AUTONOMOUS;
-			ROS_INFO("Autonomous event sent");
-			fsm.handleEvent(autonomousEvent);
-		}
-	}
-}
-
-bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::ControlFSMEvent::Response& resp) {
+bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::ControlFSMEvent::Response& resp, ControlFSM& fsm) {
     if(!preflightFinished) {
         fsm.handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
     }

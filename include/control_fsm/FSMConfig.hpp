@@ -33,6 +33,10 @@ public:
 	static std::string FSMInfoTopic;
 	///Topic to publish FSM state changed
 	static std::string FSMStateChangedTopic;
+	///Topic for recieving local position from FC
+	static std::string MavrosLocalPosTopic;
+	///Topic for recieving current state from FC
+	static std::string MavrosStateChangedTopic;
 	///Buffer size used for FSMError, FSMWarn etc
 	static int FSMStatusBufferSize;
 	///Time gotostate waits before transitioning

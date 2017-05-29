@@ -2,6 +2,8 @@
 #include <ros/ros.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include <control_fsm/ControlFSM.hpp>
+#include <control_fsm/FSMConfig.hpp>
 
 #ifndef PI_HALF
 #define PI_HALF 1.57079632679
@@ -93,9 +95,7 @@ void ControlFSM::handleFSMDebug(std::string debugMsg) {
 
 void ControlFSM::setPosition(const geometry_msgs::PoseStamped& pose) {
 	//TODO Set _dronePosition.valid to false if position is not valid
-	if(!_dronePosition.isSet) {
-		_dronePosition.isSet = true;
-	}
+    _dronePosition.isSet = true;
 	_dronePosition.position = pose;
 }
 
@@ -134,6 +134,8 @@ double ControlFSM::getPositionZ() {
 ControlFSM::ControlFSM() {
 	//Only one instance of ControlFSM is allowed
 	assert(!ControlFSM::isUsed);
+    //ROS must be initialized!
+    assert(ros::isInitialized());
 
 	//Add all states to _allStates vector for easy access
 	_allStates.push_back(&BEGINSTATE);
@@ -151,31 +153,90 @@ ControlFSM::ControlFSM() {
 	_allStates.push_back(&BLINDLANDSTATE);
 	_allStates.push_back(&MANUALFLIGHTSTATE);
 
+    //Set starting state
 	_stateVault._pCurrentState = &BEGINSTATE;
+
+    //Initialize all states
+    this->initStates();
+
+    //Subscribe to neccesary topics
+    std::string& posTopic = FSMConfig::MavrosLocalPosTopic;
+    std::string& stateTopic = FSMConfig::MavrosStateChangedTopic;
+    _subscribers.localPosSub = _nodeHandler.subscribe(posTopic, 1, &ControlFSM::localPosCB, this);
+    _subscribers.mavrosStateChangedSub = _nodeHandler.subscribe(stateTopic, 1, &ControlFSM::mavrosStateChangedCB, this);
+
+    //Make sure no other instances of ControlFSM is allowed
 	ControlFSM::isUsed = true;
 }
 
-void ControlFSM::init() {
+void ControlFSM::initStates() {
 	//Only init once
-	if(_isReady) return;
-	_pnh.reset(new ros::NodeHandle());
+	if(_statesIsReady) return;
 	for(StateInterface* p : _allStates) {
 		p->stateInit(*this);
 	}
-	_isReady = true;
+	_statesIsReady = true;
 }
 
 bool ControlFSM::isReady() {
+    //Only check states if not already passed
+    if(_droneState.preflightCompleted) return true;
+
+    //All states must run their own checks
 	for(StateInterface* p : _allStates) {
 		if(!p->stateIsReady()) return false;
 	}
+
+    //First position has been recieved
+    if(!_dronePosition.isSet) return false;
+    //Mavros must publish state data
+    if(_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) return false;
+    //Mavros must publish position data
+    if(_subscribers.localPosSub.getNumPublishers() <= 0) return false;
+
+    //Preflight has passed - no need to check it again.
+    _droneState.preflightCompleted = true;
 	return true;
 }
 
 void ControlFSM::startPreflight() {
-	if(!isReady()) return;
+	if(!isReady()) {
+        this->handleFSMWarn("FSM not ready, can't transition to preflight!");
+        return;
+    }
 	RequestEvent event(RequestType::PREFLIGHT);
 	transitionTo(PREFLIGHTSTATE, &BEGINSTATE, event);
+}
+
+void ControlFSM::localPosCB(const geometry_msgs::PoseStamped &input) {
+    this->setPosition(input);
+}
+
+void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
+    bool offboardTrue = (state.mode == std::string("OFFBOARD"));
+    bool armedTrue = (bool)state.armed;
+    //Only act if relevant states has changed
+    if(offboardTrue != _droneState.isOffboard || armedTrue != _droneState.isArmed) {
+        //Check if old state was autonomous
+        //=> now in manual mode
+        if(_droneState.isOffboard && _droneState.isArmed) {
+            EventData manualEvent;
+            manualEvent.eventType = EventType::MANUAL;
+            ROS_INFO("Manual sent!");
+            this->handleEvent(manualEvent);
+        }
+        //Set current state
+        _droneState.isOffboard = offboardTrue;
+        _droneState.isArmed = state.armed;
+
+        //If it is armed and in offboard and all preflight checks has completed - notify AUTONOMOUS mode
+        if(_droneState.isArmed && _droneState.isOffboard && _droneState.preflightCompleted) {
+            EventData autonomousEvent;
+            autonomousEvent.eventType = EventType::AUTONOMOUS;
+            ROS_INFO("Autonomous event sent");
+            this->handleEvent(autonomousEvent);
+        }
+    }
 }
 
 

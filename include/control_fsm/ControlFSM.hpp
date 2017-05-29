@@ -2,6 +2,7 @@
 #define CONTROL_FSM_HPP
 
 #include <mavros_msgs/PositionTarget.h>
+#include <mavros_msgs/State.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <functional>
 
@@ -73,6 +74,13 @@ private:
 		StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
 	} _stateVault;
 
+	struct {
+		friend class ControlFSM;
+	private:
+		ros::Subscriber localPosSub;
+		ros::Subscriber mavrosStateChangedSub;
+	} _subscribers;
+
 	///Current drone position
 	struct {
 		//Not all states needs direct access to position and flags
@@ -83,18 +91,24 @@ private:
 		bool isSet = false;
 		bool validXY = true; //Assumes XY is valid if not set otherwise
 	} _dronePosition;
+
+	struct {
+		bool isOffboard = false;
+		bool isArmed = false;
+		bool preflightCompleted = false;
+	} _droneState;
 	
 	///Is drone in an active state?
 	bool _isActive = false;
 
 	///Has FSM been initiated?
-	bool _isReady = false;
+	bool _statesIsReady = false;
 
 	///Vector of all states
 	std::vector<StateInterface*> _allStates;
 
 	///Shared nodehandle for all states
-	std::unique_ptr<ros::NodeHandle> _pnh;
+	ros::NodeHandle _nodeHandler;
 
 	///Callback when a transition is made
 	std::function<void()> _onStateChanged = [](){};
@@ -108,6 +122,20 @@ private:
 	ControlFSM(const ControlFSM&) = delete;
 	///Assignment operator deleted
 	ControlFSM& operator=(const ControlFSM&) = delete;
+
+	//Callback methods
+
+	///Callback for local position
+	void localPosCB(const geometry_msgs::PoseStamped& input);
+	///Callback for mavros state changed
+	void mavrosStateChangedCB(const mavros_msgs::State& state);
+
+	///Initializes all states
+	void initStates();
+
+
+
+
 
 
 protected:
@@ -170,9 +198,6 @@ public:
 
 	/// \deprecated Get altitude (should always be correct - 1D lidar)
 	double getPositionZ();
-	
-	///Checks if FSM is in an "active" state
-	bool getIsActive() { return _isActive; }
 
 	///Sets new callback function for onStateChanged
 	void setOnStateChangedCB(std::function<void()> cb) { _onStateChanged = cb; }
@@ -186,10 +211,9 @@ public:
 	///Sets new callback function for onFSMError
 	void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
 
-	///Initializes all states
-	void init();
 	///Checks if all states are ready
 	bool isReady();
+
 	///Transition to preflight from begin state
 	void startPreflight();
 };
