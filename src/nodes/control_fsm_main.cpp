@@ -10,7 +10,7 @@
 #include <ascend_msgs/PointArray.h>
 #include <std_msgs/String.h>
 #include <cmath>
-
+#include "control_fsm/DebugServer.hpp"
 
 
 bool firstPositionRecieved = false;
@@ -53,9 +53,8 @@ int main(int argc, char** argv) {
 	ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, FSMConfig::FSMStatusBufferSize);
 	ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, FSMConfig::FSMStatusBufferSize);
 
-	//Set up services
-	using DebugCB = boost::function<ascend_msgs::ControlFSMEvent::Request, ascend_msgs::ControlFSMEvent::Response>;
-	ros::ServiceServer debugServiceServer = n.advertiseService("control_fsm_debug", boost::bind<DebugCB>(handleDebugEvent, _1, _2, boost::ref(fsm)));
+	//Set up debug server
+	DebugServer debugServer(&fsm);
 
 	//Spin once to get first messages
 	ros::spinOnce();
@@ -91,8 +90,7 @@ int main(int argc, char** argv) {
 	while(ros::ok()) {
 		ros::Duration(0.5).sleep();
 		ros::spinOnce();
-		//Make sure all critical datastreams are up and running before continuing
-		if(!firstPositionRecieved) continue;
+		//Wait for FSM to be ready
 		if(!fsm.isReady()) continue; //Checks if all states are ready
 		break;
 	}
@@ -126,106 +124,4 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request& req, ascend_msgs::ControlFSMEvent::Response& resp, ControlFSM& fsm) {
-    if(!preflightFinished) {
-        fsm.handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
-    }
-	EventData event = generateDebugEvent(req);
-	//If request event is not valid
-	if(event.eventType == EventType::REQUEST && !event.isValidRequest()) {
-		resp.accepted = false;
-		resp.errorMsg = "Not valid request event";
-		return true;
-	} 
-	//If command event is not valid
-	if(event.eventType == EventType::COMMAND && !event.isValidCMD()) {
-		resp.accepted = false;
-		resp.errorMsg = "Not valid cmd event";
-		return true;
-	}
-	//If there is no valid event
-	if(event.eventType == EventType::NONE) {
-		resp.accepted = false;
-		resp.errorMsg = "No valid event";
-		return true;
-	}
-
-	if(event.isValidCMD()) {
-		event.setOnCompleteCallback([](){
-			ROS_INFO("[Control FSM Debug] Manual CMD finished");
-		});
-		event.setOnFeedbackCallback([](std::string msg){
-			ROS_INFO("[Control FSM Debug] Manual CMD feedback: %s", msg.c_str());
-		});
-		event.setOnErrorCallback([](std::string errMsg) {
-			ROS_WARN("[Control FSM Debug] Manual CMD error: %s", errMsg.c_str());
-		});
-	}
-	fsm.handleEvent(event);
-	resp.accepted = true;
-	resp.stateName = fsm.getState()->getStateName();
-	return true;
-
-}
-
-EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
-	EventData event;
-	//Lambda expression returning correct eventtype
-	event.eventType = ([&]() -> EventType{
-		using REQ = ascend_msgs::ControlFSMEvent::Request;
-		switch(req.eventType) {
-			case REQ::REQUEST: return EventType::REQUEST;
-			case REQ::COMMAND: return EventType::COMMAND;
-			case REQ::AUTONOMOUS: return EventType::AUTONOMOUS;
-			case REQ::MANUAL: return EventType::MANUAL;
-			case REQ::GROUNDDETECTED: return EventType::GROUNDDETECTED;
-			default: return EventType::NONE;
-		}
-	})();
-
-	if(event.eventType == EventType::REQUEST) {
-		//Lambda expression returning correct requesttype
-		event.request = ([&]() -> RequestType {
-			using REQ = ascend_msgs::ControlFSMEvent::Request;
-			switch(req.requestType) {
-				case REQ::ABORT: return RequestType::ABORT;
-				case REQ::BEGIN: return RequestType::BEGIN;
-				case REQ::END: return RequestType::END;
-				case REQ::PREFLIGHT: return RequestType::PREFLIGHT;
-				case REQ::IDLE: return RequestType::IDLE;
-				case REQ::SHUTDOWN: return RequestType::SHUTDOWN;
-				case REQ::TAKEOFF: return RequestType::TAKEOFF;
-				case REQ::BLINDHOVER: return RequestType::BLINDHOVER;
-				case REQ::POSHOLD: return RequestType::POSHOLD;
-				case REQ::GOTO: return RequestType::GOTO;
-				case REQ::LAND: return RequestType::LAND;
-				case REQ::BLINDLAND: return RequestType::BLINDLAND;
-				//case REQ::TRACKGB: return RequestType::TRACKGB;
-				//case REQ::INTERGB: return RequestType::INTERGB;
-				case REQ::ESTIMATORADJ: return RequestType::ESTIMATORADJ;
-				case REQ::MANUALFLIGHT: return RequestType::MANUALFLIGHT;
-				default: return RequestType::NONE;
-			}
-		})();
-		if(event.request == RequestType::GOTO) {
-			event.positionGoal = PositionGoalXYZ(req.x, req.y, req.z);
-		}
-	} else if(event.eventType == EventType::COMMAND) {
-		//Lambda expression returning correct commandEvent
-		event = ([&]() -> EventData{
-			using REQ = ascend_msgs::ControlFSMEvent::Request;
-			switch(req.commandType) {
-				case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
-				case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
-				//case REQ::LANDGB: return LandGBCMDEvent();
-				default:
-					EventData e;
-					e.eventType = EventType::COMMAND;
-					e.commandType = CommandType::NONE;
-					return e;
-			}
-		})();
-	}
-	return event;
-}
 

@@ -40,7 +40,7 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, co
 		//Notify state has changed
 		_onStateChanged();
 	} else {
-		handleFSMError("Transition request made by another state");
+		handleFSMError("Transition request made by not active state");
 	}
 }
 
@@ -52,9 +52,7 @@ void ControlFSM::handleEvent(const EventData& event) {
 	}
 	if(event.eventType == EventType::MANUAL) {
 		//If drone entered manual mode: Abort current operation, and go to stable.
-		EventData abortEvent;
-		abortEvent.eventType = EventType::REQUEST;
-		abortEvent.request = RequestType::ABORT;
+		RequestEvent abortEvent(RequestType::ABORT);
 		handleEvent(abortEvent);
 	}
 	//Pass event to current running state
@@ -124,6 +122,7 @@ double ControlFSM::getMavrosCorrectedYaw() {
 	return getOrientationYaw() - PI_HALF;
 }
 
+//Returns only altitude
 double ControlFSM::getPositionZ() {
 	if(!_dronePosition.isSet) {
 		handleFSMError("Position has not been set!!");
