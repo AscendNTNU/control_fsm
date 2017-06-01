@@ -13,8 +13,9 @@ private:
 	ControlFSM* pFsm_ = nullptr;
 	ros::ServiceServer server_;
 	ros::NodeHandle nh_;
-	EventData generateDebugEvent(Request& req);
+
 	bool handleDebugEvent(Request& req, Response& resp);
+	EventData generateDebugEvent(Request&);
 	//Remove copyconstructor and operator=
 	DebugServer operator=(const DebugServer&) = delete;
 	DebugServer(const DebugServer&) = delete;

@@ -53,7 +53,7 @@ bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
 
 }
 
-EventData DebugServer::generateDebugEvent(Request& req) {
+EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
 	EventData event;
 	//Lambda expression returning correct eventtype
 	event.eventType = ([&]() -> EventType{
@@ -85,8 +85,8 @@ EventData DebugServer::generateDebugEvent(Request& req) {
 				case REQ::GOTO: return RequestType::GOTO;
 				case REQ::LAND: return RequestType::LAND;
 				case REQ::BLINDLAND: return RequestType::BLINDLAND;
-				//case REQ::TRACKGB: return RequestType::TRACKGB;
-				//case REQ::INTERGB: return RequestType::INTERGB;
+					//case REQ::TRACKGB: return RequestType::TRACKGB;
+					//case REQ::INTERGB: return RequestType::INTERGB;
 				case REQ::ESTIMATORADJ: return RequestType::ESTIMATORADJ;
 				case REQ::MANUALFLIGHT: return RequestType::MANUALFLIGHT;
 				default: return RequestType::NONE;
@@ -102,7 +102,7 @@ EventData DebugServer::generateDebugEvent(Request& req) {
 			switch(req.commandType) {
 				case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
 				case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
-				//case REQ::LANDGB: return LandGBCMDEvent();
+					//case REQ::LANDGB: return LandGBCMDEvent();
 				default:
 					EventData e;
 					e.eventType = EventType::COMMAND;
@@ -113,3 +113,4 @@ EventData DebugServer::generateDebugEvent(Request& req) {
 	}
 	return event;
 }
+

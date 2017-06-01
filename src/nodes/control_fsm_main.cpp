@@ -13,26 +13,10 @@
 #include "control_fsm/DebugServer.hpp"
 
 
-bool firstPositionRecieved = false;
-bool isArmed = false;
-bool isOffboard = false;
-bool preflightFinished = false;
-
 //How often is setpoints published to flightcontroller?
 constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 
-//Mavros topics -
-constexpr char localPosTopic[] = "mavros/local_position/pose";
-constexpr char mavrosStateTopic[] = "mavros/state";
 constexpr char mavrosSetpointTopic[] = "mavros/setpoint_raw/local";
-
-//Debug service functions
-EventData generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&);
-bool handleDebugEvent(ascend_msgs::ControlFSMEvent::Request&, ascend_msgs::ControlFSMEvent::Response&, ControlFSM&);
-
-//Loads ros parameters 
-void loadParams(ros::NodeHandle& n);
-
 
 int main(int argc, char** argv) {
 	//Init ros and nodehandles
@@ -42,6 +26,10 @@ int main(int argc, char** argv) {
 
 	//Load ros params
 	FSMConfig::loadParams();
+
+	if(!FSMConfig::RequireAllDataStreams) {
+		ROS_WARN("One or more debug param features is activated!");
+	}
 
 	//Statemachine instance
 	ControlFSM fsm;
@@ -98,8 +86,6 @@ int main(int argc, char** argv) {
 
 	//Actionserver is started when the system is ready
 	ActionServer cmdServer(&fsm);
-
-    preflightFinished = true;
 
     //Preflight is finished and system is ready for use!
     /**************************************************/

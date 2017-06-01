@@ -26,6 +26,9 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			//Only landxy should occur!
 			if(_cmd.commandType == CommandType::LANDXY) {
 				_cmd.finishCMD();
+			} else {
+				_cmd.eventError("Wrong CMD type!");
+				fsm.handleFSMError("Invalid CMD type in land state!");
 			}
 			_cmd = EventData();
 		}
@@ -65,8 +68,20 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandState::loopState(ControlFSM& fsm) {
-	//Autotransition to IDLE when completed
-	//Finish current commands
+	if(fsm._landDetector.isOnGround()) {
+		if(_cmd.isValidCMD()) {
+			//Only landxy should occur!
+			if(_cmd.commandType == CommandType::LANDXY) {
+				_cmd.finishCMD();
+			} else {
+				_cmd.eventError("Wrong CMD type!");
+				fsm.handleFSMError("Invalid CMD type in land state!");
+			}
+			_cmd = EventData();
+		}
+		RequestEvent idleRequest(RequestType::IDLE);
+		fsm.transitionTo(ControlFSM::IDLESTATE, this, idleRequest);
+	}
 }
 
 const mavros_msgs::PositionTarget* LandState::getSetpoint() {

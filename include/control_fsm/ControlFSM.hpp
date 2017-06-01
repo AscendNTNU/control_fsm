@@ -22,6 +22,8 @@
 #include "BlindLandState.hpp"
 #include "ManualFlightState.hpp"
 
+#include "LandDetector.hpp"
+
 ///Main FSM logic
 class ControlFSM {
 private:
@@ -129,6 +131,11 @@ private:
 	///Initializes all states
 	void initStates();
 
+	///LandDetector used to check if drone is on ground or not
+	LandDetector _landDetector;
+
+
+
 protected:
 	/**
 	 * @brief Changes the current running state
@@ -174,10 +181,7 @@ public:
 	
 	///Returns setpoint from current state
 	const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
-	
-	///Set current drone position
-	void setPosition(const geometry_msgs::PoseStamped& pose);
-	
+
 	///Get current position - will return nullptr if invalid
 	const geometry_msgs::PoseStamped* getPositionXYZ();
 

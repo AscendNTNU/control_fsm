@@ -8,6 +8,7 @@ double FSMConfig::AltitudeReachedMargin = 0.1;
 double FSMConfig::SetpointReachedMargin = 0.3;
 double FSMConfig::YawReachedMargin = 0.02;
 double FSMConfig::NoYawCorrectDist = 0.2;
+double FSMConfig::ValidDataTimeout = 2.0; //2 seconds
 std::string FSMConfig::PathPlannerPlanTopic = "control/planner/plan";
 std::string FSMConfig::PathPlannerPosTopic = "control/planner/position";
 std::string FSMConfig::PathPlannerTargetTopic = "control/planner/target";
@@ -18,6 +19,7 @@ std::string FSMConfig::FSMInfoTopic = "control/fsm/on_info";
 std::string FSMConfig::FSMStateChangedTopic = "control/fsm/state_changed";
 std::string FSMConfig::MavrosLocalPosTopic = "mavros/local_position/pose";
 std::string FSMConfig::MavrosStateChangedTopic = "mavros/state";
+std::string FSMConfig::LandDetectorTopic = "/landdetector";
 int FSMConfig::FSMStatusBufferSize = 10;
 double FSMConfig::GoToHoldDestTime = 0.5;
 double FSMConfig::SafeHoverAltitude = 2.0;
@@ -58,6 +60,7 @@ void FSMConfig::loadParams() {
 	getDoubleParam("yaw_reached_margin", YawReachedMargin);
 	getDoubleParam("safe_hover_alt", SafeHoverAltitude);
 	getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
+	getDoubleParam("message_timeout", ValidDataTimeout);
 	getBoolParam("require_all_streams", RequireAllDataStreams);
 	//GoTo params
 	getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
@@ -80,5 +83,7 @@ void FSMConfig::loadParams() {
 	//FSM topics
 	getStringParam("local_position_topic", MavrosLocalPosTopic);
 	getStringParam("mavros_state_topic", MavrosStateChangedTopic);
+	//LandDetector
+	getStringParam("land_detector_topic", LandDetectorTopic);
 
 }

@@ -91,16 +91,14 @@ void ControlFSM::handleFSMDebug(std::string debugMsg) {
 	ROS_DEBUG("%s", (std::string("[Control FSM] ") + debugMsg).c_str());
 }
 
-void ControlFSM::setPosition(const geometry_msgs::PoseStamped& pose) {
-	//TODO Set _dronePosition.valid to false if position is not valid
-    _dronePosition.isSet = true;
-	_dronePosition.position = pose;
-}
-
 const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {
 	if(!_dronePosition.isSet) {
 		handleFSMError("Position has not been set!!");
 		return nullptr;
+	}
+	auto& stamp = _dronePosition.position.header.stamp;
+	if(ros::Time::now() - stamp > ros::Duration(FSMConfig::ValidDataTimeout)) {
+		handleFSMError("Using old position data!");
 	}
 	return _dronePosition.validXY ? &_dronePosition.position : nullptr;
 }
@@ -130,7 +128,7 @@ double ControlFSM::getPositionZ() {
  	return _dronePosition.position.pose.position.z;
 }
 
-ControlFSM::ControlFSM() {
+ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
 	//Only one instance of ControlFSM is allowed
 	assert(!ControlFSM::isUsed);
     //ROS must be initialized!
@@ -186,12 +184,17 @@ bool ControlFSM::isReady() {
 		if(!p->stateIsReady()) return false;
 	}
 
-    //First position has been recieved
-    if(!_dronePosition.isSet) return false;
-    //Mavros must publish state data
-    if(_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) return false;
-    //Mavros must publish position data
-    if(_subscribers.localPosSub.getNumPublishers() <= 0) return false;
+	//Some checks can be skipped for debugging purposes
+	if(FSMConfig::RequireAllDataStreams) {
+		//First position has been recieved
+		if (!_dronePosition.isSet) return false;
+		//Mavros must publish state data
+		if (_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) return false;
+		//Mavros must publish position data
+		if (_subscribers.localPosSub.getNumPublishers() <= 0) return false;
+		//Land detector must be ready
+		if (!_landDetector.isReady()) return false;
+	}
 
     //Preflight has passed - no need to check it again.
     _droneState.isPreflightCompleted = true;
@@ -208,7 +211,8 @@ void ControlFSM::startPreflight() {
 }
 
 void ControlFSM::localPosCB(const geometry_msgs::PoseStamped &input) {
-    this->setPosition(input);
+	_dronePosition.isSet = true;
+	_dronePosition.position = input;
 }
 
 void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {

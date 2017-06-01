@@ -21,7 +21,6 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 	} else if(event.eventType == EventType::AUTONOMOUS) {
 		//TODO use landing sensor data to determine if we should transition to blindhover or idle
 		fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event); //Transition to BLINDHOVERSTATE
-		fsm._isActive = true;
 	} else {
 		fsm.handleFSMInfo("Event ignored");
 	}

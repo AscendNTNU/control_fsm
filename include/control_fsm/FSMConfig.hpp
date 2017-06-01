@@ -37,6 +37,8 @@ public:
 	static std::string MavrosLocalPosTopic;
 	///Topic for recieving current state from FC
 	static std::string MavrosStateChangedTopic;
+	///Topic for recieving current state from land detector
+	static std::string LandDetectorTopic;
 	///Buffer size used for FSMError, FSMWarn etc
 	static int FSMStatusBufferSize;
 	///Time gotostate waits before transitioning
@@ -53,7 +55,8 @@ public:
 	static void loadParams();
 	///Finished drone will require all datastreams to be available
 	static bool RequireAllDataStreams;
-
+	///When is data considered old?
+	static double ValidDataTimeout;
 };
 
 #endif
