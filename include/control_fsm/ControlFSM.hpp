@@ -74,13 +74,6 @@ private:
 		StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
 	} _stateVault;
 
-	struct {
-		friend class ControlFSM;
-	private:
-		ros::Subscriber localPosSub;
-		ros::Subscriber mavrosStateChangedSub;
-	} _subscribers;
-
 	///Current drone position
 	struct {
 		//Not all states needs direct access to position and flags
@@ -92,23 +85,17 @@ private:
 		bool validXY = true; //Assumes XY is valid if not set otherwise
 	} _dronePosition;
 
+	///Struct holding information about drones state
 	struct {
 		bool isOffboard = false;
 		bool isArmed = false;
-		bool preflightCompleted = false;
+		bool isPreflightCompleted = false;
 	} _droneState;
-	
-	///Is drone in an active state?
-	bool _isActive = false;
-
-	///Has FSM been initiated?
-	bool _statesIsReady = false;
 
 	///Vector of all states
 	std::vector<StateInterface*> _allStates;
-
-	///Shared nodehandle for all states
-	ros::NodeHandle _nodeHandler;
+	///Has FSM been initiated?
+	bool _statesIsReady = false;
 
 	///Callback when a transition is made
 	std::function<void()> _onStateChanged = [](){};
@@ -118,12 +105,21 @@ private:
 	std::function<void(const std::string&)> _onFSMWarn = [](const std::string& msg){};
 	///Callbacks when an info message occurs in FSM
 	std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
+
 	///Copy constructor deleted
 	ControlFSM(const ControlFSM&) = delete;
 	///Assignment operator deleted
 	ControlFSM& operator=(const ControlFSM&) = delete;
 
-	//Callback methods
+	///Shared nodehandle for all states
+	ros::NodeHandle _nodeHandler;
+	///Struct holding all shared ControlFSM ros subscribers
+	struct {
+		friend class ControlFSM;
+	private:
+		ros::Subscriber localPosSub;
+		ros::Subscriber mavrosStateChangedSub;
+	} _subscribers;
 
 	///Callback for local position
 	void localPosCB(const geometry_msgs::PoseStamped& input);
@@ -132,11 +128,6 @@ private:
 
 	///Initializes all states
 	void initStates();
-
-
-
-
-
 
 protected:
 	/**
@@ -196,7 +187,7 @@ public:
 	///Return yaw with pi_half offset correction due to bug in mavros
 	double getMavrosCorrectedYaw();
 
-	/// \deprecated Get altitude (should always be correct - 1D lidar)
+	/// Get altitude (should always be correct - 1D lidar)
 	double getPositionZ();
 
 	///Sets new callback function for onStateChanged

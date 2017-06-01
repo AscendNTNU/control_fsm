@@ -179,7 +179,7 @@ void ControlFSM::initStates() {
 
 bool ControlFSM::isReady() {
     //Only check states if not already passed
-    if(_droneState.preflightCompleted) return true;
+    if(_droneState.isPreflightCompleted) return true;
 
     //All states must run their own checks
 	for(StateInterface* p : _allStates) {
@@ -194,7 +194,7 @@ bool ControlFSM::isReady() {
     if(_subscribers.localPosSub.getNumPublishers() <= 0) return false;
 
     //Preflight has passed - no need to check it again.
-    _droneState.preflightCompleted = true;
+    _droneState.isPreflightCompleted = true;
 	return true;
 }
 
@@ -229,7 +229,7 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
         _droneState.isArmed = state.armed;
 
         //If it is armed and in offboard and all preflight checks has completed - notify AUTONOMOUS mode
-        if(_droneState.isArmed && _droneState.isOffboard && _droneState.preflightCompleted) {
+        if(_droneState.isArmed && _droneState.isOffboard && _droneState.isPreflightCompleted) {
             EventData autonomousEvent;
             autonomousEvent.eventType = EventType::AUTONOMOUS;
             ROS_INFO("Autonomous event sent");

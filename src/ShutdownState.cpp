@@ -14,7 +14,6 @@ void ShutdownState::loopState(ControlFSM& fsm) {
 }
 
 void ShutdownState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	fsm._isActive = false;
 }
 
 //Make sure to return _setpoint (make sure it will stay in memory!)
