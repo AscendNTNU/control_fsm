@@ -5,14 +5,15 @@ project(control_fsm)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  geometry_msgs
-  mavros_msgs
-  actionlib_msgs
-  actionlib
-  ascend_msgs
-  tf2
+  	roscpp
+  	std_msgs
+  	geometry_msgs
+  	mavros_msgs
+  	actionlib_msgs
+  	actionlib
+  	ascend_msgs
+  	tf2
+	roslaunch
 )
 
 ###################################
@@ -46,6 +47,8 @@ add_library(control_fsm_lib
   ${control_fsm_SRC}
 )
 target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
+
+roslaunch_add_file_check(launch)
 
 
 target_link_libraries(control_fsm_lib

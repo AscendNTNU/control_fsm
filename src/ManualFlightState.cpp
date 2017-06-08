@@ -19,8 +19,11 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 			fsm.handleFSMWarn("Invalid transition request");
 		}
 	} else if(event.eventType == EventType::AUTONOMOUS) {
-		//TODO use landing sensor data to determine if we should transition to blindhover or idle
-		fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event); //Transition to BLINDHOVERSTATE
+		if(fsm._landDetector.isOnGround()) {
+			fsm.transitionTo(ControlFSM::IDLESTATE, this, event); //Transition to IDLESTATE
+		} else {
+			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event); //Transition to BLINDHOVERSTATE
+		}
 	} else {
 		fsm.handleFSMInfo("Event ignored");
 	}
@@ -32,6 +35,8 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
 		//Should never occur
 		fsm.handleFSMError("Position not valid!!");
 		_setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY | IGNORE_PZ | IGNORE_YAW;
+	} else if(fsm._landDetector.isOnGround()) {
+		_setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
 	} else {
 		_setpoint.type_mask = default_mask;
 		_setpoint.position.x = pPose->pose.position.x;

@@ -6,6 +6,11 @@ Main control node
 
 It's a ros package, build as usual with catkin_make. It requires that you have ascend_msgs in your catking workspace
 
+**FSM depends on:**
+- Land detector node for knowing when drone is on the ground (ascend_msgs/BoolStamped)
+- Path planner node to be able to fly (ascend_msgs/PathPlannerPlan)
+- Obstacle detection node for avoiding obstacles (ascend_msgs/PointArray)
+- Mavros for position and drone state
 
 **Some notes:**
 - The control node will automatically transition to preflight state when fsm is ready.
