@@ -302,7 +302,7 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 	return angle;
 }
 
-bool GoToState::stateIsReady() {
+bool GoToState::stateIsReady(ControlFSM &fsm) {
 	//Skipping check is allowed for debugging
 	if(!FSMConfig::RequireAllDataStreams) return true;
 	//Makes sure path planner is listening for input

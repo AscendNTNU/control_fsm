@@ -28,7 +28,7 @@ public:
 	virtual void stateInit(ControlFSM& fsm) { _isReady = true; }
 
 	///Used to check if state is ready for flight
-	virtual bool stateIsReady() { return _isReady; }
+	virtual bool stateIsReady(ControlFSM &fsm) { return _isReady; }
 
 	///Virtual destructor - override if needed
 	virtual ~StateInterface() {}

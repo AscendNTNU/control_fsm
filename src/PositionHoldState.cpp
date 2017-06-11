@@ -96,10 +96,16 @@ void PositionHoldState::stateInit(ControlFSM &fsm) {
 	_lidarSub = fsm._nodeHandler.subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
 }
 
-bool PositionHoldState::stateIsReady() {
-	//Skipping check is allowed in debug mode
+bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
+	//Skilpping check is allowed in debug mode
 	if(!FSMConfig::RequireAllDataStreams) return true;
-	return _lidarSub.getNumPublishers() > 0;
+
+	if(_lidarSub.getNumPublishers() > 0) {
+		return true;
+	} else {
+		fsm.handleFSMWarn("No lidar publisher in posHold");
+		return false;
+	}
 }
 
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {

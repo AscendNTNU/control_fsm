@@ -181,7 +181,7 @@ bool ControlFSM::isReady() {
 
     //All states must run their own checks
 	for(StateInterface* p : _allStates) {
-		if(!p->stateIsReady()) return false;
+		if(!p->stateIsReady(*this)) return false;
 	}
 
 	//Some checks can be skipped for debugging purposes
