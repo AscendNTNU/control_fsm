@@ -13,6 +13,8 @@ public:
 	void loopState(ControlFSM& fsm) override;
 	std::string getStateName() const override { return "Blind hover";}
 	const mavros_msgs::PositionTarget* getSetpoint() override;
+
+	void handleManual(ControlFSM &fsm) override;
 };
 
 #endif

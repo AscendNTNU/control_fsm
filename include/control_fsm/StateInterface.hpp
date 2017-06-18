@@ -35,6 +35,9 @@ public:
 
 	///Handles incoming external events
 	virtual void handleEvent(ControlFSM& fsm, const EventData& event) = 0;
+
+    ///Handles loss of offboard mode
+    virtual void handleManual(ControlFSM& fsm) = 0;
 	
 	///Runs on current state AFTER transition
 	/**stateBegin is only implemented if needed by state.*/

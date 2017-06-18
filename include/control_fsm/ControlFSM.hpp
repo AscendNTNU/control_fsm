@@ -211,6 +211,8 @@ public:
 
 	///Transition to preflight from begin state
 	void startPreflight();
+
+    void handleManual();
 };
 
 #endif

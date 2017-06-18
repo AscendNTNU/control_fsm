@@ -53,3 +53,8 @@ const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {
 	return &_setpoint;
 }
 
+void EstimateAdjustState::handleManual(ControlFSM &fsm) {
+    fsm.handleFSMWarn("Lost OFFBOARD while adjusting position estimates! Do NOT switch back to OFFBOARD. Can lead to undefined behaviour!");
+    //TODO Should it transition to MANUALFLIGHTSTATE?
+}
+

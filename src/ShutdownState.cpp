@@ -21,3 +21,7 @@ const mavros_msgs::PositionTarget* ShutdownState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
 }
+
+void ShutdownState::handleManual(ControlFSM &fsm) {
+	//Do nothing
+}

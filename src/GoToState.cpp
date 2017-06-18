@@ -325,6 +325,12 @@ bool GoToState::stateIsReady(ControlFSM &fsm) {
 	return true;
 }
 
+void GoToState::handleManual(ControlFSM &fsm) {
+    _cmd.eventError("Lost OFFBOARD");
+    _cmd = EventData();
+    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+}
 
 
 

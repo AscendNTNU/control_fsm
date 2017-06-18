@@ -29,5 +29,9 @@ const mavros_msgs::PositionTarget* BeginState::getSetpoint() {
  	return &_setpoint;
 }
 
+void BeginState::handleManual(ControlFSM &fsm) {
+	//Does nothing
+}
+
 
 

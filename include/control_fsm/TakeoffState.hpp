@@ -18,6 +18,8 @@ public:
 	void loopState(ControlFSM& fsm) override;
 	std::string getStateName() const override { return "Takeoff";}
 	const mavros_msgs::PositionTarget* getSetpoint() override;
+
+	void handleManual(ControlFSM &fsm) override;
 };
 
 

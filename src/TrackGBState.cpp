@@ -22,3 +22,7 @@ const mavros_msgs::PositionTarget* TrackGBState::getSetpoint() {
 	_setpoint.header.stamp = ros::Time::now();
 	return &_setpoint;
 }
+
+void TrackGBState::handleManual(ControlFSM &fsm) {
+	//TODO Implement
+}

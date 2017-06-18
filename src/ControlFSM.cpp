@@ -52,8 +52,7 @@ void ControlFSM::handleEvent(const EventData& event) {
 	}
 	if(event.eventType == EventType::MANUAL) {
 		//If drone entered manual mode: Abort current operation, and go to stable.
-		RequestEvent abortEvent(RequestType::ABORT);
-		handleEvent(abortEvent);
+		this->handleManual();
 	}
 	//Pass event to current running state
 	getState()->handleEvent(*this, event);
@@ -223,10 +222,8 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
         //Check if old state was autonomous
         //=> now in manual mode
         if(_droneState.isOffboard && _droneState.isArmed) {
-            EventData manualEvent;
-            manualEvent.eventType = EventType::MANUAL;
-            ROS_INFO("Manual sent!");
-            this->handleEvent(manualEvent);
+			ROS_INFO("Manual sent!");
+            this->handleManual();
         }
         //Set current state
         _droneState.isOffboard = offboardTrue;
@@ -240,6 +237,10 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
             this->handleEvent(autonomousEvent);
         }
     }
+}
+
+void ControlFSM::handleManual() {
+	getState()->handleManual(*this);
 }
 
 

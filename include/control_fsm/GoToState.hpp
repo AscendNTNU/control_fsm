@@ -74,6 +74,8 @@ public:
 	std::string getStateName() const { return "GoTo";}
 	const mavros_msgs::PositionTarget* getSetpoint();
 	bool stateIsReady(ControlFSM &fsm) override;
+
+    void handleManual(ControlFSM &fsm) override;
 };
 
 #endif

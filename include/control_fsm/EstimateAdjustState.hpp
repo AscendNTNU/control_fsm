@@ -14,5 +14,7 @@ public:
 	void loopState(ControlFSM& fsm); //Uncomment if needed
 	std::string getStateName() const override { return "EstimatorAdjust"; }
 	const mavros_msgs::PositionTarget* getSetpoint();
+
+    void handleManual(ControlFSM &fsm) override;
 };
 #endif
