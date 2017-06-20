@@ -132,7 +132,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     double deltaY = pPose->pose.position.y - _cmd.positionGoal.y;
     double deltaZ = pPose->pose.position.z - _cmd.positionGoal.z;
 	bool xyWithinReach = (std::pow(deltaX, 2) + std::pow(deltaY, 2)) <= std::pow(_destReachedMargin, 2);
-	bool zWithinReach = (deltaZ <= FSMConfig::AltitudeReachedMargin);
+	bool zWithinReach = (std::fabs(deltaZ) <= FSMConfig::AltitudeReachedMargin);
 	bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - _setpoint.yaw) <= _yawReachedMargin);
 	//If destination is reached, begin transition to another state
 	if(xyWithinReach && zWithinReach && yawWithinReach) {
