@@ -5,14 +5,14 @@
 ///State handling blind hover
 class BlindHoverState : public StateInterface {
 private:
-	EventData _cmd;
+    EventData _cmd;
 public: 
-	BlindHoverState();
-	void handleEvent(ControlFSM& fsm, const EventData& event) override;
-	void stateBegin(ControlFSM& fsm, const EventData& event) override;
-	void loopState(ControlFSM& fsm) override;
-	std::string getStateName() const override { return "Blind hover";}
-	const mavros_msgs::PositionTarget* getSetpoint() override;
+    BlindHoverState();
+    void handleEvent(ControlFSM& fsm, const EventData& event) override;
+    void stateBegin(ControlFSM& fsm, const EventData& event) override;
+    void loopState(ControlFSM& fsm) override;
+    std::string getStateName() const override { return "Blind hover";}
+    const mavros_msgs::PositionTarget* getSetpoint() override;
 };
 
 #endif

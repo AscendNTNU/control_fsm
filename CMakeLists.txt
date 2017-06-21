@@ -5,14 +5,15 @@ project(control_fsm)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  geometry_msgs
-  mavros_msgs
-  actionlib_msgs
-  actionlib
-  ascend_msgs
-  tf2
+      roscpp
+      std_msgs
+      geometry_msgs
+      mavros_msgs
+      actionlib_msgs
+      actionlib
+      ascend_msgs
+      tf2
+    roslaunch
 )
 
 ###################################
@@ -25,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-	CATKIN_DEPENDS message_runtime ascend_msgs 
+    CATKIN_DEPENDS message_runtime ascend_msgs 
 )
 
 ###########
@@ -35,8 +36,8 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-	include
-  	${catkin_INCLUDE_DIRS}
+    include
+      ${catkin_INCLUDE_DIRS}
 )
 
 file(GLOB control_fsm_SRC "src/*.cpp")
@@ -47,9 +48,11 @@ add_library(control_fsm_lib
 )
 target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
 
+roslaunch_add_file_check(launch)
+
 
 target_link_libraries(control_fsm_lib
-	${catkin_LIBRARIES}
+    ${catkin_LIBRARIES}
 )
 
 ## Declare a C++ executable
@@ -60,7 +63,7 @@ target_compile_features(control_fsm_main PRIVATE cxx_range_for)
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(control_fsm_main
-	control_fsm_lib
+    control_fsm_lib
 )
 
 ## Add cmake target dependencies of the executable

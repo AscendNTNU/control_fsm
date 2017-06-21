@@ -1,28 +1,28 @@
 <launch>
-	<include file="$(find mavros)/launch/px4.launch">
-		<arg name="fcu_url" value="udp://:14540@127.0.0.1:14557"/>
-	</include>
-	
-	<arg name="topic_planner_plan" default="/control/planner/plan" />
-	<arg name="topic_planner_target" default="/control/planner/target"/>
-	<arg name="topic_robot_position" default="/control/planner/current_position"/>
-	<arg name="topic_obstacles" default="/control/planner/obstacles"/>
-	<arg name="logging" default="false"/>
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="udp://:14540@127.0.0.1:14557"/>
+    </include>
+    
+    <arg name="topic_planner_plan" default="/control/planner/plan" />
+    <arg name="topic_planner_target" default="/control/planner/target"/>
+    <arg name="topic_robot_position" default="/control/planner/current_position"/>
+    <arg name="topic_obstacles" default="/control/planner/obstacles"/>
+    <arg name="logging" default="false"/>
 
-	<include file="$(find control_fsm)/launch/control_fsm.launch">
-		<arg name="topic_planner_plan" value="$(arg topic_planner_plan)"/>
-		<arg name="topic_planner_target" value="$(arg topic_planner_target)"/>
-		<arg name="topic_robot_position" value="$(arg topic_robot_position)" />
-		<arg name="topic_planner_obstacles" value="$(arg topic_obstacles)" />
-		<arg name="require_all_streams" value="false"/>
-	</include>
+    <include file="$(find control_fsm)/launch/control_fsm.launch">
+        <arg name="topic_planner_plan" value="$(arg topic_planner_plan)"/>
+        <arg name="topic_planner_target" value="$(arg topic_planner_target)"/>
+        <arg name="topic_robot_position" value="$(arg topic_robot_position)" />
+        <arg name="topic_planner_obstacles" value="$(arg topic_obstacles)" />
+        <arg name="require_all_streams" value="false"/>
+    </include>
 
-	<node name="planner_node" pkg="planner" type="planner_node" output="screen">
-		<param name="topic_planner_plan" value="$(arg topic_planner_plan)"/>
-		<param name="topic_planner_target" value="$(arg topic_planner_target)"/>
-		<param name="topic_robot_position" value="$(arg topic_robot_position)"/>
-		<param name="topic_obstacles" value="$(arg topic_obstacles)"/>	
-		<param name="logging" value="$(arg logging)"/>	
-	</node>	
+    <node name="planner_node" pkg="planner" type="planner_node" output="screen">
+        <param name="topic_planner_plan" value="$(arg topic_planner_plan)"/>
+        <param name="topic_planner_target" value="$(arg topic_planner_target)"/>
+        <param name="topic_robot_position" value="$(arg topic_robot_position)"/>
+        <param name="topic_obstacles" value="$(arg topic_obstacles)"/>    
+        <param name="logging" value="$(arg logging)"/>    
+    </node>    
 
 </launch>
