@@ -28,62 +28,62 @@ std::string FSMConfig::LidarTopic = "perception/obstacles/lidar";
 bool FSMConfig::RequireAllDataStreams = true;
 
 void FSMConfig::loadParams() {
-	ros::NodeHandle n("~");
-	auto getDoubleParam = [&](const std::string& name, double& var) {
-		if(!n.getParam(name, var)) {
-			ROS_WARN("[Control FSM] Load param failed: %s, using %f", name.c_str(), var);
-		}
-	};
+    ros::NodeHandle n("~");
+    auto getDoubleParam = [&](const std::string& name, double& var) {
+        if(!n.getParam(name, var)) {
+            ROS_WARN("[Control FSM] Load param failed: %s, using %f", name.c_str(), var);
+        }
+    };
 
-	auto getStringParam = [&](const std::string& name, std::string& var) {
-		if(!n.getParam(name, var)) {
-			ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var.c_str());
-		}
-	};
+    auto getStringParam = [&](const std::string& name, std::string& var) {
+        if(!n.getParam(name, var)) {
+            ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var.c_str());
+        }
+    };
 
-	auto getIntParam = [&](const std::string& name, int& var) {
-		if(!n.getParam(name, var)) {
-			ROS_WARN("[Control FSM] Load param failed: %s, using %d", name.c_str(), var);
-		}
-	};
+    auto getIntParam = [&](const std::string& name, int& var) {
+        if(!n.getParam(name, var)) {
+            ROS_WARN("[Control FSM] Load param failed: %s, using %d", name.c_str(), var);
+        }
+    };
 
-	auto getBoolParam = [&](const std::string& name, bool& var) {
-		if(!n.getParam(name, var)) {
-			ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
-		}
-	};
+    auto getBoolParam = [&](const std::string& name, bool& var) {
+        if(!n.getParam(name, var)) {
+            ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
+        }
+    };
 
-	//Global params (used by multiple states)
-	getDoubleParam("blind_hover_altitude", BlindHoverAlt);
-	getDoubleParam("takeoff_altitude", TakeoffAltitude);
-	getDoubleParam("altitude_reached_margin", AltitudeReachedMargin);
-	getDoubleParam("yaw_reached_margin", YawReachedMargin);
-	getDoubleParam("safe_hover_alt", SafeHoverAltitude);
-	getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
-	getDoubleParam("message_timeout", ValidDataTimeout);
-	getBoolParam("require_all_streams", RequireAllDataStreams);
-	//GoTo params
-	getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
-	getDoubleParam("setp_reached_margin", SetpointReachedMargin);
-	getDoubleParam("dest_reached_margin", DestReachedMargin);
-	getDoubleParam("no_yaw_correct_dist", NoYawCorrectDist);
-	//Planner params
-	getStringParam("control_planner_plan", PathPlannerPlanTopic);
-	getStringParam("control_planner_position", PathPlannerPosTopic);
-	getStringParam("control_planner_target", PathPlannerTargetTopic);
-	getStringParam("control_planner_obstacles", PathPlannerObsTopic);
-	//FSM debug params
-	getStringParam("fsm_error_topic", FSMErrorTopic);
-	getStringParam("fsm_warn_topic", FSMWarnTopic);
-	getStringParam("fsm_info_topic", FSMInfoTopic);
-	getStringParam("fsm_state_changed_topic", FSMStateChangedTopic);
-	getIntParam("status_msg_buffer_size", FSMStatusBufferSize);
-	//Lidar topics
-	getStringParam("lidar_topic", LidarTopic);
-	//FSM topics
-	getStringParam("local_position_topic", MavrosLocalPosTopic);
-	getStringParam("mavros_state_topic", MavrosStateChangedTopic);
-	//LandDetector
-	getStringParam("land_detector_topic", LandDetectorTopic);
+    //Global params (used by multiple states)
+    getDoubleParam("blind_hover_altitude", BlindHoverAlt);
+    getDoubleParam("takeoff_altitude", TakeoffAltitude);
+    getDoubleParam("altitude_reached_margin", AltitudeReachedMargin);
+    getDoubleParam("yaw_reached_margin", YawReachedMargin);
+    getDoubleParam("safe_hover_alt", SafeHoverAltitude);
+    getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
+    getDoubleParam("message_timeout", ValidDataTimeout);
+    getBoolParam("require_all_streams", RequireAllDataStreams);
+    //GoTo params
+    getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
+    getDoubleParam("setp_reached_margin", SetpointReachedMargin);
+    getDoubleParam("dest_reached_margin", DestReachedMargin);
+    getDoubleParam("no_yaw_correct_dist", NoYawCorrectDist);
+    //Planner params
+    getStringParam("control_planner_plan", PathPlannerPlanTopic);
+    getStringParam("control_planner_position", PathPlannerPosTopic);
+    getStringParam("control_planner_target", PathPlannerTargetTopic);
+    getStringParam("control_planner_obstacles", PathPlannerObsTopic);
+    //FSM debug params
+    getStringParam("fsm_error_topic", FSMErrorTopic);
+    getStringParam("fsm_warn_topic", FSMWarnTopic);
+    getStringParam("fsm_info_topic", FSMInfoTopic);
+    getStringParam("fsm_state_changed_topic", FSMStateChangedTopic);
+    getIntParam("status_msg_buffer_size", FSMStatusBufferSize);
+    //Lidar topics
+    getStringParam("lidar_topic", LidarTopic);
+    //FSM topics
+    getStringParam("local_position_topic", MavrosLocalPosTopic);
+    getStringParam("mavros_state_topic", MavrosStateChangedTopic);
+    //LandDetector
+    getStringParam("land_detector_topic", LandDetectorTopic);
 
 }

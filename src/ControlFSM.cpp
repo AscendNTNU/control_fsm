@@ -28,20 +28,20 @@ bool ControlFSM::isUsed = false;
 
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
-	//Only current running state is allowed to change state
-	if(getState() == pCaller) {
-		//Run stateEnd on current running state before transitioning
-		getState()->stateEnd(*this, event);
-		//Set the current state pointer
-		_stateVault._pCurrentState = &state;
-		handleFSMInfo("Current state: " + getState()->getStateName());
-		//Pass event to new current state
-		getState()->stateBegin(*this, event);
-		//Notify state has changed
-		_onStateChanged();
-	} else {
-		handleFSMError("Transition request made by not active state");
-	}
+    //Only current running state is allowed to change state
+    if(getState() == pCaller) {
+        //Run stateEnd on current running state before transitioning
+        getState()->stateEnd(*this, event);
+        //Set the current state pointer
+        _stateVault._pCurrentState = &state;
+        handleFSMInfo("Current state: " + getState()->getStateName());
+        //Pass event to new current state
+        getState()->stateBegin(*this, event);
+        //Notify state has changed
+        _onStateChanged();
+    } else {
+        handleFSMError("Transition request made by not active state");
+    }
 }
 
 //Send external event to current state and to "next" state
@@ -60,97 +60,97 @@ void ControlFSM::handleEvent(const EventData& event) {
 
 //Runs state specific code on current state
 void ControlFSM::loopCurrentState(void) {
-	if(getState() == nullptr) {
-		handleFSMError("Bad implementation of FSM - no current state!!");
-		return;
-	}
-	getState()->loopState(*this);
+    if(getState() == nullptr) {
+        handleFSMError("Bad implementation of FSM - no current state!!");
+        return;
+    }
+    getState()->loopState(*this);
 }
 
 //Send error message to user via ROS
 void ControlFSM::handleFSMError(std::string errMsg) {
-	ROS_ERROR("%s", (std::string("[Control FSM] ") + errMsg).c_str());
-	_onFSMError(errMsg);
+    ROS_ERROR("%s", (std::string("[Control FSM] ") + errMsg).c_str());
+    _onFSMError(errMsg);
 }
 
 //Send info message to user via ROS
 void ControlFSM::handleFSMInfo(std::string infoMsg) {
-	ROS_INFO("%s",(std::string("[Control FSM] ") + infoMsg).c_str());
-	_onFSMInfo(infoMsg);
+    ROS_INFO("%s",(std::string("[Control FSM] ") + infoMsg).c_str());
+    _onFSMInfo(infoMsg);
 }
 
 //Send warning to user via ROS
 void ControlFSM::handleFSMWarn(std::string warnMsg) {
-	ROS_WARN("%s", (std::string("[Control FSM] ") + warnMsg).c_str());
-	_onFSMWarn(warnMsg);
+    ROS_WARN("%s", (std::string("[Control FSM] ") + warnMsg).c_str());
+    _onFSMWarn(warnMsg);
 }
 
 //Send debug message to user via ROS
 void ControlFSM::handleFSMDebug(std::string debugMsg) {
-	ROS_DEBUG("%s", (std::string("[Control FSM] ") + debugMsg).c_str());
+    ROS_DEBUG("%s", (std::string("[Control FSM] ") + debugMsg).c_str());
 }
 
 const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {
-	if(!_dronePosition.isSet) {
-		handleFSMError("Position has not been set!!");
-		return nullptr;
-	}
-	auto& stamp = _dronePosition.position.header.stamp;
-	if(ros::Time::now() - stamp > ros::Duration(FSMConfig::ValidDataTimeout)) {
-		handleFSMError("Using old position data!");
-	}
-	return _dronePosition.validXY ? &_dronePosition.position : nullptr;
+    if(!_dronePosition.isSet) {
+        handleFSMError("Position has not been set!!");
+        return nullptr;
+    }
+    auto& stamp = _dronePosition.position.header.stamp;
+    if(ros::Time::now() - stamp > ros::Duration(FSMConfig::ValidDataTimeout)) {
+        handleFSMError("Using old position data!");
+    }
+    return _dronePosition.validXY ? &_dronePosition.position : nullptr;
 }
 
 double ControlFSM::getOrientationYaw() {
-	double quatX = _dronePosition.position.pose.orientation.x;
-	double quatY = _dronePosition.position.pose.orientation.y;
-	double quatZ = _dronePosition.position.pose.orientation.z;
-	double quatW = _dronePosition.position.pose.orientation.w;
-	tf2::Quaternion q(quatX, quatY, quatZ, quatW);
-	tf2::Matrix3x3 m(q);
-	double roll, pitch, yaw;
-	m.getRPY(roll, pitch, yaw);
-	//Subtracting PI halfs to correct for a bug in mavros (90 degree offset)
-	return yaw;
+    double quatX = _dronePosition.position.pose.orientation.x;
+    double quatY = _dronePosition.position.pose.orientation.y;
+    double quatZ = _dronePosition.position.pose.orientation.z;
+    double quatW = _dronePosition.position.pose.orientation.w;
+    tf2::Quaternion q(quatX, quatY, quatZ, quatW);
+    tf2::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    //Subtracting PI halfs to correct for a bug in mavros (90 degree offset)
+    return yaw;
 }
 
 double ControlFSM::getMavrosCorrectedYaw() {
-	return getOrientationYaw() - PI_HALF;
+    return getOrientationYaw() - PI_HALF;
 }
 
 //Returns only altitude
 double ControlFSM::getPositionZ() {
-	if(!_dronePosition.isSet) {
-		handleFSMError("Position has not been set!!");
-	}
- 	return _dronePosition.position.pose.position.z;
+    if(!_dronePosition.isSet) {
+        handleFSMError("Position has not been set!!");
+    }
+     return _dronePosition.position.pose.position.z;
 }
 
 ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
-	//Only one instance of ControlFSM is allowed
-	assert(!ControlFSM::isUsed);
+    //Only one instance of ControlFSM is allowed
+    assert(!ControlFSM::isUsed);
     //ROS must be initialized!
     assert(ros::isInitialized());
 
-	//Add all states to _allStates vector for easy access
-	_allStates.push_back(&BEGINSTATE);
-	_allStates.push_back(&PREFLIGHTSTATE);
-	_allStates.push_back(&IDLESTATE);
-	_allStates.push_back(&TAKEOFFSTATE);
-	_allStates.push_back(&BLINDHOVERSTATE);
-	_allStates.push_back(&POSITIONHOLDSTATE);
-	_allStates.push_back(&SHUTDOWNSTATE);
-	_allStates.push_back(&ESTIMATEADJUSTSTATE);
-	_allStates.push_back(&TRACKGBSTATE);
-	_allStates.push_back(&INTERACTGBSTATE);
-	_allStates.push_back(&GOTOSTATE);
-	_allStates.push_back(&LANDSTATE);
-	_allStates.push_back(&BLINDLANDSTATE);
-	_allStates.push_back(&MANUALFLIGHTSTATE);
+    //Add all states to _allStates vector for easy access
+    _allStates.push_back(&BEGINSTATE);
+    _allStates.push_back(&PREFLIGHTSTATE);
+    _allStates.push_back(&IDLESTATE);
+    _allStates.push_back(&TAKEOFFSTATE);
+    _allStates.push_back(&BLINDHOVERSTATE);
+    _allStates.push_back(&POSITIONHOLDSTATE);
+    _allStates.push_back(&SHUTDOWNSTATE);
+    _allStates.push_back(&ESTIMATEADJUSTSTATE);
+    _allStates.push_back(&TRACKGBSTATE);
+    _allStates.push_back(&INTERACTGBSTATE);
+    _allStates.push_back(&GOTOSTATE);
+    _allStates.push_back(&LANDSTATE);
+    _allStates.push_back(&BLINDLANDSTATE);
+    _allStates.push_back(&MANUALFLIGHTSTATE);
 
     //Set starting state
-	_stateVault._pCurrentState = &BEGINSTATE;
+    _stateVault._pCurrentState = &BEGINSTATE;
 
     //Initialize all states
     this->initStates();
@@ -162,16 +162,16 @@ ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
     _subscribers.mavrosStateChangedSub = _nodeHandler.subscribe(stateTopic, 1, &ControlFSM::mavrosStateChangedCB, this);
 
     //Make sure no other instances of ControlFSM is allowed
-	ControlFSM::isUsed = true;
+    ControlFSM::isUsed = true;
 }
 
 void ControlFSM::initStates() {
-	//Only init once
-	if(_statesIsReady) return;
-	for(StateInterface* p : _allStates) {
-		p->stateInit(*this);
-	}
-	_statesIsReady = true;
+    //Only init once
+    if(_statesIsReady) return;
+    for(StateInterface* p : _allStates) {
+        p->stateInit(*this);
+    }
+    _statesIsReady = true;
 }
 
 bool ControlFSM::isReady() {
@@ -197,21 +197,21 @@ bool ControlFSM::isReady() {
 
     //Preflight has passed - no need to check it again.
     _droneState.isPreflightCompleted = true;
-	return true;
+    return true;
 }
 
 void ControlFSM::startPreflight() {
-	if(!isReady()) {
+    if(!isReady()) {
         this->handleFSMWarn("FSM not ready, can't transition to preflight!");
         return;
     }
-	RequestEvent event(RequestType::PREFLIGHT);
-	transitionTo(PREFLIGHTSTATE, &BEGINSTATE, event);
+    RequestEvent event(RequestType::PREFLIGHT);
+    transitionTo(PREFLIGHTSTATE, &BEGINSTATE, event);
 }
 
 void ControlFSM::localPosCB(const geometry_msgs::PoseStamped &input) {
-	_dronePosition.isSet = true;
-	_dronePosition.position = input;
+    _dronePosition.isSet = true;
+    _dronePosition.position = input;
 }
 
 void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {

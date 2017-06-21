@@ -27,125 +27,125 @@
 ///Main FSM logic
 class ControlFSM {
 private:
-	//Add state classes as friend classes here - allowing them to use transitionTo.
-	friend class BeginState;
-	friend class PreFlightState;
-	friend class IdleState;
-	friend class TakeoffState;
-	friend class BlindHoverState;
-	friend class PositionHoldState;
-	friend class ShutdownState;
-	friend class EstimateAdjustState;
-	friend class TrackGBState;
-	friend class InteractGBState;
-	friend class GoToState;
-	friend class LandState;
-	friend class BlindLandState;
-	friend class ManualFlightState;
-	
-	//Static instances of the different states
-	//Also add them to _allStates vector in constructor
-	static BeginState BEGINSTATE;
-	static PreFlightState PREFLIGHTSTATE;
-	static IdleState IDLESTATE;
-	static TakeoffState TAKEOFFSTATE;
-	static BlindHoverState BLINDHOVERSTATE;
-	static PositionHoldState POSITIONHOLDSTATE;
-	static ShutdownState SHUTDOWNSTATE;
-	static EstimateAdjustState ESTIMATEADJUSTSTATE;
-	static TrackGBState TRACKGBSTATE;
-	static InteractGBState INTERACTGBSTATE;
-	static GoToState GOTOSTATE;
-	static LandState LANDSTATE;
-	static BlindLandState BLINDLANDSTATE;
-	static ManualFlightState MANUALFLIGHTSTATE;
-	///Only one instance of ControlFSM is allowed - used to check
-	static bool isUsed;
+    //Add state classes as friend classes here - allowing them to use transitionTo.
+    friend class BeginState;
+    friend class PreFlightState;
+    friend class IdleState;
+    friend class TakeoffState;
+    friend class BlindHoverState;
+    friend class PositionHoldState;
+    friend class ShutdownState;
+    friend class EstimateAdjustState;
+    friend class TrackGBState;
+    friend class InteractGBState;
+    friend class GoToState;
+    friend class LandState;
+    friend class BlindLandState;
+    friend class ManualFlightState;
+    
+    //Static instances of the different states
+    //Also add them to _allStates vector in constructor
+    static BeginState BEGINSTATE;
+    static PreFlightState PREFLIGHTSTATE;
+    static IdleState IDLESTATE;
+    static TakeoffState TAKEOFFSTATE;
+    static BlindHoverState BLINDHOVERSTATE;
+    static PositionHoldState POSITIONHOLDSTATE;
+    static ShutdownState SHUTDOWNSTATE;
+    static EstimateAdjustState ESTIMATEADJUSTSTATE;
+    static TrackGBState TRACKGBSTATE;
+    static InteractGBState INTERACTGBSTATE;
+    static GoToState GOTOSTATE;
+    static LandState LANDSTATE;
+    static BlindLandState BLINDLANDSTATE;
+    static ManualFlightState MANUALFLIGHTSTATE;
+    ///Only one instance of ControlFSM is allowed - used to check
+    static bool isUsed;
 
-	/**
-	 * @brief Holds a pointer to current running state
-	 * @details Struct "vault" explanation:
-	 *	The struct (with instance _stateHolder) keeps the _pCurrentState private. 
-	 *	The struct friends the FSM class so the FSM class can access the pointer. 
-	 *	Even though other classes or function might have access to FSM private variables through friend,
-	 *	they still wont have access to the pointer.
-	 */
-	struct {
-		friend class ControlFSM;
-	private:
-		StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
-	} _stateVault;
+    /**
+     * @brief Holds a pointer to current running state
+     * @details Struct "vault" explanation:
+     *    The struct (with instance _stateHolder) keeps the _pCurrentState private. 
+     *    The struct friends the FSM class so the FSM class can access the pointer. 
+     *    Even though other classes or function might have access to FSM private variables through friend,
+     *    they still wont have access to the pointer.
+     */
+    struct {
+        friend class ControlFSM;
+    private:
+        StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
+    } _stateVault;
 
-	///Current drone position
-	struct {
-		//Not all states needs direct access to position and flags
-		friend class ControlFSM;
-		friend class EstimateAdjustState;
-	private:
-		geometry_msgs::PoseStamped position;
-		bool isSet = false;
-		bool validXY = true; //Assumes XY is valid if not set otherwise
-	} _dronePosition;
+    ///Current drone position
+    struct {
+        //Not all states needs direct access to position and flags
+        friend class ControlFSM;
+        friend class EstimateAdjustState;
+    private:
+        geometry_msgs::PoseStamped position;
+        bool isSet = false;
+        bool validXY = true; //Assumes XY is valid if not set otherwise
+    } _dronePosition;
 
-	///Struct holding information about drones state
-	struct {
-		bool isOffboard = false;
-		bool isArmed = false;
-		bool isPreflightCompleted = false;
-	} _droneState;
+    ///Struct holding information about drones state
+    struct {
+        bool isOffboard = false;
+        bool isArmed = false;
+        bool isPreflightCompleted = false;
+    } _droneState;
 
-	///Vector of all states
-	std::vector<StateInterface*> _allStates;
-	///Has FSM been initiated?
-	bool _statesIsReady = false;
+    ///Vector of all states
+    std::vector<StateInterface*> _allStates;
+    ///Has FSM been initiated?
+    bool _statesIsReady = false;
 
-	///Callback when a transition is made
-	std::function<void()> _onStateChanged = [](){};
-	///Callback when an error occurs in FSM
-	std::function<void(const std::string&)> _onFSMError = [](const std::string& msg){};
-	///Callback when an warning occurs in FSM
-	std::function<void(const std::string&)> _onFSMWarn = [](const std::string& msg){};
-	///Callbacks when an info message occurs in FSM
-	std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
+    ///Callback when a transition is made
+    std::function<void()> _onStateChanged = [](){};
+    ///Callback when an error occurs in FSM
+    std::function<void(const std::string&)> _onFSMError = [](const std::string& msg){};
+    ///Callback when an warning occurs in FSM
+    std::function<void(const std::string&)> _onFSMWarn = [](const std::string& msg){};
+    ///Callbacks when an info message occurs in FSM
+    std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
 
-	///Copy constructor deleted
-	ControlFSM(const ControlFSM&) = delete;
-	///Assignment operator deleted
-	ControlFSM& operator=(const ControlFSM&) = delete;
+    ///Copy constructor deleted
+    ControlFSM(const ControlFSM&) = delete;
+    ///Assignment operator deleted
+    ControlFSM& operator=(const ControlFSM&) = delete;
 
-	///Shared nodehandle for all states
-	ros::NodeHandle _nodeHandler;
-	///Struct holding all shared ControlFSM ros subscribers
-	struct {
-		friend class ControlFSM;
-	private:
-		ros::Subscriber localPosSub;
-		ros::Subscriber mavrosStateChangedSub;
-	} _subscribers;
+    ///Shared nodehandle for all states
+    ros::NodeHandle _nodeHandler;
+    ///Struct holding all shared ControlFSM ros subscribers
+    struct {
+        friend class ControlFSM;
+    private:
+        ros::Subscriber localPosSub;
+        ros::Subscriber mavrosStateChangedSub;
+    } _subscribers;
 
-	///Callback for local position
-	void localPosCB(const geometry_msgs::PoseStamped& input);
-	///Callback for mavros state changed
-	void mavrosStateChangedCB(const mavros_msgs::State& state);
+    ///Callback for local position
+    void localPosCB(const geometry_msgs::PoseStamped& input);
+    ///Callback for mavros state changed
+    void mavrosStateChangedCB(const mavros_msgs::State& state);
 
-	///Initializes all states
-	void initStates();
+    ///Initializes all states
+    void initStates();
 
-	///LandDetector used to check if drone is on ground or not
-	LandDetector _landDetector;
+    ///LandDetector used to check if drone is on ground or not
+    LandDetector _landDetector;
 
 
 
 protected:
-	/**
-	 * @brief Changes the current running state
-	 * @details Allows the current running state to change the current state pointer
-	 * @param state Which state instance to transition to0
-	 * @param _pCaller Which state that requests the transition
-	 * @param event Which event triggered the transition request
-	 */
-	void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
-	
+    /**
+     * @brief Changes the current running state
+     * @details Allows the current running state to change the current state pointer
+     * @param state Which state instance to transition to0
+     * @param _pCaller Which state that requests the transition
+     * @param event Which event triggered the transition request
+     */
+    void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
+    
 public:
 	
 	///Constructor sets default/starting state

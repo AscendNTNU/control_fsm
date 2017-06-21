@@ -5,7 +5,7 @@ Some suggestions for improving code quality of the ControlFSM
 - Try to find a better way to handle CMDs (avoid having to manually terminate cmds in every state - will probably lead to bugs). Mabye implement commands in a new method in the state interface, thereby shared by all states?
 - Avoid using request for both external and internal events
 - Add useful eventhandlers for the different states
-	- Will allow more flexible design and make it easier to add features later
+    - Will allow more flexible design and make it easier to add features later
 - ABORT should be a method in stateinterface, not a request - it should not be manually handled by all states
 - States should be owned by FSM object
 	- It's unsafe to store pointer to fsm object in static state object

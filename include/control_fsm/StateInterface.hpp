@@ -18,12 +18,11 @@ DO NOT store event data by reference
 */
 class StateInterface {
 private:
-	///Flag used to check if state is ready - should be set by state init
-	bool _isReady = false;
+    ///Flag used to check if state is ready - should be set by state init
+    bool _isReady = false;
 protected:
-	mavros_msgs::PositionTarget _setpoint;
+    mavros_msgs::PositionTarget _setpoint;
 public:
-
 	///Used for state setup - remember to implement isReady if overriding
 	virtual void stateInit(ControlFSM& fsm) { _isReady = true; }
 

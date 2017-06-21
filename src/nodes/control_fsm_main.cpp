@@ -87,24 +87,24 @@ int main(int argc, char** argv) {
     //Preflight is finished and system is ready for use!
     /**************************************************/
     fsm.handleFSMInfo("FSM is ready!");
-	fsm.startPreflight(); //Transition to preflight!
-	//Used to maintain a fixed loop rate
-	ros::Rate loopRate(SETPOINT_PUB_RATE);
-	//Main loop
-	while(ros::ok()) {
+    fsm.startPreflight(); //Transition to preflight!
+    //Used to maintain a fixed loop rate
+    ros::Rate loopRate(SETPOINT_PUB_RATE);
+    //Main loop
+    while(ros::ok()) {
         //Get latest messages
-		ros::spinOnce(); //Handle all incoming messages - generates fsm events
-		fsm.loopCurrentState(); //Run current FSM state loop
+        ros::spinOnce(); //Handle all incoming messages - generates fsm events
+        fsm.loopCurrentState(); //Run current FSM state loop
 
-		//Publish setpoints at gived rate
-		const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
-		setpointPub.publish(*pSetpoint);
+        //Publish setpoints at gived rate
+        const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+        setpointPub.publish(*pSetpoint);
 
-		//Sleep for remaining time
-		loopRate.sleep();
-	}
+        //Sleep for remaining time
+        loopRate.sleep();
+    }
 
-	return 0;
+    return 0;
 }
 
 

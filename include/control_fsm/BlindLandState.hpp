@@ -11,7 +11,6 @@ public:
 	void loopState(ControlFSM& fsm) override;
 	std::string getStateName() const { return "BlindLand";}
 	const mavros_msgs::PositionTarget* getSetpoint();
-
     void handleManual(ControlFSM &fsm) override;
 };
 #endif

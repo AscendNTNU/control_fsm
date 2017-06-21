@@ -9,10 +9,10 @@
 ///Holds the current position
 class PositionHoldState : public StateInterface {
 private:
-	ros::Subscriber _lidarSub;
-	bool _isActive = false;
-	double _safeHoverAlt = DEFAULT_SAFE_HOVER_ALT;
-	ControlFSM* _pFsm = nullptr;
+    ros::Subscriber _lidarSub;
+    bool _isActive = false;
+    double _safeHoverAlt = DEFAULT_SAFE_HOVER_ALT;
+    ControlFSM* _pFsm = nullptr;
 public:
 	PositionHoldState();
 	void stateInit(ControlFSM& fsm) override;
@@ -23,7 +23,6 @@ public:
 	const mavros_msgs::PositionTarget* getSetpoint() override;
 	void obsCB(const ascend_msgs::PointArray::ConstPtr& msg);
 	bool stateIsReady(ControlFSM &fsm) override;
-
     void handleManual(ControlFSM &fsm) override;
 };
 
