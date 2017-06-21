@@ -147,72 +147,72 @@ protected:
     void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
     
 public:
-	
-	///Constructor sets default/starting state
-	ControlFSM();
-	
-	///Destructor not used to anything specific.
-	~ControlFSM() {}
+     
+    ///Constructor sets default/starting state
+    ControlFSM();
+    
+    ///Destructor not used to anything specific.
+    ~ControlFSM() {}
 
-	///Get pointer to the current running state
-	StateInterface* getState() { return _stateVault._pCurrentState; }
-	
-	/**
-	 * @brief Handles incoming (external) events
-	 * @details Events are sent to current running state
-	 * @param event Information about the external event
-	 */
-	void handleEvent(const EventData& event);
-	
-	///Loops the current running state
-	void loopCurrentState(void);
-	
-	///Send errormessage to user via ROS_ERROR
-	void handleFSMError(std::string errMsg);
-	
-	///Send info message to user via ROS_INFO
-	void handleFSMInfo(std::string infoMsg);
-	
-	///Send warning message to user via ROS_WARN
-	void handleFSMWarn(std::string warnMsg);
-	
-	///Send debug message to user via ROS_DEBUG
-	void handleFSMDebug(std::string debugMsg);
-	
-	///Returns setpoint from current state
-	const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
+    ///Get pointer to the current running state
+    StateInterface* getState() { return _stateVault._pCurrentState; }
+    
+    /**
+     * @brief Handles incoming (external) events
+     * @details Events are sent to current running state
+     * @param event Information about the external event
+     */
+    void handleEvent(const EventData& event);
+    
+    ///Loops the current running state
+    void loopCurrentState(void);
+    
+    ///Send errormessage to user via ROS_ERROR
+    void handleFSMError(std::string errMsg);
+    
+    ///Send info message to user via ROS_INFO
+    void handleFSMInfo(std::string infoMsg);
+    
+    ///Send warning message to user via ROS_WARN
+    void handleFSMWarn(std::string warnMsg);
+    
+    ///Send debug message to user via ROS_DEBUG
+    void handleFSMDebug(std::string debugMsg);
+    
+    ///Returns setpoint from current state
+    const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
 
-	///Get current position - will return nullptr if invalid
-	const geometry_msgs::PoseStamped* getPositionXYZ();
+    ///Get current position - will return nullptr if invalid
+    const geometry_msgs::PoseStamped* getPositionXYZ();
 
-	///Returns actual yaw based on orientation from pose
-	double getOrientationYaw();
+    ///Returns actual yaw based on orientation from pose
+    double getOrientationYaw();
 
-	///Return yaw with pi_half offset correction due to bug in mavros
-	double getMavrosCorrectedYaw();
+    ///Return yaw with pi_half offset correction due to bug in mavros
+    double getMavrosCorrectedYaw();
 
-	/// Get altitude (should always be correct - 1D lidar)
-	double getPositionZ();
+    /// Get altitude (should always be correct - 1D lidar)
+    double getPositionZ();
 
-	///Sets new callback function for onStateChanged
-	void setOnStateChangedCB(std::function<void()> cb) { _onStateChanged = cb; }
+    ///Sets new callback function for onStateChanged
+    void setOnStateChangedCB(std::function<void()> cb) { _onStateChanged = cb; }
 
-	///Sets new callback function for onFSMError
-	void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {_onFSMError = cb; }
-	
-	///Sets new callback function for onFSMError
-	void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {_onFSMWarn = cb; }
-	
-	///Sets new callback function for onFSMError
-	void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
+    ///Sets new callback function for onFSMError
+    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {_onFSMError = cb; }
+    
+    ///Sets new callback function for onFSMError
+    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {_onFSMWarn = cb; }
+    
+    ///Sets new callback function for onFSMError
+    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
 
-	///Checks if all states are ready
-	bool isReady();
+    ///Checks if all states are ready
+    bool isReady();
 
-	///Transition to preflight from begin state
-	void startPreflight();
+    ///Transition to preflight from begin state
+    void startPreflight();
 
-    void handleManual();
+    oid handleManual();
 };
 
 #endif

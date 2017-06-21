@@ -46,16 +46,16 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, co
 
 //Send external event to current state and to "next" state
 void ControlFSM::handleEvent(const EventData& event) {
-	if(getState() == nullptr) {
-		handleFSMError("Bad implementation of FSM - FSM allways need a state");
-		return;
-	}
-	if(event.eventType == EventType::MANUAL) {
-		//If drone entered manual mode: Abort current operation, and go to stable.
-		this->handleManual();
-	}
-	//Pass event to current running state
-	getState()->handleEvent(*this, event);
+    if(getState() == nullptr) {
+        handleFSMError("Bad implementation of FSM - FSM allways need a state");
+        return;
+    }
+    if(event.eventType == EventType::MANUAL) {
+        //If drone entered manual mode: Abort current operation, and go to stable.
+        this->handleManual();
+    }
+    //Pass event to current running state
+    getState()->handleEvent(*this, event);
 }
 
 //Runs state specific code on current state
@@ -179,21 +179,21 @@ bool ControlFSM::isReady() {
     if(_droneState.isPreflightCompleted) return true;
 
     //All states must run their own checks
-	for(StateInterface* p : _allStates) {
-		if(!p->stateIsReady(*this)) return false;
-	}
+    for(StateInterface* p : _allStates) {
+        if(!p->stateIsReady(*this)) return false;
+    }
 
-	//Some checks can be skipped for debugging purposes
-	if(FSMConfig::RequireAllDataStreams) {
-		//First position has been recieved
-		if (!_dronePosition.isSet) return false;
-		//Mavros must publish state data
-		if (_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) return false;
-		//Mavros must publish position data
-		if (_subscribers.localPosSub.getNumPublishers() <= 0) return false;
-		//Land detector must be ready
-		if (!_landDetector.isReady()) return false;
-	}
+    //Some checks can be skipped for debugging purposes
+    if(FSMConfig::RequireAllDataStreams) {
+        //First position has been recieved
+        if (!_dronePosition.isSet) return false;
+        //Mavros must publish state data
+        if (_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) return false;
+        //Mavros must publish position data
+        if (_subscribers.localPosSub.getNumPublishers() <= 0) return false;
+        //Land detector must be ready
+        if (!_landDetector.isReady()) return false;
+    }
 
     //Preflight has passed - no need to check it again.
     _droneState.isPreflightCompleted = true;
@@ -222,7 +222,7 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
         //Check if old state was autonomous
         //=> now in manual mode
         if(_droneState.isOffboard && _droneState.isArmed) {
-			ROS_INFO("Manual sent!");
+            ROS_INFO("Manual sent!");
             this->handleManual();
         }
         //Set current state
@@ -240,7 +240,7 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
 }
 
 void ControlFSM::handleManual() {
-	getState()->handleManual(*this);
+    getState()->handleManual(*this);
 }
 
 

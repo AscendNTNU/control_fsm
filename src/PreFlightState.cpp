@@ -36,7 +36,7 @@ const mavros_msgs::PositionTarget* PreFlightState::getSetpoint() {
 }
 
 void PreFlightState::handleManual(ControlFSM &fsm) {
-	//Do nothing
+    //Do nothing
 }
 
 

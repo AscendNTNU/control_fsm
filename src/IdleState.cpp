@@ -32,6 +32,6 @@ const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
 }
 
 void IdleState::handleManual(ControlFSM &fsm) {
-	RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-	fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
 }

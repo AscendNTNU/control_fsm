@@ -303,26 +303,26 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 }
 
 bool GoToState::stateIsReady(ControlFSM &fsm) {
-	//Skipping check is allowed for debugging
-	if(!FSMConfig::RequireAllDataStreams) return true;
-	//Makes sure path planner is listening for input
-	if(_planSub.getNumPublishers() <= 0) {
-		fsm.handleFSMWarn("No path planner publisher");
-		return false;	
-	} 
-	if(_targetPub.getNumSubscribers() <= 0) {
-		fsm.handleFSMWarn("No path planner subscriber");
-		return false;
-	}
-	if(_posPub.getNumSubscribers() <= 0) {
-		fsm.handleFSMWarn("No path planner subscriber");
-		return false;
-	}
-	if(_obsPub.getNumSubscribers() <= 0) {
-		fsm.handleFSMWarn("No path planner subscriber");
-		return false;
-	}
-	return true;
+    //Skipping check is allowed for debugging
+    if(!FSMConfig::RequireAllDataStreams) return true;
+    //Makes sure path planner is listening for input
+    if(_planSub.getNumPublishers() <= 0) {
+        fsm.handleFSMWarn("No path planner publisher");
+        return false;    
+    } 
+    if(_targetPub.getNumSubscribers() <= 0) {
+        fsm.handleFSMWarn("No path planner subscriber");
+        return false;
+    }
+    if(_posPub.getNumSubscribers() <= 0) {
+        fsm.handleFSMWarn("No path planner subscriber");
+        return false;
+    }
+    if(_obsPub.getNumSubscribers() <= 0) {
+        fsm.handleFSMWarn("No path planner subscriber");
+        return false;
+    }
+    return true;
 }
 
 void GoToState::handleManual(ControlFSM &fsm) {

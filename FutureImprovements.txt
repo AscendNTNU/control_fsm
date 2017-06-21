@@ -8,8 +8,8 @@ Some suggestions for improving code quality of the ControlFSM
     - Will allow more flexible design and make it easier to add features later
 - ABORT should be a method in stateinterface, not a request - it should not be manually handled by all states
 - States should be owned by FSM object
-	- It's unsafe to store pointer to fsm object in static state object
-		- It relies on that the FSM object ALWAYS will be in scope
+    - It's unsafe to store pointer to fsm object in static state object
+        - It relies on that the FSM object ALWAYS will be in scope
 - External events should've been handled as designated state methods through the StateInterface
     - Thereby forcing the developer to implement all external events correctly.
 - The EventData data structure isn't a suffecient way to notify the current state that an event has occurred.

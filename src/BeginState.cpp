@@ -30,7 +30,7 @@ const mavros_msgs::PositionTarget* BeginState::getSetpoint() {
 }
 
 void BeginState::handleManual(ControlFSM &fsm) {
-	//Does nothing
+    //Does nothing
 }
 
 

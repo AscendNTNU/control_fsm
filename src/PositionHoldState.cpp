@@ -15,34 +15,34 @@ PositionHoldState::PositionHoldState() {
 
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	_isActive = true;
-	if(event.isValidCMD()) {
-		//All valid command needs to go via the GOTO state
-		fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
-	} else if(event.isValidRequest()) {
-		switch(event.request) {
-			case RequestType::GOTO:
-				fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
-				break;
-			case RequestType::LAND:
-				fsm.transitionTo(ControlFSM::LANDSTATE, this, event);
-				break;
-			case RequestType::BLINDLAND:
-				fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
-				break;
+    _isActive = true;
+    if(event.isValidCMD()) {
+        //All valid command needs to go via the GOTO state
+        fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+    } else if(event.isValidRequest()) {
+        switch(event.request) {
+            case RequestType::GOTO:
+                fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+                break;
+            case RequestType::LAND:
+                fsm.transitionTo(ControlFSM::LANDSTATE, this, event);
+                break;
+            case RequestType::BLINDLAND:
+                fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
+                break;
 
-			/*case RequestType::TRACKGB:
-				fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
-				break;
-			*/
-			 case RequestType::ESTIMATORADJ:
-				fsm.transitionTo(ControlFSM::ESTIMATEADJUSTSTATE, this, event);
-				break;
-			default:
-				fsm.handleFSMWarn("Transition not allowed");
-				break;
-		}
-	}
+            /*case RequestType::TRACKGB:
+                fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
+                break;
+            */
+             case RequestType::ESTIMATORADJ:
+                fsm.transitionTo(ControlFSM::ESTIMATEADJUSTSTATE, this, event);
+                break;
+            default:
+                fsm.handleFSMWarn("Transition not allowed");
+                break;
+        }
+    }
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
@@ -88,13 +88,13 @@ void PositionHoldState::stateInit(ControlFSM &fsm) {
 }
 
 bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
-	//Skilpping check is allowed in debug mode
-	if(!FSMConfig::RequireAllDataStreams) return true;
+    //Skilpping check is allowed in debug mode
+    if(!FSMConfig::RequireAllDataStreams) return true;
 
-	if(_lidarSub.getNumPublishers() > 0) {
-		return true;
-	} else {
-		fsm.handleFSMWarn("No lidar publisher in posHold");
+    if(_lidarSub.getNumPublishers() > 0) {
+        return true;
+    } else {
+        fsm.handleFSMWarn("No lidar publisher in posHold");
         return false;
     }
 }
@@ -141,8 +141,8 @@ void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
 
 //Returns setpoint
 const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
-	_setpoint.header.stamp = ros::Time::now();
-	return &_setpoint;
+    _setpoint.header.stamp = ros::Time::now();
+    return &_setpoint;
 }
 
 void PositionHoldState::handleManual(ControlFSM &fsm) {

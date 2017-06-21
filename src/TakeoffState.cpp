@@ -83,11 +83,11 @@ const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 }
 
 void TakeoffState::handleManual(ControlFSM &fsm) {
-	if(_cmd.isValidCMD()) {
-		_cmd.eventError("Lost OFFBOARD!");
-		_cmd = EventData();
-	}
-	RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-	fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    if(_cmd.isValidCMD()) {
+        _cmd.eventError("Lost OFFBOARD!");
+        _cmd = EventData();
+    }
+    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
 }
 

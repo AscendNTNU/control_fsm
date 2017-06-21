@@ -18,10 +18,10 @@ void ShutdownState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 //Make sure to return _setpoint (make sure it will stay in memory!)
 const mavros_msgs::PositionTarget* ShutdownState::getSetpoint() {
-	_setpoint.header.stamp = ros::Time::now();
-	return &_setpoint;
+    _setpoint.header.stamp = ros::Time::now();
+    return &_setpoint;
 }
 
 void ShutdownState::handleManual(ControlFSM &fsm) {
-	//Do nothing
+    //Do nothing
 }
