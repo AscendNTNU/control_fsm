@@ -4,7 +4,7 @@
 #include "control_fsm/ControlFSM.hpp"
 
 EstimateAdjustState::EstimateAdjustState() {
-	_setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY; //State should transition before this is needed, but just in case
+    _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY; //State should transition before this is needed, but just in case
 }
 
 void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -33,23 +33,23 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
     bool posInvalid = true;
 
     if(posInvalid) {
-		if(_cmd.isValidCMD()) {
-			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
-			_cmd = EventData();
-		} else {
-			RequestEvent event(RequestType::BLINDHOVER);
-			fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
-		}
-	}
+        if(_cmd.isValidCMD()) {
+            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
+            _cmd = EventData();
+        } else {
+            RequestEvent event(RequestType::BLINDHOVER);
+            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
+        }
+    }
 }
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	_setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
+    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 
 }
 
 const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {
-	_setpoint.header.stamp = ros::Time::now();
-	return &_setpoint;
+    _setpoint.header.stamp = ros::Time::now();
+    return &_setpoint;
 }
 

@@ -7,21 +7,21 @@
 
 
 class DebugServer {
-	using Response = ascend_msgs::ControlFSMEvent::Response;
-	using Request = ascend_msgs::ControlFSMEvent::Request;
+    using Response = ascend_msgs::ControlFSMEvent::Response;
+    using Request = ascend_msgs::ControlFSMEvent::Request;
 private:
-	ControlFSM* pFsm_ = nullptr;
-	ros::ServiceServer server_;
-	ros::NodeHandle nh_;
+    ControlFSM* pFsm_ = nullptr;
+    ros::ServiceServer server_;
+    ros::NodeHandle nh_;
 
-	bool handleDebugEvent(Request& req, Response& resp);
-	EventData generateDebugEvent(Request&);
-	//Remove copyconstructor and operator=
-	DebugServer operator=(const DebugServer&) = delete;
-	DebugServer(const DebugServer&) = delete;
+    bool handleDebugEvent(Request& req, Response& resp);
+    EventData generateDebugEvent(Request&);
+    //Remove copyconstructor and operator=
+    DebugServer operator=(const DebugServer&) = delete;
+    DebugServer(const DebugServer&) = delete;
 
 public:
-	DebugServer(ControlFSM* pFsm);
+    DebugServer(ControlFSM* pFsm);
 
 };
 

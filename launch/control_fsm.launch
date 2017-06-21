@@ -1,57 +1,57 @@
 <launch>
-	<!--FSM topics-->
-	<arg name="topic_planner_plan" default="/control/planner/plan" />
-	<arg name="topic_planner_target" default="/control/planner/target"/>
-	<arg name="topic_robot_position" default="/control/planner/current_position"/>
-	<arg name="topic_planner_obstacles" default="/control/planner/obstacles"/>
-	<arg name="topic_lidar" default="/perception/obstacles/lidar"/>
-	<arg name="topic_mavros_position" default="/mavros/local_position/pose"/>
-	<arg name="topic_mavros_state" default="/mavros/state"/>
-	<arg name="topic_land_detector" default="/landdetector"/>
+    <!--FSM topics-->
+    <arg name="topic_planner_plan" default="/control/planner/plan" />
+    <arg name="topic_planner_target" default="/control/planner/target"/>
+    <arg name="topic_robot_position" default="/control/planner/current_position"/>
+    <arg name="topic_planner_obstacles" default="/control/planner/obstacles"/>
+    <arg name="topic_lidar" default="/perception/obstacles/lidar"/>
+    <arg name="topic_mavros_position" default="/mavros/local_position/pose"/>
+    <arg name="topic_mavros_state" default="/mavros/state"/>
+    <arg name="topic_land_detector" default="/landdetector"/>
 
 
-	<!-- FSM config-->
-	<arg name="message_timeout" default="2.0"/>
-	<arg name="dest_reached_margin" default="0.3"/>
-	<arg name="blind_hover_altitude" default="1.0"/>
-	<arg name="takeoff_altitude" default="1.0"/>
-	<arg name="altitude_reached_margin" default="0.1"/>
-	<arg name="setp_reached_margin" default="0.3"/>
-	<arg name="goto_hold_dest_time" default="0.5"/>
-	<arg name="safe_hover_alt" default="2.5"/>
-	<arg name="obstacle_too_close_dist" default="2.0"/>
-	<arg name="yaw_reached_margin" default="0.02"/> <!--In radians-->
-	<arg name="no_yaw_correct_dist" default="0.2"/>
+    <!-- FSM config-->
+    <arg name="message_timeout" default="2.0"/>
+    <arg name="dest_reached_margin" default="0.3"/>
+    <arg name="blind_hover_altitude" default="1.0"/>
+    <arg name="takeoff_altitude" default="1.0"/>
+    <arg name="altitude_reached_margin" default="0.1"/>
+    <arg name="setp_reached_margin" default="0.3"/>
+    <arg name="goto_hold_dest_time" default="0.5"/>
+    <arg name="safe_hover_alt" default="2.5"/>
+    <arg name="obstacle_too_close_dist" default="2.0"/>
+    <arg name="yaw_reached_margin" default="0.02"/> <!--In radians-->
+    <arg name="no_yaw_correct_dist" default="0.2"/>
 
-	<!--FSM debug features-->
-	<arg name="require_all_streams" default="true"/>
+    <!--FSM debug features-->
+    <arg name="require_all_streams" default="true"/>
 
-	<!--Start main control node with params-->
-	<node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">
-		<param name="dest_reached_margin" value="$(arg dest_reached_margin)"/>
-		<param name="blind_hover_altitude" value="$(arg blind_hover_altitude)"/>
-		<param name="takeoff_altitude" value="$(arg takeoff_altitude)"/>
-		<param name="altitude_reached_margin" value="$(arg altitude_reached_margin)"/>
-		<param name="control_planner_plan" value="$(arg topic_planner_plan)"/>
-		<param name="control_planner_position" value="$(arg topic_robot_position)"/>
-		<param name="control_planner_target" value="$(arg topic_planner_target)"/>
-		<param name="control_planner_obstacles" value="$(arg topic_planner_obstacles)"/>
-		<param name="setp_reached_margin" value="$(arg setp_reached_margin)"/>
-		<param name="fsm_error_topic" value="control/fsm/on_error"/>
-		<param name="fsm_info_topic" value="control/fsm/on_info"/>
-		<param name="fsm_warn_topic" value="control/fsm/on_warn"/>
-		<param name="fsm_state_changed_topic" value="control/fsm/state_changed"/>
-		<param name="status_msg_buffer_size" value="10"/>
-		<param name="goto_hold_dest_time" value="$(arg goto_hold_dest_time)"/>
-		<param name="safe_hover_alt" value="$(arg safe_hover_alt)"/>
-		<param name="obstacle_too_close_dist" value="$(arg obstacle_too_close_dist)"/>
-		<param name="lidar_topic" value="$(arg topic_lidar)"/>
-		<param name="yaw_reached_margin" value="$(arg yaw_reached_margin)"/>
-		<param name="no_yaw_correct_dist" value="$(arg no_yaw_correct_dist)"/>
-		<param name="require_all_streams" value="$(arg require_all_streams)"/>
-		<param name="message_timeout" value="$(arg message_timeout)"/>
-		<param name="local_position_topic" value="$(arg topic_mavros_position)"/>
-		<param name="mavros_state_topic" value="$(arg topic_mavros_state)"/>
-		<param name="land_detector_topic" value="$(arg topic_land_detector)"/>
-	</node>
+    <!--Start main control node with params-->
+    <node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">
+        <param name="dest_reached_margin" value="$(arg dest_reached_margin)"/>
+        <param name="blind_hover_altitude" value="$(arg blind_hover_altitude)"/>
+        <param name="takeoff_altitude" value="$(arg takeoff_altitude)"/>
+        <param name="altitude_reached_margin" value="$(arg altitude_reached_margin)"/>
+        <param name="control_planner_plan" value="$(arg topic_planner_plan)"/>
+        <param name="control_planner_position" value="$(arg topic_robot_position)"/>
+        <param name="control_planner_target" value="$(arg topic_planner_target)"/>
+        <param name="control_planner_obstacles" value="$(arg topic_planner_obstacles)"/>
+        <param name="setp_reached_margin" value="$(arg setp_reached_margin)"/>
+        <param name="fsm_error_topic" value="control/fsm/on_error"/>
+        <param name="fsm_info_topic" value="control/fsm/on_info"/>
+        <param name="fsm_warn_topic" value="control/fsm/on_warn"/>
+        <param name="fsm_state_changed_topic" value="control/fsm/state_changed"/>
+        <param name="status_msg_buffer_size" value="10"/>
+        <param name="goto_hold_dest_time" value="$(arg goto_hold_dest_time)"/>
+        <param name="safe_hover_alt" value="$(arg safe_hover_alt)"/>
+        <param name="obstacle_too_close_dist" value="$(arg obstacle_too_close_dist)"/>
+        <param name="lidar_topic" value="$(arg topic_lidar)"/>
+        <param name="yaw_reached_margin" value="$(arg yaw_reached_margin)"/>
+        <param name="no_yaw_correct_dist" value="$(arg no_yaw_correct_dist)"/>
+        <param name="require_all_streams" value="$(arg require_all_streams)"/>
+        <param name="message_timeout" value="$(arg message_timeout)"/>
+        <param name="local_position_topic" value="$(arg topic_mavros_position)"/>
+        <param name="mavros_state_topic" value="$(arg topic_mavros_state)"/>
+        <param name="land_detector_topic" value="$(arg topic_land_detector)"/>
+    </node>
 </launch>
