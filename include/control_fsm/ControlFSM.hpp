@@ -212,7 +212,8 @@ public:
     ///Transition to preflight from begin state
     void startPreflight();
 
-    oid handleManual();
+    ///Handles loss of offboard mode
+    void handleManual();
 };
 
 #endif
