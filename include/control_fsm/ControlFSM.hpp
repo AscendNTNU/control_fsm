@@ -147,7 +147,7 @@ protected:
     void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
     
 public:
-    
+     
     ///Constructor sets default/starting state
     ControlFSM();
     
@@ -211,6 +211,9 @@ public:
 
     ///Transition to preflight from begin state
     void startPreflight();
+
+    ///Handles loss of offboard mode
+    void handleManual();
 };
 
 #endif

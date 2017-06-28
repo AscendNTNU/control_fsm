@@ -42,15 +42,6 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 fsm.handleFSMWarn("Transition not allowed");
                 break;
         }
-    } else if(event.eventType == EventType::POSLOST) {
-        fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
-    } else if(event.eventType == EventType::AUTONOMOUS) {
-        fsm.transitionTo(*this, this, event); //Transition to itself, sets correct setpoint after manual mode
-        /*
-        TODO This might not be a suffecient solution to midflight loss of OFFBOARD. 
-        If the mavros state message arrives "late" the drone will try to go to the old
-        position setpoints. Consider adding another state for manual flight (that always use current position as setpoint)
-        */
     }
 }
 
@@ -96,10 +87,16 @@ void PositionHoldState::stateInit(ControlFSM &fsm) {
     _lidarSub = fsm._nodeHandler.subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
 }
 
-bool PositionHoldState::stateIsReady() {
-    //Skipping check is allowed in debug mode
+bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
+    //Skilpping check is allowed in debug mode
     if(!FSMConfig::RequireAllDataStreams) return true;
-    return _lidarSub.getNumPublishers() > 0;
+
+    if(_lidarSub.getNumPublishers() > 0) {
+        return true;
+    } else {
+        fsm.handleFSMWarn("No lidar publisher in posHold");
+        return false;
+    }
 }
 
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
@@ -146,4 +143,9 @@ void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
 const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
     _setpoint.header.stamp = ros::Time::now();
     return &_setpoint;
+}
+
+void PositionHoldState::handleManual(ControlFSM &fsm) {
+    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
 }

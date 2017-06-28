@@ -13,5 +13,6 @@ public:
     void loopState(ControlFSM& fsm);
     std::string getStateName() const override { return "Land"; }
     const mavros_msgs::PositionTarget* getSetpoint();
+    void handleManual(ControlFSM &fsm) override;
 };
 #endif

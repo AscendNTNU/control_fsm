@@ -41,4 +41,7 @@ const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {
 }
 
 
-
+void BlindLandState::handleManual(ControlFSM &fsm) {
+    RequestEvent requestEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, requestEvent);
+}

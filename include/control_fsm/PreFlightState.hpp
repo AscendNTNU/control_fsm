@@ -12,6 +12,7 @@ public:
     std::string getStateName() const override { return "Preflight"; }
     //Returns setpoint
     const mavros_msgs::PositionTarget* getSetpoint() override;
+    void handleManual(ControlFSM &fsm) override;
 };
 
 #endif

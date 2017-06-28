@@ -48,7 +48,11 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
 
 
 //Returns setpoint
-const mavros_msgs::PositionTarget* ManualFlightState::getSetpoint() { 
+const mavros_msgs::PositionTarget* ManualFlightState::getSetpoint() {
     _setpoint.header.stamp = ros::Time::now();
     return &_setpoint; 
+}
+
+void ManualFlightState::handleManual(ControlFSM &fsm) {
+    //Already in manual, nothing to do
 }

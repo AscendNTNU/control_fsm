@@ -75,12 +75,9 @@ int main(int argc, char** argv) {
 
     //Wait for all systems to initalize and position to become valid
     fsm.handleFSMInfo("Waiting for necessary data streams!");
-    while(ros::ok()) {
+    while(ros::ok() && !fsm.isReady()) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
-        //Wait for FSM to be ready
-        if(!fsm.isReady()) continue; //Checks if all states are ready
-        break;
     }
     fsm.handleFSMInfo("Necessary data streams are ready!");
 

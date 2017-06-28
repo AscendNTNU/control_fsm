@@ -22,7 +22,8 @@ public:
     std::string getStateName() const override { return "Position hold"; }
     const mavros_msgs::PositionTarget* getSetpoint() override;
     void obsCB(const ascend_msgs::PointArray::ConstPtr& msg);
-    bool stateIsReady() override;
+    bool stateIsReady(ControlFSM &fsm) override;
+    void handleManual(ControlFSM &fsm) override;
 };
 
 #endif

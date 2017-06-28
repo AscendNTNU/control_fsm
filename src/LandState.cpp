@@ -88,3 +88,12 @@ const mavros_msgs::PositionTarget* LandState::getSetpoint() {
     _setpoint.header.stamp = ros::Time::now();
     return &_setpoint;
 }
+
+void LandState::handleManual(ControlFSM &fsm) {
+    if(_cmd.isValidCMD()) {
+        _cmd.eventError("Lost OFFBOARD!");
+        _cmd = EventData();
+    }
+    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+}

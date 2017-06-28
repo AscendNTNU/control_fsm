@@ -302,17 +302,35 @@ double GoToState::calculatePathYaw(double dx, double dy) {
     return angle;
 }
 
-bool GoToState::stateIsReady() {
+bool GoToState::stateIsReady(ControlFSM &fsm) {
     //Skipping check is allowed for debugging
     if(!FSMConfig::RequireAllDataStreams) return true;
     //Makes sure path planner is listening for input
-    if(_planSub.getNumPublishers() <= 0) return false;
-    if(_targetPub.getNumSubscribers() <= 0) return false;
-    if(_posPub.getNumSubscribers() <= 0) return false;
-    if(_obsPub.getNumSubscribers() <= 0) return false;
+    if(_planSub.getNumPublishers() <= 0) {
+        fsm.handleFSMWarn("No path planner publisher");
+        return false;    
+    } 
+    if(_targetPub.getNumSubscribers() <= 0) {
+        fsm.handleFSMWarn("No path planner subscriber");
+        return false;
+    }
+    if(_posPub.getNumSubscribers() <= 0) {
+        fsm.handleFSMWarn("No path planner subscriber");
+        return false;
+    }
+    if(_obsPub.getNumSubscribers() <= 0) {
+        fsm.handleFSMWarn("No path planner subscriber");
+        return false;
+    }
     return true;
 }
 
+void GoToState::handleManual(ControlFSM &fsm) {
+    _cmd.eventError("Lost OFFBOARD");
+    _cmd = EventData();
+    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+}
 
 
 
