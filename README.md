@@ -125,6 +125,19 @@ Name: "no_yaw_correct_dist", Description: Not setting new yaw in gotostate if ta
 ```
 Name: "require_all_streams", Description: Require that all datastreams (from other nodes) is available before continuing (DEBUG feature) 
 ```
+```
+Name: "message_timeout", Description: When is data from other nodes considered old 
+```
+```
+Name: "local_position_topic", Description: Mavros position topic, MsgType: geometry_msgs/PoseStamped
+```
+```
+Name: "mavros_state_topic", Description: Mavros state topic (info about OFFBOARD and ARMED) 
+```
+```
+Name: "land_detector_topic", Description: Topic for knowing if drone is on ground, MsgType: ascend_msgs/BoolStamped 
+```
+
 *Drone have to wait to allow the drone to slow down before doing a transition
 
 **Drone will automaticly go to safe hover altitude if an obstacle is too close
