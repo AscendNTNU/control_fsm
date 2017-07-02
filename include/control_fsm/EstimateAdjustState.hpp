@@ -8,11 +8,12 @@ private:
     EventData _cmd;
 
 public:
-	EstimateAdjustState();
-	void handleEvent(ControlFSM& fsm, const EventData& event) override;
-	void stateBegin(ControlFSM& fsm, const EventData& event) override;
-	void loopState(ControlFSM& fsm); //Uncomment if needed
-	std::string getStateName() const override { return "EstimatorAdjust"; }
-	const mavros_msgs::PositionTarget* getSetpoint();
+    EstimateAdjustState();
+    void handleEvent(ControlFSM& fsm, const EventData& event) override;
+    void stateBegin(ControlFSM& fsm, const EventData& event) override;
+    void loopState(ControlFSM& fsm); //Uncomment if needed
+    std::string getStateName() const override { return "EstimatorAdjust"; }
+    const mavros_msgs::PositionTarget* getSetpoint();
+    void handleManual(ControlFSM &fsm) override;
 };
 #endif

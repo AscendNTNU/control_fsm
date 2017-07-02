@@ -3,22 +3,26 @@
 #include <ros/ros.h>
 
 InteractGBState::InteractGBState() {
-	//TODO Implement correct setpoint type
+    //TODO Implement correct setpoint type
 }
 
 void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
-	//TODO Handle all transition requests
+    //TODO Handle all transition requests
 }
 
 void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
-	//TODO Implement
+    //TODO Implement
 }
 
 void InteractGBState::loopState(ControlFSM& fsm) {
-	//TODO Implement ground robot tracking
+    //TODO Implement ground robot tracking
 }
 
 const mavros_msgs::PositionTarget* InteractGBState::getSetpoint() {
-	_setpoint.header.stamp = ros::Time::now();
-	return &_setpoint;
+    _setpoint.header.stamp = ros::Time::now();
+    return &_setpoint;
+}
+
+void InteractGBState::handleManual(ControlFSM &fsm) {
+    //TODO Implement
 }
