@@ -88,7 +88,11 @@ void PositionHoldState::stateInit(ControlFSM &fsm) {
 }
 
 bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
-    //Skilpping check is allowed in debug mode
+
+    //Return true if obstacle detection is disabled
+    if(!FSMConfig::RequireObstacleDetection) return true;
+
+    //Skipping check is allowed in debug mode
     if(!FSMConfig::RequireAllDataStreams) return true;
 
     if(_lidarSub.getNumPublishers() > 0) {

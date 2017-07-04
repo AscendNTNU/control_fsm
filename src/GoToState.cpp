@@ -303,6 +303,7 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 }
 
 bool GoToState::stateIsReady(ControlFSM &fsm) {
+    //TODO set up obstacles stream for planner
     //Skipping check is allowed for debugging
     if(!FSMConfig::RequireAllDataStreams) return true;
     //Makes sure path planner is listening for input

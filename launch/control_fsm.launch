@@ -25,6 +25,7 @@
 
     <!--FSM debug features-->
     <arg name="require_all_streams" default="true"/>
+    <arg name="require_obs_detection" default="true"/>
 
     <!--Start main control node with params-->
     <node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">
@@ -53,5 +54,6 @@
         <param name="local_position_topic" value="$(arg topic_mavros_position)"/>
         <param name="mavros_state_topic" value="$(arg topic_mavros_state)"/>
         <param name="land_detector_topic" value="$(arg topic_land_detector)"/>
+        <param name="require_obs_detection" value="$(arg require_obs_detection)"/>
     </node>
 </launch>

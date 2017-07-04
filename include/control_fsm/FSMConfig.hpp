@@ -55,6 +55,8 @@ public:
     static void loadParams();
     ///Finished drone will require all datastreams to be available
     static bool RequireAllDataStreams;
+    ///Makes it possible to disable the use of obstacle detection features
+    static bool RequireObstacleDetection;
     ///When is data considered old?
     static double ValidDataTimeout;
 };
