@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     //Load ros params
     FSMConfig::loadParams();
 
-    if(!FSMConfig::RequireAllDataStreams) {
+    if(!FSMConfig::RequireAllDataStreams || !FSMConfig::RequireObstacleDetection) {
         ROS_WARN("One or more debug param features is activated!");
     }
 
