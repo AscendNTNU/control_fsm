@@ -44,6 +44,7 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
 }
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
+    fsm.handleFSMError("EstimateAdjust has not been properly implemented!! Take manual control!");
     _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 
 }

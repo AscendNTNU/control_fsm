@@ -9,7 +9,6 @@
 #define PI_HALF 1.57079632679
 #endif
 
-//TODO: Initiate static instances of the different state classes here!!
 BeginState ControlFSM::BEGINSTATE;
 PreFlightState ControlFSM::PREFLIGHTSTATE;
 IdleState ControlFSM::IDLESTATE;

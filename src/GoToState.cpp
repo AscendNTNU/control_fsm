@@ -55,7 +55,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     _currentPlan.valid = false;
     //Has not arrived yet
     _delayTransition.enabled = false;
-    //TODO Implement rest of stateBegin
+
     if(!event.positionGoal.valid) {
         if(_cmd.isValidCMD()) {
             event.eventError("No valid position target");
