@@ -4,6 +4,7 @@
 #include <mavros_msgs/PositionTarget.h>
 #include <mavros_msgs/State.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <ascend_msgs/PositionWarning.h>
 #include <functional>
 
 #include "StateInterface.hpp"
@@ -128,11 +129,15 @@ private:
     ///Callback for mavros state changed
     void mavrosStateChangedCB(const mavros_msgs::State& state);
 
+    bool positionWarningCB(ascend_msgs::PositionWarning::Request &req, ascend_msgs::PositionWarning::Response &res);
+
     ///Initializes all states
     void initStates();
 
     ///LandDetector used to check if drone is on ground or not
     LandDetector _landDetector;
+
+    ros::ServiceServer _posWarnService;
 
 
 

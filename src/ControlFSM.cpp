@@ -159,6 +159,7 @@ ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
     std::string& stateTopic = FSMConfig::MavrosStateChangedTopic;
     _subscribers.localPosSub = _nodeHandler.subscribe(posTopic, 1, &ControlFSM::localPosCB, this);
     _subscribers.mavrosStateChangedSub = _nodeHandler.subscribe(stateTopic, 1, &ControlFSM::mavrosStateChangedCB, this);
+    _posWarnService = _nodeHandler.advertiseService("position_warning", &ControlFSM::positionWarningCB, this);
 
     //Make sure no other instances of ControlFSM is allowed
     ControlFSM::isUsed = true;
@@ -240,6 +241,37 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
 
 void ControlFSM::handleManual() {
     getState()->handleManual(*this);
+}
+
+bool ControlFSM::positionWarningCB(ascend_msgs::PositionWarning::Request &req,
+                                   ascend_msgs::PositionWarning::Response &res) {
+
+    /*
+     * When position becomes invalid - the FSM will try to get to the estimatorAdjustState to safely adjust the pos estimate.
+     * It will first check if we're already at the estimatorAdjustState
+     * If not it will send an abort to stop any current operation (will go to idle or posHold if possible)
+     * Then it will try to transition to the estimatorAdjust state (only possible from idle or posHold)
+     * Then it will check if transition was succesfull and then respond to service
+     *
+     * Should work all the time, except if the drone is currently taking off or landing as these operations
+     * can't be aborted.
+     */
+    bool isReady = getState()->handlePositionWarning(*this);
+    if(!isReady) {
+        //Abort current operation
+        RequestEvent abortEvent(RequestType::ABORT);
+        this->handleEvent(abortEvent);
+        //Try to transition to estimator adjust state
+        RequestEvent estEvent(RequestType::ESTIMATORADJ);
+        this->handleEvent(estEvent);
+        //Check if we've arrived at correct state
+        res.success = getState()->handlePositionWarning(*this);
+    } else {
+        res.success = isReady;
+    }
+    return true;
+
+
 }
 
 

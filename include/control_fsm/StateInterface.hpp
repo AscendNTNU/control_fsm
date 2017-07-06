@@ -37,6 +37,9 @@ public:
 
     ///Handles loss of offboard mode
     virtual void handleManual(ControlFSM& fsm) = 0;
+
+    ///Notify there is a position warning - try to get to estimateAdjustState
+    virtual bool handlePositionWarning(ControlFSM& fsm) { return false; };
      
     ///Runs on current state AFTER transition
     /**stateBegin is only implemented if needed by state.*/

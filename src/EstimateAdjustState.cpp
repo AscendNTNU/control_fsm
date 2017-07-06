@@ -1,6 +1,7 @@
 #include "control_fsm/EstimateAdjustState.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control_fsm/FSMConfig.hpp>
 #include "control_fsm/ControlFSM.hpp"
 
 EstimateAdjustState::EstimateAdjustState() {
@@ -29,8 +30,13 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void EstimateAdjustState::loopState(ControlFSM& fsm) {
-    //TODO Transition to blindhover as soon as position is invalid
-    bool posInvalid = true;
+    auto& pos = fsm.getPositionXYZ()->pose.position;
+    double dx = _perPose.pose.position.x - pos.x;
+    double dy = _perPose.pose.position.y - pos.y;
+
+    if(std::pow(dx, 2) + std::pow(dy, 2) < std::pow(FSMConfig::EstimatesIsEqualMargin, 2)) {
+        //TODO Finish
+    }
 
     if(posInvalid) {
         if(_cmd.isValidCMD()) {
@@ -57,5 +63,17 @@ const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {
 void EstimateAdjustState::handleManual(ControlFSM &fsm) {
     fsm.handleFSMWarn("Lost OFFBOARD while adjusting position estimates! Do NOT switch back to OFFBOARD. Can lead to undefined behaviour!");
     //TODO Should it transition to MANUALFLIGHTSTATE?
+}
+
+void EstimateAdjustState::stateInit(ControlFSM &fsm) {
+    _perceptionPosSub = fsm._nodeHandler.subscribe(FSMConfig::PerceptionPosTopic, 1, &EstimateAdjustState::perceptionPosCB, this);
+}
+
+bool EstimateAdjustState::handlePositionWarning(ControlFSM &fsm) {
+    return true;
+}
+
+void EstimateAdjustState::perceptionPosCB(const geometry_msgs::PoseStamped& pose) {
+    _perPose = pose;
 }
 

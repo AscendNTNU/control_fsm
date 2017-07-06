@@ -27,6 +27,8 @@ double FSMConfig::ObstacleTooCloseDist = 2.0;
 std::string FSMConfig::LidarTopic = "perception/obstacles/lidar";
 bool FSMConfig::RequireAllDataStreams = true;
 bool FSMConfig::RequireObstacleDetection = true;
+double FSMConfig::EstimatesIsEqualMargin = 0.1;
+std::string FSMConfig::PerceptionPosTopic = "/perception/position";
 
 void FSMConfig::loadParams() {
     ros::NodeHandle n("~");
@@ -87,5 +89,9 @@ void FSMConfig::loadParams() {
     getStringParam("mavros_state_topic", MavrosStateChangedTopic);
     //LandDetector
     getStringParam("land_detector_topic", LandDetectorTopic);
+    //EstimateAdjust
+    getDoubleParam("estimates_isequal_margin", EstimatesIsEqualMargin);
+
+    getStringParam("perception_pos_topic", PerceptionPosTopic);
 
 }

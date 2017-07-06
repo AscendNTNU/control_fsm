@@ -59,6 +59,10 @@ public:
     static bool RequireObstacleDetection;
     ///When is data considered old?
     static double ValidDataTimeout;
+    ///When is the estimates considered to be equal
+    static double EstimatesIsEqualMargin;
+    ///Perception position topic
+    static std::string PerceptionPosTopic;
 };
 
 #endif
