@@ -5,7 +5,7 @@
     <arg name="landed_threshold" default="0.1"/>
     <arg name="pub_rate_hz" default="10"/>
     <!--Start main control node with params-->
-    <node name="control_fsm_node" pkg="control_fsm" type="land_detector_node" output="screen">
+    <node name="land_detector_node" pkg="control_fsm" type="land_detector_node" output="screen">
         <param name="pub_topic" value="$(arg pub_topic)"/>
         <param name="pos_topic" value="$(arg pos_topic)"/>
         <param name="threshold" value="$(arg landed_threshold)"/>

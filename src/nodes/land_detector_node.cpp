@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
     loadDoubleParam("pub_rate_hz", Config::pubRateHz);
 
     pub = n.advertise<ascend_msgs::BoolStamped>(Config::pubTopic, 1);
+    ROS_INFO("[Land detector] Ready!");
     ros::Rate pubRate(Config::pubRateHz);
     while(ros::ok()) {
         pubRate.sleep();

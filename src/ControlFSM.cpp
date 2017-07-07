@@ -186,13 +186,25 @@ bool ControlFSM::isReady() {
     //Some checks can be skipped for debugging purposes
     if(FSMConfig::RequireAllDataStreams) {
         //First position has been recieved
-        if (!_dronePosition.isSet) return false;
+        if (!_dronePosition.isSet) {
+            this->handleFSMWarn("Missing initial position!");
+            return false;
+        }
         //Mavros must publish state data
-        if (_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) return false;
+        if (_subscribers.mavrosStateChangedSub.getNumPublishers() <= 0) {
+            this->handleFSMWarn("Missing mavros state info!");
+            return false;
+        }
         //Mavros must publish position data
-        if (_subscribers.localPosSub.getNumPublishers() <= 0) return false;
+        if (_subscribers.localPosSub.getNumPublishers() <= 0) {
+            this->handleFSMWarn("Missing local position stream!");
+            return false;
+        }
         //Land detector must be ready
-        if (!_landDetector.isReady()) return false;
+        if (!_landDetector.isReady()) {
+            this->handleFSMWarn("Missing land detector stream!");
+            return false;
+        }
     }
 
     //Preflight has passed - no need to check it again.
