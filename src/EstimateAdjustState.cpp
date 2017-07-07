@@ -35,17 +35,22 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
     double dy = _perPose.pose.position.y - pos.y;
 
     if(std::pow(dx, 2) + std::pow(dy, 2) < std::pow(FSMConfig::EstimatesIsEqualMargin, 2)) {
-        //TODO Finish
-    }
-
-    if(posInvalid) {
-        if(_cmd.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
-            _cmd = EventData();
-        } else {
-            RequestEvent event(RequestType::BLINDHOVER);
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
+        if(!_delayedTransition.enabled) {
+            _delayedTransition.enabled = true;
+            _delayedTransition.startTime = ros::Time::now();
         }
+        if(ros::Time::now() - _delayedTransition.startTime > _delayedTransition.delayTime) {
+            if(_cmd.isValidCMD()) {
+                fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
+                _cmd = EventData();
+            } else {
+                RequestEvent event(RequestType::BLINDHOVER);
+                fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
+            }
+        }
+
+    } else {
+        _delayedTransition.enabled = false;
     }
 }
 
@@ -67,10 +72,6 @@ void EstimateAdjustState::handleManual(ControlFSM &fsm) {
 
 void EstimateAdjustState::stateInit(ControlFSM &fsm) {
     _perceptionPosSub = fsm._nodeHandler.subscribe(FSMConfig::PerceptionPosTopic, 1, &EstimateAdjustState::perceptionPosCB, this);
-}
-
-bool EstimateAdjustState::handlePositionWarning(ControlFSM &fsm) {
-    return true;
 }
 
 void EstimateAdjustState::perceptionPosCB(const geometry_msgs::PoseStamped& pose) {

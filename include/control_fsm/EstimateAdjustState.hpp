@@ -10,6 +10,12 @@ private:
     EventData _cmd;
     ros::Subscriber _perceptionPosSub;
     geometry_msgs::PoseStamped _perPose;
+
+    struct {
+        ros::Duration delayTime;
+        ros::Time startTime;
+        bool enabled;
+    } _delayedTransition;
 public:
     EstimateAdjustState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
@@ -22,7 +28,5 @@ public:
     const mavros_msgs::PositionTarget* getSetpoint();
     void handleManual(ControlFSM &fsm) override;
     void perceptionPosCB(const geometry_msgs::PoseStamped& pose);
-
-    bool handlePositionWarning(ControlFSM &fsm) override;
 };
 #endif

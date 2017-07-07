@@ -30,6 +30,7 @@ bool FSMConfig::RequireObstacleDetection = true;
 double FSMConfig::EstimatesIsEqualMargin = 0.1;
 std::string FSMConfig::PerceptionPosTopic = "/perception/position";
 
+
 void FSMConfig::loadParams() {
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var) {
@@ -89,9 +90,9 @@ void FSMConfig::loadParams() {
     getStringParam("mavros_state_topic", MavrosStateChangedTopic);
     //LandDetector
     getStringParam("land_detector_topic", LandDetectorTopic);
-    //EstimateAdjust
-    getDoubleParam("estimates_isequal_margin", EstimatesIsEqualMargin);
 
-    getStringParam("perception_pos_topic", PerceptionPosTopic);
+    //Estimate adjust
+    getStringParam("perception_position_topic", PerceptionPosTopic);
+    getDoubleParam("estimate_is_equal_margin", EstimatesIsEqualMargin);
 
 }

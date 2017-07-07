@@ -256,7 +256,7 @@ bool ControlFSM::positionWarningCB(ascend_msgs::PositionWarning::Request &req,
      * Should work all the time, except if the drone is currently taking off or landing as these operations
      * can't be aborted.
      */
-    bool isReady = getState()->handlePositionWarning(*this);
+    bool isReady = (getState() == &ESTIMATEADJUSTSTATE);
     if(!isReady) {
         //Abort current operation
         RequestEvent abortEvent(RequestType::ABORT);
@@ -265,7 +265,7 @@ bool ControlFSM::positionWarningCB(ascend_msgs::PositionWarning::Request &req,
         RequestEvent estEvent(RequestType::ESTIMATORADJ);
         this->handleEvent(estEvent);
         //Check if we've arrived at correct state
-        res.success = getState()->handlePositionWarning(*this);
+        res.success = (getState() == &ESTIMATEADJUSTSTATE);
     } else {
         res.success = isReady;
     }
