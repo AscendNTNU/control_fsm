@@ -18,7 +18,6 @@ BlindHoverState::BlindHoverState() {
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    //TODO Handle incoming events when blind hovering
     if(event.isValidCMD()) {
         if(!_cmd.isValidCMD()) {
             _cmd = event; //Hold event until position is regained.

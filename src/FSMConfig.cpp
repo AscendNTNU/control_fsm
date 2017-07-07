@@ -26,6 +26,7 @@ double FSMConfig::SafeHoverAltitude = 2.0;
 double FSMConfig::ObstacleTooCloseDist = 2.0;
 std::string FSMConfig::LidarTopic = "perception/obstacles/lidar";
 bool FSMConfig::RequireAllDataStreams = true;
+bool FSMConfig::RequireObstacleDetection = true;
 
 void FSMConfig::loadParams() {
     ros::NodeHandle n("~");
@@ -62,6 +63,7 @@ void FSMConfig::loadParams() {
     getDoubleParam("obstacle_too_close_dist", ObstacleTooCloseDist);
     getDoubleParam("message_timeout", ValidDataTimeout);
     getBoolParam("require_all_streams", RequireAllDataStreams);
+    getBoolParam("require_obs_detection", RequireObstacleDetection);
     //GoTo params
     getDoubleParam("goto_hold_dest_time", GoToHoldDestTime);
     getDoubleParam("setp_reached_margin", SetpointReachedMargin);

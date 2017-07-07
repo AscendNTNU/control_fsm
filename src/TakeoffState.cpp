@@ -13,7 +13,6 @@ TakeoffState::TakeoffState() {
 }
 
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    //TODO Handle events
     if(event.isValidCMD()) {
         if(_cmd.isValidCMD()) {
             _cmd = event;

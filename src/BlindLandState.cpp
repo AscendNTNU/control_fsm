@@ -28,11 +28,12 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
-}
+    //TODO: Fix blindland and remove transition to posHold.
+    fsm.handleFSMWarn("Blind land not tested properly! Not available! Going to posHold!");
+    RequestEvent req(RequestType::POSHOLD);
+    fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, req);
 
-void BlindLandState::loopState(ControlFSM& fsm) {
-    //TODO Is this override really needed?
+    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 }
 
 const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {

@@ -10,7 +10,7 @@ void ShutdownState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ShutdownState::loopState(ControlFSM& fsm) {
-    //TODO Perform neccesary shutdown procedures
+    //Not used
 }
 
 void ShutdownState::stateBegin(ControlFSM& fsm, const EventData& event) {

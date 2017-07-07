@@ -3,13 +3,8 @@
 #include "control_fsm/ControlFSM.hpp"
 #include "control_fsm/ActionServer.hpp"
 #include "control_fsm/FSMConfig.hpp"
-#include <geometry_msgs/PoseStamped.h>
-#include <mavros_msgs/PositionTarget.h>
-#include <mavros_msgs/State.h>
 #include <ascend_msgs/ControlFSMEvent.h>
-#include <ascend_msgs/PointArray.h>
 #include <std_msgs/String.h>
-#include <cmath>
 #include "control_fsm/DebugServer.hpp"
 
 
@@ -27,7 +22,7 @@ int main(int argc, char** argv) {
     //Load ros params
     FSMConfig::loadParams();
 
-    if(!FSMConfig::RequireAllDataStreams) {
+    if(!FSMConfig::RequireAllDataStreams || !FSMConfig::RequireObstacleDetection) {
         ROS_WARN("One or more debug param features is activated!");
     }
 

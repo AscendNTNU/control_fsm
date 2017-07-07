@@ -2,7 +2,6 @@
 #define EVENT_DATA_HPP
 #include <functional>
 /*
-TODO
 This class should contain all information a state might need to make a correct decision.
 */
 
@@ -35,10 +34,8 @@ enum class EventType {
     COMMAND,
     AUTONOMOUS, //Notify system is in autonomous mode (ARMED and OFFBOARD)
     MANUAL, //Notify system is in manual mode (DISARMED and/or not OFFBOARD)
-    POSREGAINED, //Notify position is regained
     POSLOST, //Notify position is lost
-    GROUNDDETECTED,
-    OBSTACLECLOSING
+    GROUNDDETECTED
 };
 
 ///Command types - what command is it?
