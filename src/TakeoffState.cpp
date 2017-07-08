@@ -8,7 +8,7 @@
 
 TakeoffState::TakeoffState() {
     _setpoint = mavros_msgs::PositionTarget();
-    _setpoint.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
+    _setpoint.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
     _setpoint.position.z = DEFAULT_TAKEOFF_ALTITUDE;
 }
 
