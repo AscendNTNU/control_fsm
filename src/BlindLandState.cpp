@@ -28,11 +28,6 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    //TODO: Fix blindland and remove transition to posHold.
-    fsm.handleFSMWarn("Blind land not tested properly! Not available! Going to posHold!");
-    RequestEvent req(RequestType::POSHOLD);
-    fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, req);
-
     _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 }
 

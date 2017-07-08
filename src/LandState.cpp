@@ -4,7 +4,7 @@
 #include "control_fsm/ControlFSM.hpp"
 
 LandState::LandState() {
-    _setpoint.type_mask = default_mask | SETPOINT_TYPE_LAND;
+    _setpoint.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
     _setpoint.position.z = -1; //Shouldnt matter
 }
 
@@ -49,12 +49,14 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         _cmd = event;
         _cmd.sendFeedback("Landing!");
     }
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
+    //Set yaw setpoint based on current rotation
+    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
+
+    /*const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
     if(pPose != nullptr) {
         _setpoint.position.x = pPose->pose.position.x;
         _setpoint.position.y = pPose->pose.position.y;
-        //Set yaw setpoint based on current rotation
-        _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
+
     } else {
         //Should never occur
         RequestEvent abortEvent(RequestType::ABORT);
@@ -63,7 +65,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
             _cmd = EventData();
         }
         fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, abortEvent);
-    }
+    } */
 }
 
 void LandState::loopState(ControlFSM& fsm) {
