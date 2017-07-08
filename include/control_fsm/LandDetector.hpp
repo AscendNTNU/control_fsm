@@ -6,7 +6,7 @@
 #define CONTROL_FSM_LANDDETECTOR_HPP
 
 #include <ros/ros.h>
-#include <ascend_msgs/BoolStamped.h>
+#include <mavros_msgs/ExtendedState.h>
 
 class ControlFSM;
 
@@ -17,8 +17,8 @@ private:
     ControlFSM* _pFsm = nullptr;
     ros::NodeHandle _nh;
     ros::Subscriber _sub;
-    ascend_msgs::BoolStamped _lastMsg;
-    void landCB(const ascend_msgs::BoolStamped& msg);
+    mavros_msgs::ExtendedState _lastMsg;
+    void landCB(const mavros_msgs::ExtendedState& msg);
 
 public:
     LandDetector(std::string topic);

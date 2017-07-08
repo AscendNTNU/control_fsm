@@ -10,7 +10,7 @@ LandDetector::LandDetector(std::string topic) : _topic(topic) {
     _sub = _nh.subscribe(topic, 1, &LandDetector::landCB, this);
 }
 
-void LandDetector::landCB(const ascend_msgs::BoolStamped &msg) {
+void LandDetector::landCB(const mavros_msgs::ExtendedState &msg) {
     _lastMsg = msg;
 }
 
@@ -22,7 +22,11 @@ bool LandDetector::isOnGround() {
             ROS_ERROR("LandDetector using old data!");
         }
     }
-    return _lastMsg.value;
+    if(_lastMsg.landed_state == mavros_msgs::ExtendedState::LANDED_STATE_UNDEFINED) {
+        ROS_ERROR("[Control FSM] Undefined land state!!");
+    }
+
+    return _lastMsg.landed_state == mavros_msgs::ExtendedState::LANDED_STATE_ON_GROUND;
 }
 
 LandDetector::LandDetector(std::string topic, ControlFSM* pFsm) : LandDetector(topic) {
