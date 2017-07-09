@@ -29,6 +29,8 @@ catkin_package(
     CATKIN_DEPENDS message_runtime ascend_msgs 
 )
 
+add_definitions("-std=c++11")
+
 ###########
 ## Build ##
 ###########
@@ -46,7 +48,7 @@ file(GLOB control_fsm_SRC "src/*.cpp")
 add_library(control_fsm_lib
   ${control_fsm_SRC}
 )
-target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
+#target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
 
 roslaunch_add_file_check(launch)
 
@@ -58,10 +60,10 @@ target_link_libraries(control_fsm_lib
 ## Declare a C++ executable
 
 add_executable(control_fsm_main src/nodes/control_fsm_main)
-target_compile_features(control_fsm_main PRIVATE cxx_range_for)
+#target_compile_features(control_fsm_main PRIVATE cxx_range_for)
 
 add_executable(land_detector_node src/nodes/land_detector_node)
-target_compile_features(land_detector_node PRIVATE cxx_range_for)
+#target_compile_features(land_detector_node PRIVATE cxx_range_for)
 
 ## Specify libraries to link a library or executable target against
 

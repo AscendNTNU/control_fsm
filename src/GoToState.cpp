@@ -68,8 +68,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     //Sets setpoint to current position - until planner is done
     const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-    _setpoint.position.x = pPose->pose.position.x;
-    _setpoint.position.y = pPose->pose.position.y;
+    _setpoint.position.x = event.positionGoal.x;
+    _setpoint.position.y = event.positionGoal.y;
 
     //Z setpoint can be set right away
     _setpoint.position.z = event.positionGoal.z;
@@ -91,6 +91,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     if(_cmd.isValidCMD()) {
         _cmd.sendFeedback("Planning path to target!");
     }
+    /*
     //Send desired goal to path planner
     geometry_msgs::Point32 destPoint;
     //Only x and y is used
@@ -104,7 +105,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Publish target
     _targetPub.publish(destPoint);
     fsm.handleFSMInfo("Sent target and position to planner, waiting for result!");
-    
+    */
 
 }
 
@@ -178,7 +179,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 
     /**********************************************************/
     //If the destination is not reached, the loop will continue will run
-
+    /*
     //Only run pathplanner if neccesary.
     if(xyWithinReach) {
         _setpoint.position.x = _cmd.positionGoal.x;
@@ -235,6 +236,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     //Set setpoint x and y
     _setpoint.position.x = currentPoint.x;
     _setpoint.position.y = currentPoint.y;
+    */
 }
 
 //Returns valid setpoint
