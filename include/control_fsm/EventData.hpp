@@ -12,7 +12,7 @@ enum class RequestType {
     ABORT,
     BEGIN,
     END,
-    PREFLIGHT,
+    PREFLIGHT,//newcomment
     IDLE, 
     SHUTDOWN, 
     TAKEOFF, 
