@@ -1,11 +1,11 @@
 #include <ros/ros.h>
 
-#include "control_fsm/ControlFSM.hpp"
-#include "control_fsm/ActionServer.hpp"
-#include "control_fsm/FSMConfig.hpp"
+#include "control_fsm/control_fsm.hpp"
+#include "control_fsm/action_server.hpp"
+#include "control_fsm/fsm_config.hpp"
 #include <ascend_msgs/ControlFSMEvent.h>
 #include <std_msgs/String.h>
-#include "control_fsm/DebugServer.hpp"
+#include "control_fsm/debug_server.hpp"
 
 
 //How often is setpoints published to flightcontroller?
