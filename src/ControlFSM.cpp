@@ -59,10 +59,7 @@ void ControlFSM::handleEvent(const EventData& event) {
 
 //Runs state specific code on current state
 void ControlFSM::loopCurrentState(void) {
-    if(getState() == nullptr) {
-        handleFSMError("Bad implementation of FSM - no current state!!");
-        return;
-    }
+    assert(getState() != nullptr);
     getState()->loopState(*this);
 }
 
@@ -131,23 +128,6 @@ ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
     assert(!ControlFSM::isUsed);
     //ROS must be initialized!
     assert(ros::isInitialized());
-
-    //Add all states to _allStates vector for easy access
-    _allStates.push_back(&BEGINSTATE);
-    _allStates.push_back(&PREFLIGHTSTATE);
-    _allStates.push_back(&IDLESTATE);
-    _allStates.push_back(&TAKEOFFSTATE);
-    _allStates.push_back(&BLINDHOVERSTATE);
-    _allStates.push_back(&POSITIONHOLDSTATE);
-    _allStates.push_back(&SHUTDOWNSTATE);
-    _allStates.push_back(&ESTIMATEADJUSTSTATE);
-    _allStates.push_back(&TRACKGBSTATE);
-    _allStates.push_back(&INTERACTGBSTATE);
-    _allStates.push_back(&GOTOSTATE);
-    _allStates.push_back(&LANDSTATE);
-    _allStates.push_back(&BLINDLANDSTATE);
-    _allStates.push_back(&MANUALFLIGHTSTATE);
-
     //Set starting state
     _stateVault._pCurrentState = &BEGINSTATE;
 
@@ -167,8 +147,8 @@ ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
 void ControlFSM::initStates() {
     //Only init once
     if(_statesIsReady) return;
-    for(StateInterface* p : _allStates) {
-        p->stateInit(*this);
+    for(auto it = StateInterface::cbegin(); it != StateInterface::cend(); it++) {
+        (*it)->stateInit(*this);
     }
     _statesIsReady = true;
 }
@@ -178,8 +158,9 @@ bool ControlFSM::isReady() {
     if(_droneState.isPreflightCompleted) return true;
 
     //All states must run their own checks
-    for(StateInterface* p : _allStates) {
-        if(!p->stateIsReady(*this)) return false;
+    for(auto it = StateInterface::cbegin(); it != StateInterface::cend(); it++) {
+        this->handleFSMInfo((*it)->getStateName() + "is testing");
+        if(!(*it)->stateIsReady(*this)) return false;
     }
 
     //Some checks can be skipped for debugging purposes

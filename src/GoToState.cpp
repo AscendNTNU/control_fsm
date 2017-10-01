@@ -12,7 +12,7 @@ constexpr double PI = 3.14159265359;
 constexpr double PI_HALF = 1.57079632679;
 
 
-GoToState::GoToState() {
+GoToState::GoToState() : StateInterface::StateInterface() {
     _setpoint.type_mask = default_mask;
 }
 
