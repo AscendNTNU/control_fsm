@@ -7,7 +7,7 @@ ManualFlightState::ManualFlightState() {
     _setpoint.type_mask = default_mask; 
 }
 //Only check for an abort event
-void ManualFlightState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
         fsm.handleFSMWarn("Drone is not yet active - commands ignored");

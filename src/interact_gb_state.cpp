@@ -6,11 +6,11 @@ InteractGBState::InteractGBState() {
     //TODO Implement correct setpoint type
 }
 
-void InteractGBState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //TODO Handle all transition requests
 }
 
-void InteractGBState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //TODO Implement
 }
 

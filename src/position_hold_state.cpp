@@ -14,7 +14,7 @@ PositionHoldState::PositionHoldState() {
 }
 
 //Handles incoming events
-void PositionHoldState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     _isActive = true;
     if(event.isValidCMD()) {
         //All valid command needs to go via the GOTO state
@@ -45,7 +45,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const event_data& event) {
     }
 }
 
-void PositionHoldState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     if(_pFsm == nullptr) {
         _pFsm = &fsm;
     }
@@ -63,7 +63,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const event_data& event) {
         if(event.isValidCMD()) {
             event.eventError("No valid position!");
         }
-        event_data nEvent;
+        EventData nEvent;
         nEvent.eventType = EventType::POSLOST;
         fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, nEvent); 
         return;
@@ -139,7 +139,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
 
 }
 
-void PositionHoldState::stateEnd(ControlFSM &fsm, const event_data& eventData) {
+void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
     _isActive = false;
 }
 

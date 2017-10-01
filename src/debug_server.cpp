@@ -15,7 +15,7 @@ bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
     if(!pFsm_->isReady()) {
         pFsm_->handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
     }
-    event_data event = generateDebugEvent(req);
+    EventData event = generateDebugEvent(req);
     //If request event is not valid
     if(event.eventType == EventType::REQUEST && !event.isValidRequest()) {
         resp.accepted = false;
@@ -53,8 +53,8 @@ bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
 
 }
 
-event_data DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
-    event_data event;
+EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&req) {
+    EventData event;
     //Lambda expression returning correct eventtype
     event.eventType = ([&]() -> EventType{
         using REQ = ascend_msgs::ControlFSMEvent::Request;
@@ -97,14 +97,14 @@ event_data DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request
         }
     } else if(event.eventType == EventType::COMMAND) {
         //Lambda expression returning correct commandEvent
-        event = ([&]() -> event_data{
+        event = ([&]() -> EventData{
             using REQ = ascend_msgs::ControlFSMEvent::Request;
             switch(req.commandType) {
                 case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
                 case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
                     //case REQ::LANDGB: return LandGBCMDEvent();
                 default:
-                    event_data e;
+                    EventData e;
                     e.eventType = EventType::COMMAND;
                     e.commandType = CommandType::NONE;
                     return e;

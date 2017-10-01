@@ -15,7 +15,7 @@ private:
     ros::NodeHandle nh_;
 
     bool handleDebugEvent(Request& req, Response& resp);
-    event_data generateDebugEvent(Request&);
+    EventData generateDebugEvent(Request&);
     //Remove copyconstructor and operator=
     DebugServer operator=(const DebugServer&) = delete;
     DebugServer(const DebugServer&) = delete;

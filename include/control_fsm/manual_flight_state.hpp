@@ -7,7 +7,7 @@
 class ManualFlightState : public StateInterface {
 public:
     ManualFlightState();
-    void handleEvent(ControlFSM& fsm, const event_data& event) override;
+    void handleEvent(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "ManualFlight"; }
     void loopState(ControlFSM& fsm) override;
     //Returns setpoint

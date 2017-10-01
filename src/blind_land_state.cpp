@@ -7,7 +7,7 @@ BlindLandState::BlindLandState() {
     _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY | SETPOINT_TYPE_LAND;
 }
 
-void BlindLandState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.eventType == EventType::GROUNDDETECTED) {
         //Land completed
         fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
@@ -27,7 +27,7 @@ void BlindLandState::handleEvent(ControlFSM& fsm, const event_data& event) {
     }
 }
 
-void BlindLandState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //TODO: Fix blindland and remove transition to posHold.
     fsm.handleFSMWarn("Blind land not tested properly! Not available! Going to posHold!");
     RequestEvent req(RequestType::POSHOLD);

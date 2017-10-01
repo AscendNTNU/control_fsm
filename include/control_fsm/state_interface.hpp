@@ -14,7 +14,7 @@ class ControlFSM;
 NOTE:
 FSM is not async so do not run any blocking code 
 in any of these methods.
-event_data is passed by reference and is NOT guaranteed to remain in scope.
+EventData is passed by reference and is NOT guaranteed to remain in scope.
 DO NOT store event data by reference
 */
 class StateInterface;
@@ -47,18 +47,18 @@ public:
     virtual ~StateInterface() {}
 
     ///Handles incoming external events
-    virtual void handleEvent(ControlFSM& fsm, const event_data& event) = 0;
+    virtual void handleEvent(ControlFSM& fsm, const EventData& event) = 0;
 
     ///Handles loss of offboard mode
     virtual void handleManual(ControlFSM& fsm) = 0;
      
     ///Runs on current state AFTER transition
     /**stateBegin is only implemented if needed by state.*/
-    virtual void stateBegin(ControlFSM& fsm, const event_data& event) {}
+    virtual void stateBegin(ControlFSM& fsm, const EventData& event) {}
 
     ///Runs on current state BEFORE transition
     /**stateEnd is only implemented if needed by state*/
-    virtual void stateEnd(ControlFSM& fsm, const event_data& event) {}
+    virtual void stateEnd(ControlFSM& fsm, const EventData& event) {}
     
     ///Runs state specific code
     /**loopState is only implemented if needed by state*/

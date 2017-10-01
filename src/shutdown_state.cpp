@@ -5,7 +5,7 @@ ShutdownState::ShutdownState() {
     _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE;
 }
 
-void ShutdownState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void ShutdownState::handleEvent(ControlFSM& fsm, const EventData& event) {
     fsm.handleFSMWarn("Shutdown state, all events are ignored!");
 }
 
@@ -13,7 +13,7 @@ void ShutdownState::loopState(ControlFSM& fsm) {
     //Not used
 }
 
-void ShutdownState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void ShutdownState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 //Make sure to return _setpoint (make sure it will stay in memory!)

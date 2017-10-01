@@ -6,11 +6,11 @@ TrackGBState::TrackGBState() {
     //TODO Set correct setpoint type here (default might be correct?)
 }
 
-void TrackGBState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void TrackGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //TODO Handle all transition requests
 }
 
-void TrackGBState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void TrackGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //TODO Implement
 }
 

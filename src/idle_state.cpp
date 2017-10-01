@@ -10,7 +10,7 @@ IdleState::IdleState() {
     _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE;
 }
 
-void IdleState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //All commands needs to get to position hold first
     if(event.isValidCMD()) {
         fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);

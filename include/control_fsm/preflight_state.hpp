@@ -7,8 +7,8 @@
 class PreFlightState : public StateInterface {
 public:
     PreFlightState();
-    void handleEvent(ControlFSM& fsm, const event_data& event) override;
-    void stateBegin(ControlFSM& fsm, const event_data& event) override;
+    void handleEvent(ControlFSM& fsm, const EventData& event) override;
+    void stateBegin(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "Preflight"; }
     //Returns setpoint
     const mavros_msgs::PositionTarget* getSetpoint() override;

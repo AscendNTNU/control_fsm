@@ -26,7 +26,7 @@ ManualFlightState ControlFSM::MANUALFLIGHTSTATE;
 bool ControlFSM::isUsed = false;
 
 //Change the current running state - be carefull to only change into an allowed state
-void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const event_data& event) {
+void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
     //Only current running state is allowed to change state
     if(getState() == pCaller) {
         //Run stateEnd on current running state before transitioning
@@ -44,7 +44,7 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, co
 }
 
 //Send external event to current state and to "next" state
-void ControlFSM::handleEvent(const event_data& event) {
+void ControlFSM::handleEvent(const EventData& event) {
     if(getState() == nullptr) {
         handleFSMError("Bad implementation of FSM - FSM allways need a state");
         return;
@@ -223,7 +223,7 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
 
         //If it is armed and in offboard and all preflight checks has completed - notify AUTONOMOUS mode
         if(_droneState.isArmed && _droneState.isOffboard && _droneState.isPreflightCompleted) {
-            event_data autonomousEvent;
+            EventData autonomousEvent;
             autonomousEvent.eventType = EventType::AUTONOMOUS;
             ROS_INFO("Autonomous event sent");
             this->handleEvent(autonomousEvent);

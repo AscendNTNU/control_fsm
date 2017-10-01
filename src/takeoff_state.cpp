@@ -12,7 +12,7 @@ TakeoffState::TakeoffState() {
     _setpoint.position.z = DEFAULT_TAKEOFF_ALTITUDE;
 }
 
-void TakeoffState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         if(_cmd.isValidCMD()) {
             _cmd = event;
@@ -23,7 +23,7 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const event_data& event) {
     } else if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
             _cmd.eventError("Aborting command");
-            _cmd = event_data(); //Aborting commands, but will still continue takeoff
+            _cmd = EventData(); //Aborting commands, but will still continue takeoff
             fsm.handleFSMInfo("Command aborted, but takeoff can't be aborted");
         } else {
             fsm.handleFSMWarn("Illegal transition request");
@@ -33,7 +33,7 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const event_data& event) {
     }
 }
 
-void TakeoffState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Set relevant parameters
     //Takeoff altitude
     _setpoint.position.z = FSMConfig::TakeoffAltitude;
@@ -50,7 +50,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const event_data& event) {
         fsm.handleFSMError("No position available");
         if(_cmd.isValidCMD()) {
             _cmd.eventError("No position available");
-            _cmd = event_data();
+            _cmd = EventData();
         }
         RequestEvent abortEvent(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::IDLESTATE, this, abortEvent);
@@ -68,7 +68,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     if(z > (_setpoint.position.z - _altitude_reached_margin)) {
         if(_cmd.isValidCMD()) {
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
-            _cmd = event_data();
+            _cmd = EventData();
         } else {
             RequestEvent event(RequestType::BLINDHOVER);
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
@@ -84,7 +84,7 @@ const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
 void TakeoffState::handleManual(ControlFSM &fsm) {
     if(_cmd.isValidCMD()) {
         _cmd.eventError("Lost OFFBOARD!");
-        _cmd = event_data();
+        _cmd = EventData();
     }
     RequestEvent manualEvent(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);

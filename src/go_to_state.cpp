@@ -16,12 +16,12 @@ GoToState::GoToState() : StateInterface::StateInterface() {
     _setpoint.type_mask = default_mask;
 }
 
-void GoToState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT) {
             if(_cmd.isValidCMD()) {
                 _cmd.eventError("ABORT");
-                _cmd = event_data();
+                _cmd = EventData();
             }
             fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
         } else if(event.request == RequestType::POSHOLD) {
@@ -48,7 +48,7 @@ void GoToState::handleEvent(ControlFSM& fsm, const event_data& event) {
     }
 }
 
-void GoToState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     _isActive = true;
     _cmd = event;
     //Current plan is invalid until new plan is recieved
@@ -59,7 +59,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const event_data& event) {
     if(!event.positionGoal.valid) {
         if(_cmd.isValidCMD()) {
             event.eventError("No valid position target");
-            _cmd = event_data();
+            _cmd = EventData();
         }
         RequestEvent nEvent(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
@@ -108,7 +108,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const event_data& event) {
 
 }
 
-void GoToState::stateEnd(ControlFSM& fsm, const event_data& event) {
+void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
     _isActive = false;
 }
 
@@ -117,11 +117,11 @@ void GoToState::loopState(ControlFSM& fsm) {
     const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
     //Should never occur, but just in case
     if(pPose == nullptr) {
-        event_data event;
+        EventData event;
         event.eventType = EventType::POSLOST;
         if(_cmd.isValidCMD()) {
             _cmd.eventError("No position");
-            _cmd = event_data();
+            _cmd = EventData();
         }
         fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
         return;
@@ -328,7 +328,7 @@ bool GoToState::stateIsReady(ControlFSM &fsm) {
 
 void GoToState::handleManual(ControlFSM &fsm) {
     _cmd.eventError("Lost OFFBOARD");
-    _cmd = event_data();
+    _cmd = EventData();
     RequestEvent manualEvent(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
 }

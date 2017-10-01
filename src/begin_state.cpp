@@ -8,7 +8,7 @@ BeginState::BeginState() {
 }    
 
 //Begin state only waits for preflight request
-void BeginState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
         fsm.handleFSMWarn("Drone is not yet active - commands ignored");

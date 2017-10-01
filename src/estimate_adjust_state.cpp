@@ -7,7 +7,7 @@ EstimateAdjustState::EstimateAdjustState() {
     _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY; //State should transition before this is needed, but just in case
 }
 
-void EstimateAdjustState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         if(_cmd.isValidCMD()) {
             event.eventError("ABORT old CMD first!");
@@ -17,7 +17,7 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const event_data& event) 
         }
     } else if(event.eventType == EventType::REQUEST) {
         if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
-            _cmd = event_data();
+            _cmd = EventData();
             _cmd.eventError("ABORT request!");
             fsm.handleFSMDebug("ABORTING command, but estimateadjust cant be aborted!");
         } else {
@@ -35,7 +35,7 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
     if(posInvalid) {
         if(_cmd.isValidCMD()) {
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
-            _cmd = event_data();
+            _cmd = EventData();
         } else {
             RequestEvent event(RequestType::BLINDHOVER);
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
@@ -43,7 +43,7 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
     }
 }
 
-void EstimateAdjustState::stateBegin(ControlFSM& fsm, const event_data& event) {
+void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
     fsm.handleFSMError("EstimateAdjust has not been properly implemented!! Take manual control!");
     _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
 

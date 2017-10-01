@@ -144,7 +144,7 @@ protected:
      * @param _pCaller Which state that requests the transition
      * @param event Which event triggered the transition request
      */
-    void transitionTo(StateInterface& state, StateInterface* _pCaller, const event_data& event);
+    void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
     
 public:
      
@@ -162,7 +162,7 @@ public:
      * @details Events are sent to current running state
      * @param event Information about the external event
      */
-    void handleEvent(const event_data& event);
+    void handleEvent(const EventData& event);
     
     ///Loops the current running state
     void loopCurrentState(void);

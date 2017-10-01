@@ -56,10 +56,10 @@ struct PositionGoalXYZ {
     PositionGoalXYZ() : valid(false) {}
 };
 
-class event_data;
+class EventData;
 
 ///Contains all info about events
-class event_data {
+class EventData {
 private:
     ///Callback function when a CMD is completed
     std::function<void()> _onComplete = []() {}; //Does nothing by default
@@ -98,7 +98,7 @@ public:
 
 
 ///Wrapper class for LandXY CMD events
-class LandXYCMDEvent : public event_data {
+class LandXYCMDEvent : public EventData {
 private:
     //Altitude to go to before landing
     const double _goToAltitude = 1.0f;
@@ -111,7 +111,7 @@ public:
 };
 
 ///Wrapper class for GoToXYZ CMD events
-class GoToXYZCMDEvent : public event_data {
+class GoToXYZCMDEvent : public EventData {
 public:
     GoToXYZCMDEvent(double x, double y, double z) {
         positionGoal = PositionGoalXYZ(x,y,z);
@@ -121,13 +121,13 @@ public:
 };
 
 ///Wrapper class for LandGB CMD events
-class LandGBCMDEvent : public event_data {
+class LandGBCMDEvent : public EventData {
 public:
     //TODO Implement event type
 };
 
 ///Wrapper class for requests events
-class RequestEvent : public event_data {
+class RequestEvent : public EventData {
 public:
     RequestEvent(RequestType r) {
         eventType = EventType::REQUEST;

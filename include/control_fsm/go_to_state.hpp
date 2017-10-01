@@ -26,7 +26,7 @@ private:
         ros::Duration delayTime;
     } _delayTransition;
 
-    event_data _cmd;
+    EventData _cmd;
     ///Publisher for the current position - will start the path planner
     ros::Publisher _posPub;
     ///Publisher for the desired target
@@ -67,10 +67,10 @@ private:
 public:
      GoToState();
      void stateInit(ControlFSM& fsm) override;
-     void handleEvent(ControlFSM& fsm, const event_data& event) override;
-     void stateBegin(ControlFSM& fsm, const event_data& event) override;
+     void handleEvent(ControlFSM& fsm, const EventData& event) override;
+     void stateBegin(ControlFSM& fsm, const EventData& event) override;
      void loopState(ControlFSM& fsm) override;
-     void stateEnd(ControlFSM& fsm, const event_data& event) override;
+     void stateEnd(ControlFSM& fsm, const EventData& event) override;
      std::string getStateName() const { return "GoTo";}
      const mavros_msgs::PositionTarget* getSetpoint();
      bool stateIsReady(ControlFSM &fsm) override;

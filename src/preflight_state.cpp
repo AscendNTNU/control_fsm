@@ -6,7 +6,7 @@ PreFlightState::PreFlightState() {
     _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE;
 }
 //Only check for an abort event
-void PreFlightState::handleEvent(ControlFSM& fsm, const event_data& event) {
+void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
         fsm.handleFSMWarn("Drone is not yet active - commands ignored");
@@ -25,7 +25,7 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const event_data& event) {
     }
 }
 
-void PreFlightState::stateBegin(ControlFSM &fsm, const event_data &event) {
+void PreFlightState::stateBegin(ControlFSM &fsm, const EventData &event) {
     fsm.handleFSMInfo("Preflight mode: Arm and set OFFBOARD to proceed to IDLE!");
 }
 

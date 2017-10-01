@@ -6,8 +6,8 @@
 class BlindLandState : public StateInterface {
 public:
     BlindLandState();
-    void handleEvent(ControlFSM& fsm, const event_data& event) override;
-    void stateBegin(ControlFSM& fsm, const event_data& event) override;
+    void handleEvent(ControlFSM& fsm, const EventData& event) override;
+    void stateBegin(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const { return "BlindLand";}
     const mavros_msgs::PositionTarget* getSetpoint();
     void handleManual(ControlFSM &fsm) override;
