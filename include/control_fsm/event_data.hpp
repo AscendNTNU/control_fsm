@@ -62,11 +62,11 @@ class EventData;
 class EventData {
 private:
     ///Callback function when a CMD is completed
-    std::function<void()> _onComplete = []() {}; //Does nothing by default
+    std::function<void()> onComplete_ = []() {}; //Does nothing by default
     ///Callback function when a CMD fails.
-    std::function<void(std::string)> _onError = [](std::string) {}; //Does nothing by default
+    std::function<void(std::string)> onError_ = [](std::string) {}; //Does nothing by default
     //Callback function for sendig feedback during cmd execution
-    std::function<void(std::string)> _onFeedback = [](std::string){};
+    std::function<void(std::string)> onFeedback_ = [](std::string){};
 public:
 
     ///If event is a request - what type?
@@ -79,17 +79,17 @@ public:
     CommandType commandType = CommandType::NONE; //No command as default
 
     ///Setter function for complete callback
-    void setOnCompleteCallback(std::function<void()> callback) { _onComplete = callback; }
+    void setOnCompleteCallback(std::function<void()> callback) { onComplete_ = callback; }
     ///Setter function for error callback
-    void setOnErrorCallback(std::function<void(std::string)> callback) { _onError = callback; }
+    void setOnErrorCallback(std::function<void(std::string)> callback) { onError_ = callback; }
     ///Setter function for feedback callback
-    void setOnFeedbackCallback(std::function<void(std::string)> callback) {_onFeedback = callback; }
+    void setOnFeedbackCallback(std::function<void(std::string)> callback) {onFeedback_ = callback; }
     ///Finishes a CMD (calls the _onComplete callback)
-    void finishCMD() const { _onComplete(); }
+    void finishCMD() const { onComplete_(); }
     ///CMD error (calls _onError callback)
-    void eventError(std::string errorMsg) const { _onError(errorMsg); }
+    void eventError(std::string errorMsg) const { onError_(errorMsg); }
     ///Sends CMD feedback via _onFeedback callback
-    void sendFeedback(std::string msg) const { _onFeedback(msg); }
+    void sendFeedback(std::string msg) const { onFeedback_(msg); }
     ///Checks if this event is a valid cmd type
     bool isValidCMD() const { return (eventType == EventType::COMMAND && commandType != CommandType::NONE); }
     ///Checks if this event is a valid request type
@@ -101,10 +101,10 @@ public:
 class LandXYCMDEvent : public EventData {
 private:
     //Altitude to go to before landing
-    const double _goToAltitude = 1.0f;
+    const double goToAltitude_ = 1.0f;
 public:
     LandXYCMDEvent(double x, double y) {
-        positionGoal = PositionGoalXYZ(x, y, _goToAltitude);
+        positionGoal = PositionGoalXYZ(x, y, goToAltitude_);
         eventType = EventType::COMMAND;
         commandType = CommandType::LANDXY;
     }

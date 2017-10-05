@@ -73,8 +73,8 @@ private:
     struct {
         friend class ControlFSM;
     private:
-        StateInterface* _pCurrentState = nullptr; //This need to be set to a start state in constructor
-    } _stateVault;
+        StateInterface* pCurrentState_ = nullptr; //This need to be set to a start state in constructor
+    } stateVault_;
 
     ///Current drone position
     struct {
@@ -85,28 +85,28 @@ private:
         geometry_msgs::PoseStamped position;
         bool isSet = false;
         bool validXY = true; //Assumes XY is valid if not set otherwise
-    } _dronePosition;
+    } dronePosition_;
 
     ///Struct holding information about drones state
     struct {
         bool isOffboard = false;
         bool isArmed = false;
         bool isPreflightCompleted = false;
-    } _droneState;
+    } droneState_;
 
     ///Vector of all states
     std::vector<StateInterface*> _allStates;
     ///Has FSM been initiated?
-    bool _statesIsReady = false;
+    bool statesIsReady_ = false;
 
     ///Callback when a transition is made
-    std::function<void()> _onStateChanged = [](){};
+    std::function<void()> onStateChanged_ = [](){};
     ///Callback when an error occurs in FSM
-    std::function<void(const std::string&)> _onFSMError = [](const std::string& msg){};
+    std::function<void(const std::string&)> onFSMError_ = [](const std::string& msg){};
     ///Callback when an warning occurs in FSM
-    std::function<void(const std::string&)> _onFSMWarn = [](const std::string& msg){};
+    std::function<void(const std::string&)> onFSMWarn_ = [](const std::string& msg){};
     ///Callbacks when an info message occurs in FSM
-    std::function<void(const std::string&)> _onFSMInfo = [](const std::string& msg){};
+    std::function<void(const std::string&)> onFSMInfo_ = [](const std::string& msg){};
 
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
@@ -114,14 +114,14 @@ private:
     ControlFSM& operator=(const ControlFSM&) = delete;
 
     ///Shared nodehandle for all states
-    ros::NodeHandle _nodeHandler;
+    ros::NodeHandle nodeHandler_;
     ///Struct holding all shared ControlFSM ros subscribers
     struct {
         friend class ControlFSM;
     private:
         ros::Subscriber localPosSub;
         ros::Subscriber mavrosStateChangedSub;
-    } _subscribers;
+    } subscribers_;
 
     ///Callback for local position
     void localPosCB(const geometry_msgs::PoseStamped& input);
@@ -155,7 +155,7 @@ public:
     ~ControlFSM() {}
 
     ///Get pointer to the current running state
-    StateInterface* getState() { return _stateVault._pCurrentState; }
+    StateInterface* getState() { return stateVault_.pCurrentState_; }
     
     /**
      * @brief Handles incoming (external) events
@@ -195,16 +195,16 @@ public:
     double getPositionZ();
 
     ///Sets new callback function for onStateChanged
-    void setOnStateChangedCB(std::function<void()> cb) { _onStateChanged = cb; }
+    void setOnStateChangedCB(std::function<void()> cb) { onStateChanged_ = cb; }
 
     ///Sets new callback function for onFSMError
-    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {_onFSMError = cb; }
+    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {onFSMError_ = cb; }
     
     ///Sets new callback function for onFSMError
-    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {_onFSMWarn = cb; }
+    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {onFSMWarn_ = cb; }
     
     ///Sets new callback function for onFSMError
-    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {_onFSMInfo = cb; }
+    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {onFSMInfo_ = cb; }
 
     ///Checks if all states are ready
     bool isReady();

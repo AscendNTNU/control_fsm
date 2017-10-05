@@ -6,8 +6,8 @@
 
 //Sets setpoint type to IDLE
 IdleState::IdleState() {
-    _setpoint = mavros_msgs::PositionTarget();
-    _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE;
+    setpoint_ = mavros_msgs::PositionTarget();
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE;
 }
 
 void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -26,9 +26,9 @@ void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
-    //Sets timestamp, and returns _setpoint as const pointer
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint;
+    //Sets timestamp, and returns setpoint_ as const pointer
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 void IdleState::handleManual(ControlFSM &fsm) {

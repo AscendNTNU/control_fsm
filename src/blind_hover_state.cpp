@@ -12,30 +12,30 @@ Only blind states (blind hover and blind land) will accept running without valid
 */
 
 BlindHoverState::BlindHoverState() {
-    _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
-    _setpoint.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
+    setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
+    setpoint_.position.z = DEFAULT_BLIND_HOVER_ALTITUDE;
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
-        if(!_cmd.isValidCMD()) {
-            _cmd = event; //Hold event until position is regained.
+        if(!cmd_.isValidCMD()) {
+            cmd_ = event; //Hold event until position is regained.
         } else {
             event.eventError("CMD rejected!");
             fsm.handleFSMWarn("ABORT old command first");
         }
     } else if(event.isValidRequest()) {
         if(event.request == RequestType::BLINDLAND) {
-            if(_cmd.isValidCMD()) {
-                _cmd.eventError("Manual request overriding cmd");
-                _cmd = EventData();
+            if(cmd_.isValidCMD()) {
+                cmd_.eventError("Manual request overriding cmd");
+                cmd_ = EventData();
             }
             fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
         } else if(event.request == RequestType::ABORT){
-            if(_cmd.isValidCMD()) {
+            if(cmd_.isValidCMD()) {
                 fsm.handleFSMInfo("Aborting CMD");
-                _cmd.eventError("ABORT");
-                _cmd = EventData();
+                cmd_.eventError("ABORT");
+                cmd_ = EventData();
             } else {
                 fsm.handleFSMWarn("Can't abort blind hover");
             }
@@ -59,19 +59,19 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
         return;
     }
     if(event.isValidCMD()) {
-        _cmd = event;
+        cmd_ = event;
     }
 
-    _setpoint.position.z = FSMConfig::BlindHoverAlt;
-    _setpoint.yaw = fsm.getMavrosCorrectedYaw();
+    setpoint_.position.z = FSMConfig::BlindHoverAlt;
+    setpoint_.yaw = fsm.getMavrosCorrectedYaw();
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
     //Transition to position hold when position is valid.
     if(fsm.getPositionXYZ() != nullptr) {
-        if(_cmd.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, _cmd);
-            _cmd = EventData(); //Reset _cmd
+        if(cmd_.isValidCMD()) {
+            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, cmd_);
+            cmd_ = EventData(); //Reset cmd_
         } else {
             RequestEvent event(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
@@ -80,15 +80,15 @@ void BlindHoverState::loopState(ControlFSM& fsm) {
 }
 
 const mavros_msgs::PositionTarget* BlindHoverState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint;
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 
 void BlindHoverState::handleManual(ControlFSM &fsm) {
-    if(_cmd.isValidCMD()) {
-        _cmd.eventError("Lost OFFBOARD");
-        _cmd = EventData();
+    if(cmd_.isValidCMD()) {
+        cmd_.eventError("Lost OFFBOARD");
+        cmd_ = EventData();
     }
     RequestEvent manualEvent(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);

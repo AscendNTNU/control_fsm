@@ -4,21 +4,21 @@
 #include "control_fsm/control_fsm.hpp"
 
 EstimateAdjustState::EstimateAdjustState() {
-    _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY; //State should transition before this is needed, but just in case
+    setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY; //State should transition before this is needed, but just in case
 }
 
 void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
-        if(_cmd.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
             event.eventError("ABORT old CMD first!");
             fsm.handleFSMWarn("ABORT old CMD before sending new!");
         } else { 
-            _cmd = event;
+            cmd_ = event;
         }
     } else if(event.eventType == EventType::REQUEST) {
-        if(event.request == RequestType::ABORT && _cmd.isValidCMD()) {
-            _cmd = EventData();
-            _cmd.eventError("ABORT request!");
+        if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
+            cmd_ = EventData();
+            cmd_.eventError("ABORT request!");
             fsm.handleFSMDebug("ABORTING command, but estimateadjust cant be aborted!");
         } else {
             fsm.handleFSMWarn("Illegal transition request");
@@ -33,9 +33,9 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
     bool posInvalid = true;
 
     if(posInvalid) {
-        if(_cmd.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, _cmd);
-            _cmd = EventData();
+        if(cmd_.isValidCMD()) {
+            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, cmd_);
+            cmd_ = EventData();
         } else {
             RequestEvent event(RequestType::BLINDHOVER);
             fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
@@ -45,13 +45,13 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
     fsm.handleFSMError("EstimateAdjust has not been properly implemented!! Take manual control!");
-    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
+    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
 
 }
 
 const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint;
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 void EstimateAdjustState::handleManual(ControlFSM &fsm) {

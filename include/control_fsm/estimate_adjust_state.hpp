@@ -5,7 +5,7 @@
 ///Adjusting position estimate
 class EstimateAdjustState : public StateInterface {
 private:
-    EventData _cmd;
+    EventData cmd_;
 
 public:
     EstimateAdjustState();

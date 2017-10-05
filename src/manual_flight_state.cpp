@@ -4,7 +4,7 @@
 #include <geometry_msgs/PoseStamped.h>
 
 ManualFlightState::ManualFlightState() {
-    _setpoint.type_mask = default_mask; 
+    setpoint_.type_mask = default_mask;
 }
 //Only check for an abort event
 void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -34,23 +34,23 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
     if(pPose == nullptr) {
         //Should never occur
         fsm.handleFSMError("Position not valid!!");
-        _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY | IGNORE_PZ | IGNORE_YAW;
+        setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY | IGNORE_PZ | IGNORE_YAW;
     } else if(fsm._landDetector.isOnGround()) {
-        _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
+        setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
     } else {
-        _setpoint.type_mask = default_mask;
-        _setpoint.position.x = pPose->pose.position.x;
-        _setpoint.position.y = pPose->pose.position.y;
-        _setpoint.position.z = pPose->pose.position.z;
-        _setpoint.yaw = fsm.getMavrosCorrectedYaw();
+        setpoint_.type_mask = default_mask;
+        setpoint_.position.x = pPose->pose.position.x;
+        setpoint_.position.y = pPose->pose.position.y;
+        setpoint_.position.z = pPose->pose.position.z;
+        setpoint_.yaw = fsm.getMavrosCorrectedYaw();
     }
 }
 
 
 //Returns setpoint
 const mavros_msgs::PositionTarget* ManualFlightState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint; 
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 void ManualFlightState::handleManual(ControlFSM &fsm) {

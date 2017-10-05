@@ -13,11 +13,11 @@ class ControlFSM;
 class LandDetector {
 
 private:
-    std::string _topic;
-    ControlFSM* _pFsm = nullptr;
-    ros::NodeHandle _nh;
-    ros::Subscriber _sub;
-    ascend_msgs::BoolStamped _lastMsg;
+    std::string topic_;
+    ControlFSM* pFsm_ = nullptr;
+    ros::NodeHandle nh_;
+    ros::Subscriber sub_;
+    ascend_msgs::BoolStamped lastMsg_;
     void landCB(const ascend_msgs::BoolStamped& msg);
 
 public:

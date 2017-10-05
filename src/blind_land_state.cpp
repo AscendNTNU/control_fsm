@@ -4,7 +4,7 @@
 #include "control_fsm/control_fsm.hpp"
 
 BlindLandState::BlindLandState() {
-    _setpoint.type_mask = default_mask | IGNORE_PX | IGNORE_PY | SETPOINT_TYPE_LAND;
+    setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY | SETPOINT_TYPE_LAND;
 }
 
 void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -33,12 +33,12 @@ void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     RequestEvent req(RequestType::POSHOLD);
     fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, req);
 
-    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
+    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
 }
 
 const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint;
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 

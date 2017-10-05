@@ -5,7 +5,7 @@
 ///State handling blind hover
 class BlindHoverState : public StateInterface {
 private:
-    EventData _cmd;
+    EventData cmd_;
 public:
     BlindHoverState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;

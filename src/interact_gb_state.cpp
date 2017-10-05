@@ -19,8 +19,8 @@ void InteractGBState::loopState(ControlFSM& fsm) {
 }
 
 const mavros_msgs::PositionTarget* InteractGBState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint;
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 void InteractGBState::handleManual(ControlFSM &fsm) {

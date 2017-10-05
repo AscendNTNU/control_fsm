@@ -10,12 +10,12 @@
 
 //Constructor sets default setpoint type mask
 PositionHoldState::PositionHoldState() {
-    _setpoint.type_mask = default_mask;
+    setpoint_.type_mask = default_mask;
 }
 
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    _isActive = true;
+    isActive_ = true;
     if(event.isValidCMD()) {
         //All valid command needs to go via the GOTO state
         fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
@@ -46,10 +46,10 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    if(_pFsm == nullptr) {
-        _pFsm = &fsm;
+    if(pFsm_ == nullptr) {
+        pFsm_ = &fsm;
     }
-    _safeHoverAlt = FSMConfig::SafeHoverAltitude;
+    safeHoverAlt_ = FSMConfig::SafeHoverAltitude;
     //No need to check other commands
     if(event.isValidCMD()) {
         //All valid commands need to go to correct place on arena before anything else
@@ -70,21 +70,21 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Set setpoint to current position
-    _setpoint.position.x = pose->pose.position.x;
-    _setpoint.position.y = pose->pose.position.y;
+    setpoint_.position.x = pose->pose.position.x;
+    setpoint_.position.y = pose->pose.position.y;
     //Keep old altitude if abort
     //TODO Should we use an default hover altitude in case of ABORT?
     if(!event.isValidRequest() || event.request != RequestType::ABORT) {
-        _setpoint.position.z = pose->pose.position.z;
+        setpoint_.position.z = pose->pose.position.z;
     }
 
-    _setpoint.yaw = (float) fsm.getMavrosCorrectedYaw();
+    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
     
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
-    _pFsm = &fsm;
-    _lidarSub = fsm._nodeHandler.subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
+    pFsm_ = &fsm;
+    lidarSub_ = fsm.nodeHandler_.subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
 }
 
 bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
@@ -95,7 +95,7 @@ bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
     //Skipping check is allowed in debug mode
     if(!FSMConfig::RequireAllDataStreams) return true;
 
-    if(_lidarSub.getNumPublishers() > 0) {
+    if(lidarSub_.getNumPublishers() > 0) {
         return true;
     } else {
         fsm.handleFSMWarn("No lidar publisher in posHold");
@@ -106,19 +106,19 @@ bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     //TODO TEST!!!
     //Only check if neccesary
-    if(!_isActive || _setpoint.position.z >= _safeHoverAlt) {
+    if(!isActive_ || setpoint_.position.z >= safeHoverAlt_) {
         return;
     }
-    if(_pFsm == nullptr) {
+    if(pFsm_ == nullptr) {
         ROS_ERROR("FSM pointer = nullptr! Critical!");
         return; //Avoids nullpointer exception
     }
     auto points = msg->points;
-    const geometry_msgs::PoseStamped* pPose = _pFsm->getPositionXYZ();
+    const geometry_msgs::PoseStamped* pPose = pFsm_->getPositionXYZ();
     //Should never happen!
     if(pPose == nullptr) {
         //No valid XY position available, no way to determine distance to GB
-        _pFsm->handleFSMError("Position not available! Should not happen!");
+        pFsm_->handleFSMError("Position not available! Should not happen!");
         return;
     }
     //No need to check obstacles if they're too close
@@ -131,7 +131,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     for(int i = 0; i < points.size(); ++i) {
         double distSquared = std::pow(droneX - points[i].x, 2) + std::pow(droneY - points[i].y, 2);
         if(distSquared < std::pow(FSMConfig::ObstacleTooCloseDist, 2)) {
-            _setpoint.position.z = _safeHoverAlt;
+            setpoint_.position.z = safeHoverAlt_;
             return; //No need to check the rest!
         }
     }
@@ -140,13 +140,13 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
 }
 
 void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
-    _isActive = false;
+    isActive_ = false;
 }
 
 //Returns setpoint
 const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now();
-    return &_setpoint;
+    setpoint_.header.stamp = ros::Time::now();
+    return &setpoint_;
 }
 
 void PositionHoldState::handleManual(ControlFSM &fsm) {

@@ -5,31 +5,31 @@
 #include "control_fsm/land_detector.hpp"
 #include "control_fsm/control_fsm.hpp"
 
-LandDetector::LandDetector(std::string topic) : _topic(topic) {
+LandDetector::LandDetector(std::string topic) : topic_(topic) {
     assert(ros::isInitialized());
-    _sub = _nh.subscribe(topic, 1, &LandDetector::landCB, this);
+    sub_ = nh_.subscribe(topic, 1, &LandDetector::landCB, this);
 }
 
 void LandDetector::landCB(const ascend_msgs::BoolStamped &msg) {
-    _lastMsg = msg;
+    lastMsg_ = msg;
 }
 
 bool LandDetector::isOnGround() {
-    if(ros::Time::now() - _lastMsg.header.stamp > ros::Duration(FSMConfig::ValidDataTimeout)) {
-        if(_pFsm != nullptr) {
-            _pFsm->handleFSMError("LandDetector using old data");
+    if(ros::Time::now() - lastMsg_.header.stamp > ros::Duration(FSMConfig::ValidDataTimeout)) {
+        if(pFsm_ != nullptr) {
+            pFsm_->handleFSMError("LandDetector using old data");
         } else {
             ROS_ERROR("LandDetector using old data!");
         }
     }
-    return _lastMsg.value;
+    return lastMsg_.value;
 }
 
 LandDetector::LandDetector(std::string topic, ControlFSM* pFsm) : LandDetector(topic) {
-    _pFsm = pFsm;
+    pFsm_ = pFsm;
 }
 
 bool LandDetector::isReady() {
     //Make sure landing detector node is running.
-    return _sub.getNumPublishers() > 0;
+    return sub_.getNumPublishers() > 0;
 }
