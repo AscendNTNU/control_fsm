@@ -9,8 +9,8 @@
 ///Takeoff state
 class TakeoffState : public StateInterface {
 private:
-    EventData _cmd;
-    double _altitude_reached_margin = DEFAULT_TAKEOFF_ALTITUDE_REACHED_MARGIN;
+    EventData cmd_;
+    double altitude_reached_margin_ = DEFAULT_TAKEOFF_ALTITUDE_REACHED_MARGIN;
 public:
     TakeoffState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;

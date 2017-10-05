@@ -5,7 +5,7 @@
 ///Lands the drone
 class LandState : public StateInterface {
 private:
-    EventData _cmd;
+    EventData cmd_;
 public:
     LandState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;

@@ -4,7 +4,7 @@
 #include <ros/ros.h>
 
 BeginState::BeginState() {
-    _setpoint.type_mask = default_mask | SETPOINT_TYPE_IDLE;
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE;
 }    
 
 //Begin state only waits for preflight request
@@ -25,8 +25,8 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 //Returns IDLE setpoints - nothing will though happen as drone should be disarmed
 const mavros_msgs::PositionTarget* BeginState::getSetpoint() {
-    _setpoint.header.stamp = ros::Time::now(); 
-     return &_setpoint;
+    setpoint_.header.stamp = ros::Time::now();
+     return &setpoint_;
 }
 
 void BeginState::handleManual(ControlFSM &fsm) {
