@@ -25,13 +25,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
             fsm.handleFSMWarn("ABORT old command first");
         }
     } else if(event.isValidRequest()) {
-        if(event.request == RequestType::BLINDLAND) {
-            if(cmd_.isValidCMD()) {
-                cmd_.eventError("Manual request overriding cmd");
-                cmd_ = EventData();
-            }
-            fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
-        } else if(event.request == RequestType::ABORT){
+        if(event.request == RequestType::ABORT){
             if(cmd_.isValidCMD()) {
                 fsm.handleFSMInfo("Aborting CMD");
                 cmd_.eventError("ABORT");

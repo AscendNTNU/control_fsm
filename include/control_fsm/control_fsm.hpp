@@ -13,13 +13,11 @@
 #include "takeoff_state.hpp"
 #include "blind_hover_state.hpp"
 #include "position_hold_state.hpp"
-#include "shutdown_state.hpp"
 #include "estimate_adjust_state.hpp"
 #include "track_gb_state.hpp"
 #include "interact_gb_state.hpp"
 #include "go_to_state.hpp"
 #include "land_state.hpp"
-#include "blind_land_state.hpp"
 #include "manual_flight_state.hpp"
 
 #include "land_detector.hpp"
@@ -34,13 +32,10 @@ private:
     friend class TakeoffState;
     friend class BlindHoverState;
     friend class PositionHoldState;
-    friend class ShutdownState;
-    friend class EstimateAdjustState;
     friend class TrackGBState;
     friend class InteractGBState;
     friend class GoToState;
     friend class LandState;
-    friend class BlindLandState;
     friend class ManualFlightState;
     
     //Static instances of the different states
@@ -51,13 +46,10 @@ private:
     static TakeoffState TAKEOFFSTATE;
     static BlindHoverState BLINDHOVERSTATE;
     static PositionHoldState POSITIONHOLDSTATE;
-    static ShutdownState SHUTDOWNSTATE;
-    static EstimateAdjustState ESTIMATEADJUSTSTATE;
     static TrackGBState TRACKGBSTATE;
     static InteractGBState INTERACTGBSTATE;
     static GoToState GOTOSTATE;
     static LandState LANDSTATE;
-    static BlindLandState BLINDLANDSTATE;
     static ManualFlightState MANUALFLIGHTSTATE;
     ///Only one instance of ControlFSM is allowed - used to check
     static bool isUsed;

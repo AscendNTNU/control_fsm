@@ -27,17 +27,11 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
             case RequestType::LAND:
                 fsm.transitionTo(ControlFSM::LANDSTATE, this, event);
                 break;
-            case RequestType::BLINDLAND:
-                fsm.transitionTo(ControlFSM::BLINDLANDSTATE, this, event);
-                break;
 
             /*case RequestType::TRACKGB:
                 fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, event);
                 break;
             */
-             case RequestType::ESTIMATORADJ:
-                fsm.transitionTo(ControlFSM::ESTIMATEADJUSTSTATE, this, event);
-                break;
             default:
                 fsm.handleFSMWarn("Transition not allowed");
                 break;
