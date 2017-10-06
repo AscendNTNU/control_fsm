@@ -34,7 +34,7 @@ private:
     ///Publisher for obstacles
     ros::Publisher obsPub_;
     ///Subscriber for path plan
-    ros::Subscriber _planSub;
+    ros::Subscriber planSub_;
     ///Is state active flag
     bool isActive_ = false;
 
@@ -43,7 +43,7 @@ private:
         ascend_msgs::PathPlannerPlan plan;
         bool valid = false;
         int index = 0;
-    } _currentPlan;
+    } currentPlan_;
 
     ///Margin used to determine if we have arrived at our destination or not
     float destReachedMargin_ = DEFAULT_DEST_REACHED_MARGIN;

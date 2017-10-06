@@ -123,7 +123,7 @@ double ControlFSM::getPositionZ() {
      return dronePosition_.position.pose.position.z;
 }
 
-ControlFSM::ControlFSM() : _landDetector(FSMConfig::LandDetectorTopic, this) {
+ControlFSM::ControlFSM() : landDetector_(FSMConfig::LandDetectorTopic, this) {
     //Only one instance of ControlFSM is allowed
     assert(!ControlFSM::isUsed);
     //ROS must be initialized!
@@ -181,7 +181,7 @@ bool ControlFSM::isReady() {
             return false;
         }
         //Land detector must be ready
-        if (!_landDetector.isReady()) {
+        if (!landDetector_.isReady()) {
             this->handleFSMWarn("Missing land detector stream!");
             return false;
         }

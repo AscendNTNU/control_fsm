@@ -24,7 +24,7 @@ private:
     bool isReady_ = false;
 
     ///Holds all instantiated classes
-    static std::vector<StateInterface*> _allStates;
+    static std::vector<StateInterface*> allStates_;
 
     ///States should never be copied
     StateInterface(const StateInterface&) = delete;
@@ -35,7 +35,7 @@ protected:
 public:
 
     ///Constructor
-    StateInterface() {  _allStates.push_back(this); }
+    StateInterface() {  allStates_.push_back(this); }
 
     ///Used for state setup - remember to implement isReady if overriding
     virtual void stateInit(ControlFSM& fsm) { isReady_ = true; }
@@ -72,9 +72,9 @@ public:
     virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
 
     ///Static interface returning iterator to first state
-    static std::vector<StateInterface*>::const_iterator cbegin() { return _allStates.cbegin(); } 
+    static std::vector<StateInterface*>::const_iterator cbegin() { return allStates_.cbegin(); }
     ///Static interface returning iterator to last + 1 state
-    static std::vector<StateInterface*>::const_iterator cend() { return _allStates.cend(); }
+    static std::vector<StateInterface*>::const_iterator cend() { return allStates_.cend(); }
 };
 
 #endif

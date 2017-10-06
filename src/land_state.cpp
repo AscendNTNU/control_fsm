@@ -67,7 +67,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandState::loopState(ControlFSM& fsm) {
-    if(fsm._landDetector.isOnGround()) {
+    if(fsm.landDetector_.isOnGround()) {
         if(cmd_.isValidCMD()) {
             //Only landxy should occur!
             if(cmd_.commandType == CommandType::LANDXY) {

@@ -52,7 +52,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     isActive_ = true;
     cmd_ = event;
     //Current plan is invalid until new plan is recieved
-    _currentPlan.valid = false;
+    currentPlan_.valid = false;
     //Has not arrived yet
     delayTransition_.enabled = false;
 
@@ -198,9 +198,9 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
 
     //Only continue if there is a valid plan available
-    if(!_currentPlan.valid) {
+    if(!currentPlan_.valid) {
         return;
-    } else if(!(bool)_currentPlan.plan.feasibility || _currentPlan.plan.arrayOfPoints.size() <= 0) {
+    } else if(!(bool)currentPlan_.plan.feasibility || currentPlan_.plan.arrayOfPoints.size() <= 0) {
         //A plan is recieved, but there are no points. 
         fsm.handleFSMError("Recieved empty path plan");
         RequestEvent abortEvent(RequestType::ABORT);
@@ -212,7 +212,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
 
     //Get current setpoint from plan
-    auto& currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index]; //geometry_msgs::Point32
+    auto& currentPoint = currentPlan_.plan.arrayOfPoints[currentPlan_.index]; //geometry_msgs::Point32
     auto& xPos = pPose->pose.position.x;
     auto& yPos = pPose->pose.position.y;
     //Check if we are close enough to current setpoint
@@ -220,9 +220,9 @@ void GoToState::loopState(ControlFSM& fsm) {
     deltaY = yPos - currentPoint.y;
     if(std::pow(deltaX, 2) + std::pow(deltaY, 2) <= std::pow(setpointReachedMargin_, 2)) {
         //If there are a new setpoint in the plan, change to it.
-        if(_currentPlan.plan.arrayOfPoints.size() > (_currentPlan.index + 1)) {
-            ++_currentPlan.index;
-            currentPoint = _currentPlan.plan.arrayOfPoints[_currentPlan.index];
+        if(currentPlan_.plan.arrayOfPoints.size() > (currentPlan_.index + 1)) {
+            ++currentPlan_.index;
+            currentPoint = currentPlan_.plan.arrayOfPoints[currentPlan_.index];
             deltaX = currentPoint.x - xPos;
             deltaY = currentPoint.y - yPos;
             //Only change yaw if drone needs to travel a large distance
@@ -250,9 +250,9 @@ void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg
         return;
     }
     cmd_.sendFeedback("New path plan recieved!");
-    _currentPlan.plan = *msg;
-    _currentPlan.valid = true;
-    _currentPlan.index = 0;
+    currentPlan_.plan = *msg;
+    currentPlan_.valid = true;
+    currentPlan_.index = 0;
 }
 
 //Initialize state
@@ -269,7 +269,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
     posPub_ = fsm.nodeHandler_.advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
     obsPub_ = fsm.nodeHandler_.advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
     targetPub_ = fsm.nodeHandler_.advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
-    _planSub = fsm.nodeHandler_.subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
+    planSub_ = fsm.nodeHandler_.subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
@@ -307,7 +307,7 @@ bool GoToState::stateIsReady(ControlFSM &fsm) {
     //Skipping check is allowed for debugging
     if(!FSMConfig::RequireAllDataStreams) return true;
     //Makes sure path planner is listening for input
-    if(_planSub.getNumPublishers() <= 0) {
+    if(planSub_.getNumPublishers() <= 0) {
         fsm.handleFSMWarn("No path planner publisher");
         return false;    
     } 

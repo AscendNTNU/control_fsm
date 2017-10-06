@@ -44,7 +44,7 @@ private:
     friend class ManualFlightState;
     
     //Static instances of the different states
-    //Also add them to _allStates vector in constructor
+    //Also add them to allStates_ vector in constructor
     static BeginState BEGINSTATE;
     static PreFlightState PREFLIGHTSTATE;
     static IdleState IDLESTATE;
@@ -94,8 +94,6 @@ private:
         bool isPreflightCompleted = false;
     } droneState_;
 
-    ///Vector of all states
-    std::vector<StateInterface*> _allStates;
     ///Has FSM been initiated?
     bool statesIsReady_ = false;
 
@@ -132,7 +130,7 @@ private:
     void initStates();
 
     ///LandDetector used to check if drone is on ground or not
-    LandDetector _landDetector;
+    LandDetector landDetector_;
 
 
 
