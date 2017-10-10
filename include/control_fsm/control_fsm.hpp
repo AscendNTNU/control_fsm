@@ -44,7 +44,7 @@ private:
     friend class ManualFlightState;
     
     //Static instances of the different states
-    //Also add them to allStates_ vector in constructor
+    //Also add them to all_states_ vector in constructor
     static BeginState BEGINSTATE;
     static PreFlightState PREFLIGHTSTATE;
     static IdleState IDLESTATE;
@@ -60,7 +60,7 @@ private:
     static BlindLandState BLINDLANDSTATE;
     static ManualFlightState MANUALFLIGHTSTATE;
     ///Only one instance of ControlFSM is allowed - used to check
-    static bool isUsed;
+    static bool is_used;
 
     /**
      * @brief Holds a pointer to current running state
@@ -73,8 +73,8 @@ private:
     struct {
         friend class ControlFSM;
     private:
-        StateInterface* pCurrentState_ = nullptr; //This need to be set to a start state in constructor
-    } stateVault_;
+        StateInterface* p_current_state_ = nullptr; //This need to be set to a start state in constructor
+    } state_vault_;
 
     ///Current drone position
     struct {
@@ -83,28 +83,28 @@ private:
         friend class EstimateAdjustState;
     private:
         geometry_msgs::PoseStamped position;
-        bool isSet = false;
-        bool validXY = true; //Assumes XY is valid if not set otherwise
-    } dronePosition_;
+        bool is_set = false;
+        bool valid_xy = true; //Assumes XY is valid if not set otherwise
+    } drone_position_;
 
     ///Struct holding information about drones state
     struct {
-        bool isOffboard = false;
-        bool isArmed = false;
-        bool isPreflightCompleted = false;
-    } droneState_;
+        bool is_offboard = false;
+        bool is_armed = false;
+        bool is_preflight_completed = false;
+    } drone_state_;
 
     ///Has FSM been initiated?
-    bool statesIsReady_ = false;
+    bool states_is_ready_ = false;
 
     ///Callback when a transition is made
-    std::function<void()> onStateChanged_ = [](){};
+    std::function<void()> on_state_changed__ = [](){};
     ///Callback when an error occurs in FSM
-    std::function<void(const std::string&)> onFSMError_ = [](const std::string& msg){};
+    std::function<void(const std::string&)> on_fsm_error_ = [](const std::string& msg){};
     ///Callback when an warning occurs in FSM
-    std::function<void(const std::string&)> onFSMWarn_ = [](const std::string& msg){};
+    std::function<void(const std::string&)> on_fsm_warn_ = [](const std::string& msg){};
     ///Callbacks when an info message occurs in FSM
-    std::function<void(const std::string&)> onFSMInfo_ = [](const std::string& msg){};
+    std::function<void(const std::string&)> on_fsm_info_ = [](const std::string& msg){};
 
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
@@ -112,13 +112,13 @@ private:
     ControlFSM& operator=(const ControlFSM&) = delete;
 
     ///Shared nodehandle for all states
-    ros::NodeHandle nodeHandler_;
+    ros::NodeHandle node_handler_;
     ///Struct holding all shared ControlFSM ros subscribers
     struct {
         friend class ControlFSM;
     private:
-        ros::Subscriber localPosSub;
-        ros::Subscriber mavrosStateChangedSub;
+        ros::Subscriber local_pos_sub;
+        ros::Subscriber mavros_state_changed_sub;
     } subscribers_;
 
     ///Callback for local position
@@ -130,7 +130,7 @@ private:
     void initStates();
 
     ///LandDetector used to check if drone is on ground or not
-    LandDetector landDetector_;
+    LandDetector land_detector_;
 
 
 
@@ -153,7 +153,7 @@ public:
     ~ControlFSM() {}
 
     ///Get pointer to the current running state
-    StateInterface* getState() { return stateVault_.pCurrentState_; }
+    StateInterface* getState() { return state_vault_.p_current_state_; }
     
     /**
      * @brief Handles incoming (external) events
@@ -193,16 +193,16 @@ public:
     double getPositionZ();
 
     ///Sets new callback function for onStateChanged
-    void setOnStateChangedCB(std::function<void()> cb) { onStateChanged_ = cb; }
+    void setOnStateChangedCB(std::function<void()> cb) { on_state_changed__ = cb; }
 
     ///Sets new callback function for onFSMError
-    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {onFSMError_ = cb; }
+    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {on_fsm_error_ = cb; }
     
     ///Sets new callback function for onFSMError
-    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {onFSMWarn_ = cb; }
+    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {on_fsm_warn_ = cb; }
     
     ///Sets new callback function for onFSMError
-    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {onFSMInfo_ = cb; }
+    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {on_fsm_info_ = cb; }
 
     ///Checks if all states are ready
     bool isReady();

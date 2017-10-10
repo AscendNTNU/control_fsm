@@ -20,11 +20,11 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             fsm.handleFSMWarn("Illegal transition request!");
         }
-    } else if(event.eventType == EventType::GROUNDDETECTED) {
+    } else if(event.event_type == EventType::GROUNDDETECTED) {
         //Land is finished
         if(cmd_.isValidCMD()) {
             //Only landxy should occur!
-            if(cmd_.commandType == CommandType::LANDXY) {
+            if(cmd_.command_type == CommandType::LANDXY) {
                 cmd_.finishCMD();
             } else {
                 cmd_.eventError("Wrong CMD type!");
@@ -67,10 +67,10 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandState::loopState(ControlFSM& fsm) {
-    if(fsm.landDetector_.isOnGround()) {
+    if(fsm.land_detector_.isOnGround()) {
         if(cmd_.isValidCMD()) {
             //Only landxy should occur!
-            if(cmd_.commandType == CommandType::LANDXY) {
+            if(cmd_.command_type == CommandType::LANDXY) {
                 cmd_.finishCMD();
             } else {
                 cmd_.eventError("Wrong CMD type!");

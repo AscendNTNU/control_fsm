@@ -12,7 +12,7 @@ private:
     ///Is an action already running?
     bool actionIsRunning_ = false;
     ///Pointer to fsm - used to send events directly to fsm
-    ControlFSM* pFsm_ = nullptr;
+    ControlFSM* p_fsm_ = nullptr;
     ///Actionserver
     actionlib::SimpleActionServer<ascend_msgs::ControlFSMAction> as_;
     ///Callback for when new action is recieved

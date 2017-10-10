@@ -3,7 +3,7 @@
 #include <control_fsm/control_fsm.hpp>
 #include <iostream>
 ActionServer::ActionServer(ControlFSM* pFsm) : as_(nh_, "controlNodeActionServer", false) {
-    this->pFsm_ = pFsm;
+    this->p_fsm_ = pFsm;
     as_.registerGoalCallback(boost::bind(&ActionServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&ActionServer::preemptCB, this));
     as_.start();
@@ -13,7 +13,7 @@ void ActionServer::goalCB() {
     //Check if an action is already running
     if(actionIsRunning_) {
         RequestEvent abortEvent(RequestType::ABORT);
-        pFsm_->handleEvent(abortEvent);
+        p_fsm_->handleEvent(abortEvent);
         if(actionIsRunning_) {
             ROS_WARN("[Control Action Server] CMD not stopping after abort - bug!");
         }
@@ -41,7 +41,7 @@ void ActionServer::goalCB() {
 void ActionServer::preemptCB() {
     if(actionIsRunning_) {
         RequestEvent abortEvent(RequestType::ABORT);
-        pFsm_->handleEvent(abortEvent);
+        p_fsm_->handleEvent(abortEvent);
         if(actionIsRunning_) {
             ROS_WARN("[Control Action Server] CMD not properly terminated on abort - bug!");
         }
@@ -72,7 +72,7 @@ void ActionServer::startGoTo(const ascend_msgs::ControlFSMGoal& goal) {
         actionIsRunning_ = false;
         as_.setAborted(result);
     });
-    pFsm_->handleEvent(goToEvent);
+    p_fsm_->handleEvent(goToEvent);
 }
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(const ascend_msgs::ControlFSMGoal& goal) {
@@ -97,7 +97,7 @@ void ActionServer::startLandXY(const ascend_msgs::ControlFSMGoal& goal) {
         actionIsRunning_ = false;
         as_.setAborted(result);
     });
-    pFsm_->handleEvent(landXYEvent);
+    p_fsm_->handleEvent(landXYEvent);
 }
 
 void ActionServer::startLandGB(const ascend_msgs::ControlFSMGoal& goal) {

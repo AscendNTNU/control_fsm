@@ -8,7 +8,7 @@ BlindLandState::BlindLandState() {
 }
 
 void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.eventType == EventType::GROUNDDETECTED) {
+    if(event.event_type == EventType::GROUNDDETECTED) {
         //Land completed
         fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
     } else if(event.isValidCMD()) {

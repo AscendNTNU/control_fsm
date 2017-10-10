@@ -62,7 +62,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
         cmd_ = event;
     }
 
-    setpoint_.position.z = FSMConfig::BlindHoverAlt;
+    setpoint_.position.z = FSMConfig::blind_hover_alt;
     setpoint_.yaw = fsm.getMavrosCorrectedYaw();
 }
 

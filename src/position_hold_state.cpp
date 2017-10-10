@@ -15,7 +15,7 @@ PositionHoldState::PositionHoldState() {
 
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    isActive_ = true;
+    is_active_ = true;
     if(event.isValidCMD()) {
         //All valid command needs to go via the GOTO state
         fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
@@ -46,10 +46,10 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    if(pFsm_ == nullptr) {
-        pFsm_ = &fsm;
+    if(p_fsm_ == nullptr) {
+        p_fsm_ = &fsm;
     }
-    safeHoverAlt_ = FSMConfig::SafeHoverAltitude;
+    safe_hover_alt_ = FSMConfig::safe_hover_altitude;
     //No need to check other commands
     if(event.isValidCMD()) {
         //All valid commands need to go to correct place on arena before anything else
@@ -64,7 +64,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             event.eventError("No valid position!");
         }
         EventData nEvent;
-        nEvent.eventType = EventType::POSLOST;
+        nEvent.event_type = EventType::POSLOST;
         fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, nEvent); 
         return;
     }
@@ -83,19 +83,19 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
-    pFsm_ = &fsm;
-    lidarSub_ = fsm.nodeHandler_.subscribe(FSMConfig::LidarTopic, 1, &PositionHoldState::obsCB, this);
+    p_fsm_ = &fsm;
+    lidar_sub_ = fsm.node_handler_.subscribe(FSMConfig::lidar_topic, 1, &PositionHoldState::obsCB, this);
 }
 
 bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
 
     //Return true if obstacle detection is disabled
-    if(!FSMConfig::RequireObstacleDetection) return true;
+    if(!FSMConfig::require_obstacle_detection) return true;
 
     //Skipping check is allowed in debug mode
-    if(!FSMConfig::RequireAllDataStreams) return true;
+    if(!FSMConfig::require_all_data_streams) return true;
 
-    if(lidarSub_.getNumPublishers() > 0) {
+    if(lidar_sub_.getNumPublishers() > 0) {
         return true;
     } else {
         fsm.handleFSMWarn("No lidar publisher in posHold");
@@ -106,23 +106,23 @@ bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     //TODO TEST!!!
     //Only check if neccesary
-    if(!isActive_ || setpoint_.position.z >= safeHoverAlt_) {
+    if(!is_active_ || setpoint_.position.z >= safe_hover_alt_) {
         return;
     }
-    if(pFsm_ == nullptr) {
+    if(p_fsm_ == nullptr) {
         ROS_ERROR("FSM pointer = nullptr! Critical!");
         return; //Avoids nullpointer exception
     }
     auto points = msg->points;
-    const geometry_msgs::PoseStamped* pPose = pFsm_->getPositionXYZ();
+    const geometry_msgs::PoseStamped* pPose = p_fsm_->getPositionXYZ();
     //Should never happen!
     if(pPose == nullptr) {
         //No valid XY position available, no way to determine distance to GB
-        pFsm_->handleFSMError("Position not available! Should not happen!");
+        p_fsm_->handleFSMError("Position not available! Should not happen!");
         return;
     }
     //No need to check obstacles if they're too close
-    if(pPose->pose.position.z >= FSMConfig::SafeHoverAltitude) {
+    if(pPose->pose.position.z >= FSMConfig::safe_hover_altitude) {
         return;
     }
 
@@ -130,8 +130,8 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     double droneY = pPose->pose.position.y;
     for(int i = 0; i < points.size(); ++i) {
         double distSquared = std::pow(droneX - points[i].x, 2) + std::pow(droneY - points[i].y, 2);
-        if(distSquared < std::pow(FSMConfig::ObstacleTooCloseDist, 2)) {
-            setpoint_.position.z = safeHoverAlt_;
+        if(distSquared < std::pow(FSMConfig::obstacle_too_close_dist, 2)) {
+            setpoint_.position.z = safe_hover_alt_;
             return; //No need to check the rest!
         }
     }
@@ -140,7 +140,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
 }
 
 void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
-    isActive_ = false;
+    is_active_ = false;
 }
 
 //Returns setpoint

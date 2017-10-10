@@ -36,9 +36,9 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Set relevant parameters
     //Takeoff altitude
-    setpoint_.position.z = FSMConfig::TakeoffAltitude;
+    setpoint_.position.z = FSMConfig::takeoff_altitude;
     //Takeoff finished threshold
-    altitude_reached_margin_ = FSMConfig::AltitudeReachedMargin;
+    altitude_reached_margin_ = FSMConfig::altitude_reached_margin;
 
     if(event.isValidCMD()) {
         cmd_ = event;

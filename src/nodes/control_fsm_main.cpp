@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     //Load ros params
     FSMConfig::loadParams();
 
-    if(!FSMConfig::RequireAllDataStreams || !FSMConfig::RequireObstacleDetection) {
+    if(!FSMConfig::require_all_data_streams || !FSMConfig::require_obstacle_detection) {
         ROS_WARN("One or more debug param features is activated!");
     }
 
@@ -31,10 +31,10 @@ int main(int argc, char** argv) {
 
     //Set up neccesary publishers
     ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
-    ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::FSMStateChangedTopic, FSMConfig::FSMStatusBufferSize);
-    ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::FSMErrorTopic, FSMConfig::FSMStatusBufferSize);
-    ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, FSMConfig::FSMStatusBufferSize);
-    ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, FSMConfig::FSMStatusBufferSize);
+    ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::fsm_state_changed_topic, FSMConfig::fsm_status_buffer_size);
+    ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::fsm_error_topic, FSMConfig::fsm_status_buffer_size);
+    ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::fsm_info_topic, FSMConfig::fsm_status_buffer_size);
+    ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::fsm_warn_topic, FSMConfig::fsm_status_buffer_size);
 
     //Set up debug server
     DebugServer debugServer(&fsm);

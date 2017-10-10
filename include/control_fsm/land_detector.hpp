@@ -14,15 +14,15 @@ class LandDetector {
 
 private:
     std::string topic_;
-    ControlFSM* pFsm_ = nullptr;
+    ControlFSM* p_fsm_ = nullptr;
     ros::NodeHandle nh_;
     ros::Subscriber sub_;
-    ascend_msgs::BoolStamped lastMsg_;
+    ascend_msgs::BoolStamped last_msg_;
     void landCB(const ascend_msgs::BoolStamped& msg);
 
 public:
     LandDetector(std::string topic);
-    LandDetector(std::string topic, ControlFSM* _pFsm);
+    LandDetector(std::string topic, ControlFSM* p_fsm);
     bool isOnGround();
     bool isReady();
 };

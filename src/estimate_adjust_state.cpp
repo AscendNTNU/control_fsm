@@ -15,7 +15,7 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else { 
             cmd_ = event;
         }
-    } else if(event.eventType == EventType::REQUEST) {
+    } else if(event.event_type == EventType::REQUEST) {
         if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
             cmd_ = EventData();
             cmd_.eventError("ABORT request!");

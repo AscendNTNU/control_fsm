@@ -18,7 +18,7 @@ void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             fsm.handleFSMWarn("Invalid transition request");
         }
-    } else if(event.eventType == EventType::AUTONOMOUS) {
+    } else if(event.event_type == EventType::AUTONOMOUS) {
         fsm.transitionTo(ControlFSM::IDLESTATE, this, event); //Transition to IDLE when armed and ready
     } else {
         fsm.handleFSMInfo("Event ignored");
