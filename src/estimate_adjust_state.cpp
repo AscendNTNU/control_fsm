@@ -15,7 +15,7 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else { 
             cmd_ = event;
         }
-    } else if(event.eventType == EventType::REQUEST) {
+    } else if(event.event_type == EventType::REQUEST) {
         if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
             cmd_ = EventData();
             cmd_.eventError("ABORT request!");
@@ -30,15 +30,15 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void EstimateAdjustState::loopState(ControlFSM& fsm) {
     //TODO Transition to blindhover as soon as position is invalid
-    bool posInvalid = true;
+    bool pos_invalid = true;
 
-    if(posInvalid) {
+    if(pos_invalid) {
         if(cmd_.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, cmd_);
+            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
             cmd_ = EventData();
         } else {
             RequestEvent event(RequestType::BLINDHOVER);
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event);
+            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event);
         }
     }
 }
@@ -56,6 +56,6 @@ const mavros_msgs::PositionTarget* EstimateAdjustState::getSetpoint() {
 
 void EstimateAdjustState::handleManual(ControlFSM &fsm) {
     fsm.handleFSMWarn("Lost OFFBOARD while adjusting position estimates! Do NOT switch back to OFFBOARD. Can lead to undefined behaviour!");
-    //TODO Should it transition to MANUALFLIGHTSTATE?
+    //TODO Should it transition to MANUAL_FLIGHT_STATE?
 }
 

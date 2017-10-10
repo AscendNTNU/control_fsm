@@ -18,39 +18,39 @@ private:
     struct {
         bool completed = false;
         std::function<void()> publish = [](){};
-    } safePublisher_;
+    } safe_publisher_;
 
     struct {
         ros::Time started;
         bool enabled = false;
         ros::Duration delayTime;
-    } delayTransition_;
+    } delay_transition_;
 
     EventData cmd_;
     ///Publisher for the current position - will start the path planner
-    ros::Publisher posPub_;
+    ros::Publisher pos_pub_;
     ///Publisher for the desired target
-    ros::Publisher targetPub_;
+    ros::Publisher target_pub_;
     ///Publisher for obstacles
-    ros::Publisher obsPub_;
+    ros::Publisher obs_pub_;
     ///Subscriber for path plan
-    ros::Subscriber _planSub;
+    ros::Subscriber plan_sub_;
     ///Is state active flag
-    bool isActive_ = false;
+    bool is_active_ = false;
 
     ///Contains the latest flight path recieved
     struct {
         ascend_msgs::PathPlannerPlan plan;
         bool valid = false;
         int index = 0;
-    } _currentPlan;
+    } current_plan_;
 
     ///Margin used to determine if we have arrived at our destination or not
-    float destReachedMargin_ = DEFAULT_DEST_REACHED_MARGIN;
+    float dest_reached_margin_ = DEFAULT_DEST_REACHED_MARGIN;
     ///Margin used to determine if we are close enough to a setpoint to switch
-    float setpointReachedMargin_ = DEFAULT_SETPOINT_REACHED_MARGIN;
+    float setpoint_reached_margin_ = DEFAULT_SETPOINT_REACHED_MARGIN;
     ///Margin used to determine if we are close enough to target yaw
-    float yawReachedMargin_ = DEFAULT_YAW_REACHED_MARGIN;
+    float yaw_reached_margin_ = DEFAULT_YAW_REACHED_MARGIN;
     ///Callback for path planner
     void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
     /**

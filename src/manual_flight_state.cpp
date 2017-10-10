@@ -14,15 +14,15 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     } else if(event.isValidRequest()) {
         if(event.request == RequestType::PREFLIGHT) {
             fsm.handleFSMWarn("Going back to preflight, land drone before offboard");
-            fsm.transitionTo(ControlFSM::PREFLIGHTSTATE, this, event);
+            fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
         } else {
             fsm.handleFSMWarn("Invalid transition request");
         }
-    } else if(event.eventType == EventType::AUTONOMOUS) {
-        if(fsm._landDetector.isOnGround()) {
-            fsm.transitionTo(ControlFSM::IDLESTATE, this, event); //Transition to IDLESTATE
+    } else if(event.event_type == EventType::AUTONOMOUS) {
+        if(fsm.land_detector_.isOnGround()) {
+            fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
         } else {
-            fsm.transitionTo(ControlFSM::BLINDHOVERSTATE, this, event); //Transition to BLINDHOVERSTATE
+            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
         }
     } else {
         fsm.handleFSMInfo("Event ignored");
@@ -30,18 +30,18 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-    if(pPose == nullptr) {
+    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
+    if(pose_p == nullptr) {
         //Should never occur
         fsm.handleFSMError("Position not valid!!");
         setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY | IGNORE_PZ | IGNORE_YAW;
-    } else if(fsm._landDetector.isOnGround()) {
+    } else if(fsm.land_detector_.isOnGround()) {
         setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
     } else {
         setpoint_.type_mask = default_mask;
-        setpoint_.position.x = pPose->pose.position.x;
-        setpoint_.position.y = pPose->pose.position.y;
-        setpoint_.position.z = pPose->pose.position.z;
+        setpoint_.position.x = pose_p->pose.position.x;
+        setpoint_.position.y = pose_p->pose.position.y;
+        setpoint_.position.z = pose_p->pose.position.z;
         setpoint_.yaw = fsm.getMavrosCorrectedYaw();
     }
 }

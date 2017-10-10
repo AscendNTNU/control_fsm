@@ -9,10 +9,10 @@
 ///Holds the current position
 class PositionHoldState : public StateInterface {
 private:
-    ros::Subscriber lidarSub_;
-    bool isActive_ = false;
-    double safeHoverAlt_ = DEFAULT_SAFE_HOVER_ALT;
-    ControlFSM* pFsm_ = nullptr;
+    ros::Subscriber lidar_sub_;
+    bool is_active_ = false;
+    double safe_hover_alt_ = DEFAULT_SAFE_HOVER_ALT;
+    ControlFSM* fsm_p_ = nullptr;
 public:
     PositionHoldState();
     void stateInit(ControlFSM& fsm) override;

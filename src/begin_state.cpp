@@ -14,7 +14,7 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
         fsm.handleFSMWarn("Drone is not yet active - commands ignored");
     } else if(event.isValidRequest()) {
         if(event.request == RequestType::PREFLIGHT) {
-            fsm.transitionTo(ControlFSM::PREFLIGHTSTATE, this, event);
+            fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
         } else {
             fsm.handleFSMWarn("Invalid transiton request!");
         }

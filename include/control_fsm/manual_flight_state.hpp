@@ -1,5 +1,5 @@
-#ifndef MANUAL_FLIGHT_STATE
-#define MANUAL_FLIGHT_STATE
+#ifndef MANUAL_FLIGHT_STATE_HPP
+#define MANUAL_FLIGHT_STATE_HPP
 
 #include "state_interface.hpp"
 
