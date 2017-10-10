@@ -2,18 +2,18 @@
 #include "control_fsm/debug_server.hpp"
 #include "control_fsm/event_data.hpp"
 
-DebugServer::DebugServer(ControlFSM* p_fsm) : p_fsm_(p_fsm) {
+DebugServer::DebugServer(ControlFSM* p_fsm) : fsm_p_(p_fsm) {
     //Must be constructed after ros init
     assert(ros::isInitialized());
     //Can't be nullptr
-    assert(p_fsm_);
+    assert(fsm_p_);
     //Advertise service! 
     server_ = nh_.advertiseService("control_fsm_debug", &DebugServer::handleDebugEvent, this);
 }
 
 bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
-    if(!p_fsm_->isReady()) {
-        p_fsm_->handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
+    if(!fsm_p_->isReady()) {
+        fsm_p_->handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
     }
     EventData event = generateDebugEvent(req);
     //If request event is not valid
@@ -46,9 +46,9 @@ bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
             ROS_WARN("[Control FSM Debug] Manual CMD error: %s", errMsg.c_str());
         });
     }
-    p_fsm_->handleEvent(event);
+    fsm_p_->handleEvent(event);
     resp.accepted = true;
-    resp.stateName = p_fsm_->getState()->getStateName();
+    resp.stateName = fsm_p_->getState()->getStateName();
     return true;
 
 }

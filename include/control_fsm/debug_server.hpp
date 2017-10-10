@@ -10,7 +10,7 @@ class DebugServer {
     using Response = ascend_msgs::ControlFSMEvent::Response;
     using Request = ascend_msgs::ControlFSMEvent::Request;
 private:
-    ControlFSM* p_fsm_ = nullptr;
+    ControlFSM* fsm_p_ = nullptr;
     ros::ServiceServer server_;
     ros::NodeHandle nh_;
 

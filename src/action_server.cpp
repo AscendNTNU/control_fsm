@@ -2,8 +2,8 @@
 #include <control_fsm/event_data.hpp>
 #include <control_fsm/control_fsm.hpp>
 #include <iostream>
-ActionServer::ActionServer(ControlFSM* p_fsm) : as_(nh_, "controlNodeActionServer", false) {
-    this->fsm_p_ = p_fsm;
+ActionServer::ActionServer(ControlFSM* fsm_p) : as_(nh_, "controlNodeActionServer", false) {
+    this->fsm_p_ = fsm_p;
     as_.registerGoalCallback(boost::bind(&ActionServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&ActionServer::preemptCB, this));
     as_.start();

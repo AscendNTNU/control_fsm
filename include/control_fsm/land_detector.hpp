@@ -14,7 +14,7 @@ class LandDetector {
 
 private:
     std::string topic_;
-    ControlFSM* p_fsm_ = nullptr;
+    ControlFSM* fsm_p_ = nullptr;
     ros::NodeHandle nh_;
     ros::Subscriber sub_;
     ascend_msgs::BoolStamped last_msg_;

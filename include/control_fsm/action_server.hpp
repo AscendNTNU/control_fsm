@@ -26,7 +26,7 @@ private:
     ///Start landgb - NB not in use!!
     void startLandGB(const ascend_msgs::ControlFSMGoal& goal);
 public:
-    ActionServer(ControlFSM* p_fsm);
+    ActionServer(ControlFSM* fsm_p);
 };
 
 #endif

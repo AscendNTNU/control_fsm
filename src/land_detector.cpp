@@ -16,8 +16,8 @@ void LandDetector::landCB(const ascend_msgs::BoolStamped &msg) {
 
 bool LandDetector::isOnGround() {
     if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(FSMConfig::valid_data_timeout)) {
-        if(p_fsm_ != nullptr) {
-            p_fsm_->handleFSMError("LandDetector using old data");
+        if(fsm_p_ != nullptr) {
+            fsm_p_->handleFSMError("LandDetector using old data");
         } else {
             ROS_ERROR("LandDetector using old data!");
         }
@@ -26,7 +26,7 @@ bool LandDetector::isOnGround() {
 }
 
 LandDetector::LandDetector(std::string topic, ControlFSM* p_fsm) : LandDetector(topic) {
-    p_fsm_ = p_fsm;
+    fsm_p_ = p_fsm;
 }
 
 bool LandDetector::isReady() {
