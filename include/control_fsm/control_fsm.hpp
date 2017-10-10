@@ -45,20 +45,20 @@ private:
     
     //Static instances of the different states
     //Also add them to all_states_ vector in constructor
-    static BeginState BEGINSTATE;
-    static PreFlightState PREFLIGHTSTATE;
-    static IdleState IDLESTATE;
-    static TakeoffState TAKEOFFSTATE;
-    static BlindHoverState BLINDHOVERSTATE;
-    static PositionHoldState POSITIONHOLDSTATE;
-    static ShutdownState SHUTDOWNSTATE;
-    static EstimateAdjustState ESTIMATEADJUSTSTATE;
-    static TrackGBState TRACKGBSTATE;
-    static InteractGBState INTERACTGBSTATE;
-    static GoToState GOTOSTATE;
-    static LandState LANDSTATE;
-    static BlindLandState BLINDLANDSTATE;
-    static ManualFlightState MANUALFLIGHTSTATE;
+    static BeginState BEGIN_STATE;
+    static PreFlightState PREFLIGHT_STATE;
+    static IdleState IDLE_STATE;
+    static TakeoffState TAKEOFF_STATE;
+    static BlindHoverState BLIND_HOVER_STATE;
+    static PositionHoldState POSITION_HOLD_STATE;
+    static ShutdownState SHUTDOWN_STATE;
+    static EstimateAdjustState ESTIMATE_ADJUST_STATE;
+    static TrackGBState TRACK_GB_STATE;
+    static InteractGBState INTERACT_GB_STATE;
+    static GoToState GO_TO_STATE;
+    static LandState LAND_STATE;
+    static BlindLandState BLIND_LAND_STATE;
+    static ManualFlightState MANUAL_FLIGHT_STATE;
     ///Only one instance of ControlFSM is allowed - used to check
     static bool is_used;
 
@@ -73,7 +73,7 @@ private:
     struct {
         friend class ControlFSM;
     private:
-        StateInterface* p_current_state_ = nullptr; //This need to be set to a start state in constructor
+        StateInterface* current_state_p_ = nullptr; //This need to be set to a start state in constructor
     } state_vault_;
 
     ///Current drone position
@@ -98,7 +98,7 @@ private:
     bool states_is_ready_ = false;
 
     ///Callback when a transition is made
-    std::function<void()> on_state_changed__ = [](){};
+    std::function<void()> on_state_changed_ = [](){};
     ///Callback when an error occurs in FSM
     std::function<void(const std::string&)> on_fsm_error_ = [](const std::string& msg){};
     ///Callback when an warning occurs in FSM
@@ -139,10 +139,10 @@ protected:
      * @brief Changes the current running state
      * @details Allows the current running state to change the current state pointer
      * @param state Which state instance to transition to0
-     * @param _pCaller Which state that requests the transition
+     * @param caller_p Which state that requests the transition
      * @param event Which event triggered the transition request
      */
-    void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
+    void transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event);
     
 public:
      
@@ -153,7 +153,7 @@ public:
     ~ControlFSM() {}
 
     ///Get pointer to the current running state
-    StateInterface* getState() { return state_vault_.p_current_state_; }
+    StateInterface* getState() { return state_vault_.current_state_p_; }
     
     /**
      * @brief Handles incoming (external) events
@@ -166,16 +166,16 @@ public:
     void loopCurrentState(void);
     
     ///Send errormessage to user via ROS_ERROR
-    void handleFSMError(std::string errMsg);
+    void handleFSMError(std::string err_msg);
     
     ///Send info message to user via ROS_INFO
-    void handleFSMInfo(std::string infoMsg);
+    void handleFSMInfo(std::string info_msg);
     
     ///Send warning message to user via ROS_WARN
-    void handleFSMWarn(std::string warnMsg);
+    void handleFSMWarn(std::string warn_msg);
     
     ///Send debug message to user via ROS_DEBUG
-    void handleFSMDebug(std::string debugMsg);
+    void handleFSMDebug(std::string debug_msg);
     
     ///Returns setpoint from current state
     const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
@@ -193,7 +193,7 @@ public:
     double getPositionZ();
 
     ///Sets new callback function for onStateChanged
-    void setOnStateChangedCB(std::function<void()> cb) { on_state_changed__ = cb; }
+    void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }
 
     ///Sets new callback function for onFSMError
     void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {on_fsm_error_ = cb; }

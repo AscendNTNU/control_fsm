@@ -10,7 +10,7 @@ BlindLandState::BlindLandState() {
 void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.event_type == EventType::GROUNDDETECTED) {
         //Land completed
-        fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
+        fsm.transitionTo(ControlFSM::IDLE_STATE, this, event);
     } else if(event.isValidCMD()) {
         //Blind land not part of normal operation. 
         //Any command will be ignored!
@@ -31,7 +31,7 @@ void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //TODO: Fix blindland and remove transition to posHold.
     fsm.handleFSMWarn("Blind land not tested properly! Not available! Going to posHold!");
     RequestEvent req(RequestType::POSHOLD);
-    fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, req);
+    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req);
 
     setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
 }
@@ -43,6 +43,6 @@ const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {
 
 
 void BlindLandState::handleManual(ControlFSM &fsm) {
-    RequestEvent requestEvent(RequestType::MANUALFLIGHT);
-    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, requestEvent);
+    RequestEvent req_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, req_event);
 }

@@ -12,7 +12,7 @@ private:
     ros::Subscriber lidar_sub_;
     bool is_active_ = false;
     double safe_hover_alt_ = DEFAULT_SAFE_HOVER_ALT;
-    ControlFSM* p_fsm_ = nullptr;
+    ControlFSM* fsm_p_ = nullptr;
 public:
     PositionHoldState();
     void stateInit(ControlFSM& fsm) override;

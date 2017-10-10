@@ -15,7 +15,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 cmd_.eventError("ABORT request sent. Aborting command");
                 cmd_ = EventData();
             }
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             return;
         } else {
             fsm.handleFSMWarn("Illegal transition request!");
@@ -32,7 +32,7 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
             }
             cmd_ = EventData();
         }
-        fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
+        fsm.transitionTo(ControlFSM::IDLE_STATE, this, event);
     } else if(event.isValidCMD()) {
         if(cmd_.isValidCMD()) {
             fsm.handleFSMWarn("ABORT should be sent before new command!");
@@ -49,20 +49,20 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Landing!");
     }
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-    if(pPose != nullptr) {
-        setpoint_.position.x = pPose->pose.position.x;
-        setpoint_.position.y = pPose->pose.position.y;
+    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
+    if(pose_p != nullptr) {
+        setpoint_.position.x = pose_p->pose.position.x;
+        setpoint_.position.y = pose_p->pose.position.y;
         //Set yaw setpoint based on current rotation
         setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
     } else {
         //Should never occur
-        RequestEvent abortEvent(RequestType::ABORT);
+        RequestEvent abort_event(RequestType::ABORT);
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No valid position");
             cmd_ = EventData();
         }
-        fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, abortEvent);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 }
 
@@ -78,8 +78,8 @@ void LandState::loopState(ControlFSM& fsm) {
             }
             cmd_ = EventData();
         }
-        RequestEvent idleRequest(RequestType::IDLE);
-        fsm.transitionTo(ControlFSM::IDLESTATE, this, idleRequest);
+        RequestEvent idle_request(RequestType::IDLE);
+        fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
     }
 }
 
@@ -93,6 +93,6 @@ void LandState::handleManual(ControlFSM &fsm) {
         cmd_.eventError("Lost OFFBOARD!");
         cmd_ = EventData();
     }
-    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    RequestEvent manual_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }

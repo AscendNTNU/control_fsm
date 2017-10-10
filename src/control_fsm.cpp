@@ -9,35 +9,35 @@
 #define PI_HALF 1.57079632679
 #endif
 
-BeginState ControlFSM::BEGINSTATE;
-PreFlightState ControlFSM::PREFLIGHTSTATE;
-IdleState ControlFSM::IDLESTATE;
-TakeoffState ControlFSM::TAKEOFFSTATE;
-BlindHoverState ControlFSM::BLINDHOVERSTATE;
-PositionHoldState ControlFSM::POSITIONHOLDSTATE;
-ShutdownState ControlFSM::SHUTDOWNSTATE;
-EstimateAdjustState ControlFSM::ESTIMATEADJUSTSTATE;
-TrackGBState ControlFSM::TRACKGBSTATE;
-InteractGBState ControlFSM::INTERACTGBSTATE;
-GoToState ControlFSM::GOTOSTATE;
-LandState ControlFSM::LANDSTATE;
-BlindLandState ControlFSM::BLINDLANDSTATE;
-ManualFlightState ControlFSM::MANUALFLIGHTSTATE;
+BeginState ControlFSM::BEGIN_STATE;
+PreFlightState ControlFSM::PREFLIGHT_STATE;
+IdleState ControlFSM::IDLE_STATE;
+TakeoffState ControlFSM::TAKEOFF_STATE;
+BlindHoverState ControlFSM::BLIND_HOVER_STATE;
+PositionHoldState ControlFSM::POSITION_HOLD_STATE;
+ShutdownState ControlFSM::SHUTDOWN_STATE;
+EstimateAdjustState ControlFSM::ESTIMATE_ADJUST_STATE;
+TrackGBState ControlFSM::TRACK_GB_STATE;
+InteractGBState ControlFSM::INTERACT_GB_STATE;
+GoToState ControlFSM::GO_TO_STATE;
+LandState ControlFSM::LAND_STATE;
+BlindLandState ControlFSM::BLIND_LAND_STATE;
+ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 bool ControlFSM::is_used = false;
 
 //Change the current running state - be carefull to only change into an allowed state
-void ControlFSM::transitionTo(StateInterface& state, StateInterface* pCaller, const EventData& event) {
+void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
     //Only current running state is allowed to change state
-    if(getState() == pCaller) {
+    if(getState() == caller_p) {
         //Run stateEnd on current running state before transitioning
         getState()->stateEnd(*this, event);
         //Set the current state pointer
-        state_vault_.p_current_state_ = &state;
+        state_vault_.current_state_p_ = &state;
         handleFSMInfo("Current state: " + getState()->getStateName());
         //Pass event to new current state
         getState()->stateBegin(*this, event);
         //Notify state has changed
-        on_state_changed__();
+        on_state_changed_();
     } else {
         handleFSMError("Transition request made by not active state");
     }
@@ -64,26 +64,26 @@ void ControlFSM::loopCurrentState(void) {
 }
 
 //Send error message to user via ROS
-void ControlFSM::handleFSMError(std::string errMsg) {
-    ROS_ERROR("%s", (std::string("[Control FSM] ") + errMsg).c_str());
-    on_fsm_error_(errMsg);
+void ControlFSM::handleFSMError(std::string err_msg) {
+    ROS_ERROR("%s", (std::string("[Control FSM] ") + err_msg).c_str());
+    on_fsm_error_(err_msg);
 }
 
 //Send info message to user via ROS
-void ControlFSM::handleFSMInfo(std::string infoMsg) {
-    ROS_INFO("%s",(std::string("[Control FSM] ") + infoMsg).c_str());
-    on_fsm_info_(infoMsg);
+void ControlFSM::handleFSMInfo(std::string info_msg) {
+    ROS_INFO("%s",(std::string("[Control FSM] ") + info_msg).c_str());
+    on_fsm_info_(info_msg);
 }
 
 //Send warning to user via ROS
-void ControlFSM::handleFSMWarn(std::string warnMsg) {
-    ROS_WARN("%s", (std::string("[Control FSM] ") + warnMsg).c_str());
-    on_fsm_warn_(warnMsg);
+void ControlFSM::handleFSMWarn(std::string warn_msg) {
+    ROS_WARN("%s", (std::string("[Control FSM] ") + warn_msg).c_str());
+    on_fsm_warn_(warn_msg);
 }
 
 //Send debug message to user via ROS
-void ControlFSM::handleFSMDebug(std::string debugMsg) {
-    ROS_DEBUG("%s", (std::string("[Control FSM] ") + debugMsg).c_str());
+void ControlFSM::handleFSMDebug(std::string debug_msg) {
+    ROS_DEBUG("%s", (std::string("[Control FSM] ") + debug_msg).c_str());
 }
 
 const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {
@@ -99,11 +99,11 @@ const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {
 }
 
 double ControlFSM::getOrientationYaw() {
-    double quatX = drone_position_.position.pose.orientation.x;
-    double quatY = drone_position_.position.pose.orientation.y;
-    double quatZ = drone_position_.position.pose.orientation.z;
-    double quatW = drone_position_.position.pose.orientation.w;
-    tf2::Quaternion q(quatX, quatY, quatZ, quatW);
+    double quat_x = drone_position_.position.pose.orientation.x;
+    double quat_y = drone_position_.position.pose.orientation.y;
+    double quat_z = drone_position_.position.pose.orientation.z;
+    double quat_w = drone_position_.position.pose.orientation.w;
+    tf2::Quaternion q(quat_x, quat_y, quat_z, quat_w);
     tf2::Matrix3x3 m(q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
@@ -129,7 +129,7 @@ ControlFSM::ControlFSM() : land_detector_(FSMConfig::land_detector_topic, this) 
     //ROS must be initialized!
     assert(ros::isInitialized());
     //Set starting state
-    state_vault_.p_current_state_ = &BEGINSTATE;
+    state_vault_.current_state_p_ = &BEGIN_STATE;
 
     //Initialize all states
     this->initStates();
@@ -198,7 +198,7 @@ void ControlFSM::startPreflight() {
         return;
     }
     RequestEvent event(RequestType::PREFLIGHT);
-    transitionTo(PREFLIGHTSTATE, &BEGINSTATE, event);
+    transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
 }
 
 void ControlFSM::localPosCB(const geometry_msgs::PoseStamped &input) {
@@ -207,10 +207,10 @@ void ControlFSM::localPosCB(const geometry_msgs::PoseStamped &input) {
 }
 
 void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
-    bool offboardTrue = (state.mode == std::string("OFFBOARD"));
-    bool armedTrue = (bool)state.armed;
+    bool offboard_true = (state.mode == std::string("OFFBOARD"));
+    bool armed_true = (bool)state.armed;
     //Only act if relevant states has changed
-    if(offboardTrue != drone_state_.is_offboard || armedTrue != drone_state_.is_armed) {
+    if(offboard_true != drone_state_.is_offboard || armed_true != drone_state_.is_armed) {
         //Check if old state was autonomous
         //=> now in manual mode
         if(drone_state_.is_offboard && drone_state_.is_armed) {
@@ -218,7 +218,7 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
             this->handleManual();
         }
         //Set current state
-        drone_state_.is_offboard = offboardTrue;
+        drone_state_.is_offboard = offboard_true;
         drone_state_.is_armed = state.armed;
 
         //If it is armed and in offboard and all preflight checks has completed - notify AUTONOMOUS mode
