@@ -32,8 +32,9 @@ void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     fsm.handleFSMWarn("Blind land not tested properly! Not available! Going to posHold!");
     RequestEvent req(RequestType::POSHOLD);
     fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req);
-
-    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
+    ///Get shared_ptr to drones pose
+    auto pose_p = ControlPose::getSharedPosePtr();
+    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
 }
 
 const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {

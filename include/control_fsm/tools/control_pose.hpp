@@ -4,8 +4,12 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <array>
 #include <std_msgs/Header.h>
+class ControlPose;
 class ControlPose {
 private:
+    ///One static shared_ptr instance
+    static std::shared_ptr<ControlPose> instance_;
+
     ///Nodehandle
     ros::NodeHandle n_;
     ///Last recieved position
@@ -14,21 +18,23 @@ private:
     ros::Subscriber pos_sub_;
     ///Callback for new position messages
     void positionCB(const geometry_msgs::PoseStamped& msg) { last_position_ = msg; }
-
-public:
-
-    ///Constructor
+    ///Constructor - only accessible from static functions
     ControlPose();
+public:
     ///Returns array of position in order x, y, z
-    std::array<float, 3> get_position_xyz();
+    std::array<float, 3> getPositionXYZ();
     ///Returns yaw value in radians with negative PI/2 offsett to correct mavros bug.
-    float get_mavros_corrected_yaw();
+    float getMavrosCorrectedYaw();
     ///Returns raw yaw calculated from orientation quaternions
-    float get_yaw();
+    float getYaw();
     ///Returns raw orientation quaternion
-    std::array<float, 4> get_orientation();
+    std::array<float, 4> getOrientation();
     ///Get header - includes timestamp
-    std_msgs::Header get_header();
+    std_msgs::Header getHeader() { return last_position_.header; }
+    ///Returns pointer to instance
+    static std::shared_ptr<ControlPose> getSharedPosePtr();
+    ///Check if pose is recieved
+    bool isPoseValid();
 
 };
 

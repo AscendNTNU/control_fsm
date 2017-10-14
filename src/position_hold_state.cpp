@@ -57,9 +57,10 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
-    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
+    auto pose_p = ControlPose::getSharedPosePtr();
+    std::array<float, 3> position = pose_p->getPositionXYZ();
     //GoTo blind hover if position not valid, should never occur
-    if(pose_p == nullptr) {
+    if(!pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
             event.eventError("No valid position!");
         }
@@ -70,16 +71,15 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Set setpoint to current position
-    setpoint_.position.x = pose_p->pose.position.x;
-    setpoint_.position.y = pose_p->pose.position.y;
+    setpoint_.position.x = position[0];
+    setpoint_.position.y = position[1];
     //Keep old altitude if abort
     //TODO Should we use an default hover altitude in case of ABORT?
     if(!event.isValidRequest() || event.request != RequestType::ABORT) {
-        setpoint_.position.z = pose_p->pose.position.z;
+        setpoint_.position.z = position[2];
     }
 
-    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
-    
+    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
@@ -114,20 +114,21 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
         return; //Avoids nullpointer exception
     }
     auto points = msg->points;
-    const geometry_msgs::PoseStamped* pose_p = fsm_p_->getPositionXYZ();
+    auto pose_p = ControlPose::getSharedPosePtr();
+    std::array<float, 3> position = pose_p->getPositionXYZ();
     //Should never happen!
     if(pose_p == nullptr) {
         //No valid XY position available, no way to determine distance to GB
         fsm_p_->handleFSMError("Position not available! Should not happen!");
         return;
     }
-    //No need to check obstacles if they're too close
-    if(pose_p->pose.position.z >= FSMConfig::safe_hover_altitude) {
+    //No need to check obstacles if we're high enough
+    if(position[2] >= FSMConfig::safe_hover_altitude) {
         return;
     }
 
-    double drone_x = pose_p->pose.position.x;
-    double drone_y = pose_p->pose.position.y;
+    double drone_x = position[0];
+    double drone_y = position[1];
     for(int i = 0; i < points.size(); ++i) {
         double dist_squared = std::pow(drone_x - points[i].x, 2) + std::pow(drone_y - points[i].y, 2);
         if(dist_squared < std::pow(FSMConfig::obstacle_too_close_dist, 2)) {

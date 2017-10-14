@@ -1,6 +1,5 @@
 #ifndef STATE_INTERFACE_HPP
 #define STATE_INTERFACE_HPP
-
 #include "event_data.hpp"
 #include <iostream>
 #include <mavros_msgs/PositionTarget.h>
@@ -72,7 +71,10 @@ public:
     virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
 
     ///Static interface returning iterator to first state
-    static std::vector<StateInterface*>::const_iterator cbegin() { return all_states_.cbegin(); }
+    static std::vector<StateInterface*>::const_iterator cbegin() {
+
+        return all_states_.cbegin();
+    }
     ///Static interface returning iterator to last + 1 state
     static std::vector<StateInterface*>::const_iterator cend() { return all_states_.cend(); }
 };

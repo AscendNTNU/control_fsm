@@ -48,8 +48,10 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
+    ///Get shared_ptr to drones pose
+    auto pose_p = ControlPose::getSharedPosePtr();
     //If full position is valid - no need to blind hover
-    if(fsm.getPositionXYZ() != nullptr) {
+    if(pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
         } else {
@@ -63,12 +65,14 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     }
 
     setpoint_.position.z = FSMConfig::blind_hover_alt;
-    setpoint_.yaw = fsm.getMavrosCorrectedYaw();
+    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
+    ///Get shared_ptr to drones pose
+    auto pose_p = ControlPose::getSharedPosePtr();
     //Transition to position hold when position is valid.
-    if(fsm.getPositionXYZ() != nullptr) {
+    if(pose_p->isPoseValid()) {
         if(cmd_.isValidCMD()) {
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
             cmd_ = EventData(); //Reset cmd_

@@ -30,19 +30,16 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
-    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
-    if(pose_p == nullptr) {
-        //Should never occur
-        fsm.handleFSMError("Position not valid!!");
-        setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY | IGNORE_PZ | IGNORE_YAW;
-    } else if(fsm.land_detector_.isOnGround()) {
+    auto pose_p = ControlPose::getSharedPosePtr();
+    std::array<float, 3> position = pose_p->getPositionXYZ();
+    if(fsm.land_detector_.isOnGround()) {
         setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
     } else {
         setpoint_.type_mask = default_mask;
-        setpoint_.position.x = pose_p->pose.position.x;
-        setpoint_.position.y = pose_p->pose.position.y;
-        setpoint_.position.z = pose_p->pose.position.z;
-        setpoint_.yaw = fsm.getMavrosCorrectedYaw();
+        setpoint_.position.x = position[0];
+        setpoint_.position.y = position[1];
+        setpoint_.position.z = position[2];
+        setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
     }
 }
 

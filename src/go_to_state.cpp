@@ -67,18 +67,20 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Sets setpoint to current position - until planner is done
-    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
-    setpoint_.position.x = pose_p->pose.position.x;
-    setpoint_.position.y = pose_p->pose.position.y;
+    ///Get shared_ptr to drones pose
+    auto pose_p = ControlPose::getSharedPosePtr();
+    std::array<float, 3> position = pose_p->getPositionXYZ();
+    setpoint_.position.x = position[0];
+    setpoint_.position.y = position[1];
 
     //Z setpoint can be set right away
     setpoint_.position.z = event.position_goal.z;
     //Set yaw setpoint to desired target yaw
-    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
+    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
 
     //Calculate the square distance from drone to target
-    double delta_x = pose_p->pose.position.x - event.position_goal.x;
-    double delta_y = pose_p->pose.position.y - event.position_goal.y;
+    double delta_x = position[0] - event.position_goal.x;
+    double delta_y = position[1] - event.position_goal.y;
     double pos_xy_dist_square = std::pow(delta_x, 2) + std::pow(delta_y, 2);
 
     //If only altitude is different, no need for pathplanner
@@ -114,7 +116,8 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 
 void GoToState::loopState(ControlFSM& fsm) {
     //Get position
-    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
+    auto pose_p = ControlPose::getSharedPosePtr();
+    std::array<float, 3> current_position = pose_p->getPositionXYZ();
     //Should never occur, but just in case
     if(pose_p == nullptr) {
         EventData event;
@@ -128,12 +131,12 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
 
     //Check if destination is reached!
-    double delta_x = pose_p->pose.position.x - cmd_.position_goal.x;
-    double delta_y = pose_p->pose.position.y - cmd_.position_goal.y;
-    double delta_z = pose_p->pose.position.z - cmd_.position_goal.z;
+    double delta_x = current_position[0] - cmd_.position_goal.x;
+    double delta_y = current_position[1] - cmd_.position_goal.y;
+    double delta_z = current_position[2] - cmd_.position_goal.z;
     bool xy_within_reach = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
     bool z_within_reach = (std::fabs(delta_z) <= FSMConfig::altitude_reached_margin);
-    bool yaw_within_reach = (std::fabs(fsm.getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
+    bool yaw_within_reach = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
     if(xy_within_reach && z_within_reach && yaw_within_reach) {
         //Hold current position for a duration - avoiding unwanted velocity before doing anything else
@@ -193,8 +196,8 @@ void GoToState::loopState(ControlFSM& fsm) {
         }
         //Send current position to path planner
         geometry_msgs::Point32 current_pos;
-        current_pos.x = static_cast<float>(pose_p->pose.position.x);
-        current_pos.y = static_cast<float>(pose_p->pose.position.y);
+        current_pos.x = static_cast<float>(current_position[0]);
+        current_pos.y = static_cast<float>(current_position[1]);
         pos_pub_.publish(current_pos);
     }
 
@@ -214,8 +217,8 @@ void GoToState::loopState(ControlFSM& fsm) {
 
     //Get current setpoint from plan
     auto& current_point = current_plan_.plan.arrayOfPoints[current_plan_.index]; //geometry_msgs::Point32
-    auto& x_pos = pose_p->pose.position.x;
-    auto& y_pos = pose_p->pose.position.y;
+    auto& x_pos = current_position[0];
+    auto& y_pos = current_position[1];
     //Check if we are close enough to current setpoint
     delta_x = x_pos - current_point.x;
     delta_y = y_pos - current_point.y;
@@ -271,6 +274,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
     obs_pub_ = fsm.node_handler_.advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::path_planner_obs_topic, 1);
     target_pub_ = fsm.node_handler_.advertise<geometry_msgs::Point32>(FSMConfig::path_planner_target_topic , 1);
     plan_sub_ = fsm.node_handler_.subscribe(FSMConfig::path_planner_plan_topic, 1, &GoToState::pathRecievedCB, this);
+    fsm.handleFSMInfo("GoTo init completed!");
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
