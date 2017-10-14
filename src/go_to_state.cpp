@@ -118,8 +118,8 @@ void GoToState::loopState(ControlFSM& fsm) {
     //Get position
     auto pose_p = ControlPose::getSharedPosePtr();
     std::array<float, 3> current_position = pose_p->getPositionXYZ();
-    //Should never occur, but just in case
-    if(pose_p == nullptr) {
+    //Check that position data is valid
+    if(!pose_p->isPoseValid()) {
         EventData event;
         event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {
