@@ -4,7 +4,13 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <array>
 #include <std_msgs/Header.h>
+//Forward declaration
 class ControlPose;
+
+/**
+ * Handles drones pose
+ * Uses shared_ptr to the same memory to avoid duplicates.
+ */
 class ControlPose {
 private:
     ///One static shared_ptr instance
@@ -31,6 +37,7 @@ public:
     std::array<float, 4> getOrientation();
     ///Get header - includes timestamp
     std_msgs::Header getHeader() { return last_position_.header; }
+
     ///Returns pointer to instance
     static std::shared_ptr<ControlPose> getSharedPosePtr();
     ///Check if pose is recieved
