@@ -6,7 +6,6 @@
 #include "gtest/gtest.h"
 
 TEST(TestSuite, stateHandlerTest) {
-    ControlFSM fsm;
     ///There should be multiple states in the state vector
     EXPECT_NE(0, StateInterface::getNumStates());
 }
