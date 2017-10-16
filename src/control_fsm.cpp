@@ -86,43 +86,6 @@ void ControlFSM::handleFSMDebug(std::string debug_msg) {
     ROS_DEBUG("%s", (std::string("[Control FSM] ") + debug_msg).c_str());
 }
 
-const geometry_msgs::PoseStamped* ControlFSM::getPositionXYZ() {
-    if(!drone_position_.is_set) {
-        handleFSMError("Position has not been set!!");
-        return nullptr;
-    }
-    auto& stamp = drone_position_.position.header.stamp;
-    if(ros::Time::now() - stamp > ros::Duration(FSMConfig::valid_data_timeout)) {
-        handleFSMError("Using old position data!");
-    }
-    return drone_position_.valid_xy ? &drone_position_.position : nullptr;
-}
-
-double ControlFSM::getOrientationYaw() {
-    double quat_x = drone_position_.position.pose.orientation.x;
-    double quat_y = drone_position_.position.pose.orientation.y;
-    double quat_z = drone_position_.position.pose.orientation.z;
-    double quat_w = drone_position_.position.pose.orientation.w;
-    tf2::Quaternion q(quat_x, quat_y, quat_z, quat_w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-    //Subtracting PI halfs to correct for a bug in mavros (90 degree offset)
-    return yaw;
-}
-
-double ControlFSM::getMavrosCorrectedYaw() {
-    return getOrientationYaw() - PI_HALF;
-}
-
-//Returns only altitude
-double ControlFSM::getPositionZ() {
-    if(!drone_position_.is_set) {
-        handleFSMError("Position has not been set!!");
-    }
-     return drone_position_.position.pose.position.z;
-}
-
 ControlFSM::ControlFSM() : land_detector_(FSMConfig::land_detector_topic, this) {
     //Only one instance of ControlFSM is allowed
     assert(!ControlFSM::is_used);
@@ -135,9 +98,7 @@ ControlFSM::ControlFSM() : land_detector_(FSMConfig::land_detector_topic, this) 
     this->initStates();
 
     //Subscribe to neccesary topics
-    std::string& posTopic = FSMConfig::mavros_local_pos_topic;
     std::string& stateTopic = FSMConfig::mavros_state_changed_topic;
-    subscribers_.local_pos_sub = node_handler_.subscribe(posTopic, 1, &ControlFSM::localPosCB, this);
     subscribers_.mavros_state_changed_sub = node_handler_.subscribe(stateTopic, 1, &ControlFSM::mavrosStateChangedCB, this);
 
     //Make sure no other instances of ControlFSM is allowed
@@ -159,25 +120,22 @@ bool ControlFSM::isReady() {
 
     //All states must run their own checks
     for(auto it = StateInterface::cbegin(); it != StateInterface::cend(); it++) {
-        this->handleFSMInfo((*it)->getStateName() + "is testing");
+        this->handleFSMInfo((*it)->getStateName() + " is testing");
         if(!(*it)->stateIsReady(*this)) return false;
     }
 
     //Some checks can be skipped for debugging purposes
     if(FSMConfig::require_all_data_streams) {
-        //First position has been recieved
-        if (!drone_position_.is_set) {
-            this->handleFSMWarn("Missing initial position!");
+
+        //Check that we're recieving position
+        if(!drone_pose_p->isPoseValid()) {
+            this->handleFSMWarn("Missing position data");
             return false;
         }
+
         //Mavros must publish state data
         if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
             this->handleFSMWarn("Missing mavros state info!");
-            return false;
-        }
-        //Mavros must publish position data
-        if (subscribers_.local_pos_sub.getNumPublishers() <= 0) {
-            this->handleFSMWarn("Missing local position stream!");
             return false;
         }
         //Land detector must be ready
@@ -199,11 +157,6 @@ void ControlFSM::startPreflight() {
     }
     RequestEvent event(RequestType::PREFLIGHT);
     transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
-}
-
-void ControlFSM::localPosCB(const geometry_msgs::PoseStamped &input) {
-    drone_position_.is_set = true;
-    drone_position_.position = input;
 }
 
 void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {

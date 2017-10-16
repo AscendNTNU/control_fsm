@@ -24,6 +24,8 @@
 
 #include "land_detector.hpp"
 
+#include "tools/control_pose.hpp"
+
 ///Main FSM logic
 class ControlFSM {
 private:
@@ -117,12 +119,12 @@ private:
     struct {
         friend class ControlFSM;
     private:
-        ros::Subscriber local_pos_sub;
         ros::Subscriber mavros_state_changed_sub;
     } subscribers_;
 
-    ///Callback for local position
-    void localPosCB(const geometry_msgs::PoseStamped& input);
+    ///Drones pose
+    std::shared_ptr<control::Pose> drone_pose_p = control::Pose::getSharedPosePtr();
+
     ///Callback for mavros state changed
     void mavrosStateChangedCB(const mavros_msgs::State& state);
 
@@ -179,18 +181,6 @@ public:
     
     ///Returns setpoint from current state
     const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
-
-    ///Get current position - will return nullptr if invalid
-    const geometry_msgs::PoseStamped* getPositionXYZ();
-
-    ///Returns actual yaw based on orientation from pose
-    double getOrientationYaw();
-
-    ///Return yaw with pi_half offset correction due to bug in mavros
-    double getMavrosCorrectedYaw();
-
-    /// Get altitude (should always be correct - 1D lidar)
-    double getPositionZ();
 
     ///Sets new callback function for onStateChanged
     void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }

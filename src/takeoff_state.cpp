@@ -44,9 +44,10 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Takeoff!!");
     }
-    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point current_position = pose_p->getPositionXYZ();
     //If no position is available - abort takeoff
-    if(pose_p == nullptr) {
+    if(!pose_p->isPoseValid()) {
         fsm.handleFSMError("No position available");
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position available");
@@ -57,15 +58,16 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
     //Set takeoff setpoint to current XY position
-    setpoint_.position.x = pose_p->pose.position.x;
-    setpoint_.position.y = pose_p->pose.position.y;
+    setpoint_.position.x = current_position.x;
+    setpoint_.position.y = current_position.y;
     //Set yaw setpoint based on current rotation
-    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();;
+    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
-    double z = fsm.getPositionZ();
-    if(z > (setpoint_.position.z - altitude_reached_margin_)) {
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point current_position = pose_p->getPositionXYZ();
+    if(current_position.z > (setpoint_.position.z - altitude_reached_margin_)) {
         if(cmd_.isValidCMD()) {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
             cmd_ = EventData();

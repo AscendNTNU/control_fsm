@@ -49,12 +49,13 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Landing!");
     }
-    const geometry_msgs::PoseStamped* pose_p = fsm.getPositionXYZ();
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point current_position = pose_p->getPositionXYZ();
     if(pose_p != nullptr) {
-        setpoint_.position.x = pose_p->pose.position.x;
-        setpoint_.position.y = pose_p->pose.position.y;
+        setpoint_.position.x = current_position.x;
+        setpoint_.position.y = current_position.y;
         //Set yaw setpoint based on current rotation
-        setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
+        setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
     } else {
         //Should never occur
         RequestEvent abort_event(RequestType::ABORT);

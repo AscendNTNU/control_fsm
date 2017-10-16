@@ -45,7 +45,9 @@ void EstimateAdjustState::loopState(ControlFSM& fsm) {
 
 void EstimateAdjustState::stateBegin(ControlFSM& fsm, const EventData& event) {
     fsm.handleFSMError("EstimateAdjust has not been properly implemented!! Take manual control!");
-    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
+    ///Get shared_ptr to drones pose
+    auto pose_p = control::Pose::getSharedPosePtr();
+    setpoint_.yaw = static_cast<float>(pose_p->getMavrosCorrectedYaw());
 
 }
 
