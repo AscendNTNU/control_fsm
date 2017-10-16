@@ -23,11 +23,13 @@ private:
     ///Flag used to check if state is ready - should be set by state init
     bool is_ready_ = false;
 
-    ///Holds all instantiated classes
-    static std::vector<StateInterface*> all_states_;
+    /**
+     * get vector of all instianciated states
+     * This idiom is a workaround for the "static initialiazation fiasco"
+     * @return vector of states
+     */
+    static std::vector<StateInterface*>* getAllStatesVector();
 
-    ///States should never be copied
-    StateInterface(const StateInterface&) = delete;
     ///Assigmnet operator should be removed
     StateInterface& operator=(const StateInterface&) = delete;
 protected:
@@ -35,7 +37,10 @@ protected:
 public:
 
     ///Constructor
-    StateInterface() {  all_states_.push_back(this); }
+    StateInterface() {  getAllStatesVector()->push_back(this); }
+
+    ///States should never be copied
+    StateInterface(const StateInterface&) = delete;
 
     ///Used for state setup - remember to implement isReady if overriding
     virtual void stateInit(ControlFSM& fsm) { is_ready_ = true; }
@@ -72,9 +77,11 @@ public:
     virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
 
     ///Static interface returning iterator to first state
-    static std::vector<StateInterface*>::const_iterator cbegin() { return all_states_.cbegin(); }
+    static std::vector<StateInterface*>::const_iterator cbegin() { return getAllStatesVector()->cbegin(); }
     ///Static interface returning iterator to last + 1 state
-    static std::vector<StateInterface*>::const_iterator cend() { return all_states_.cend(); }
+    static std::vector<StateInterface*>::const_iterator cend() { return getAllStatesVector()->cend(); }
+    ///Returns number of instanciated states
+    static size_t getNumStates() { return getAllStatesVector()->size(); }
 };
 
 #endif

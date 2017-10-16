@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(control_fsm)
 
+add_compile_options(-std=c++11)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -46,7 +47,6 @@ file(GLOB control_fsm_SRC "src/*.cpp")
 add_library(control_fsm_lib
   ${control_fsm_SRC}
 )
-target_compile_features(control_fsm_lib PRIVATE cxx_range_for)
 
 roslaunch_add_file_check(launch)
 
@@ -75,3 +75,5 @@ add_dependencies(control_fsm_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 add_dependencies(land_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+catkin_add_gtest(utest test/utest.cpp)
+target_link_libraries(utest control_fsm_lib)
