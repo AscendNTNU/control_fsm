@@ -2,6 +2,8 @@
 // Created by haavard on 12.10.17.
 //
 
+#define _USE_MATH_DEFINES // import cmath mathematical constants
+
 #include <control_fsm/fsm_config.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
