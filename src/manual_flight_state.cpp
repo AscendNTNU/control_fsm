@@ -30,15 +30,15 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
-    auto pose_p = ControlPose::getSharedPosePtr();
-    std::array<float, 3> position = pose_p->getPositionXYZ();
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point position = pose_p->getPositionXYZ();
     if(fsm.land_detector_.isOnGround()) {
         setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
     } else {
         setpoint_.type_mask = default_mask;
-        setpoint_.position.x = position[0];
-        setpoint_.position.y = position[1];
-        setpoint_.position.z = position[2];
+        setpoint_.position.x = position.x;
+        setpoint_.position.y = position.y;
+        setpoint_.position.z = position.z;
         setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
     }
 }

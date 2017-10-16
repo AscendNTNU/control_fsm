@@ -123,7 +123,7 @@ private:
     } subscribers_;
 
     ///Drones pose
-    std::shared_ptr<ControlPose> drone_pose_p = ControlPose::getSharedPosePtr();
+    std::shared_ptr<control::Pose> drone_pose_p = control::Pose::getSharedPosePtr();
 
     ///Callback for mavros state changed
     void mavrosStateChangedCB(const mavros_msgs::State& state);

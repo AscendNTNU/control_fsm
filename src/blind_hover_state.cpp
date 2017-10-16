@@ -49,7 +49,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     ///Get shared_ptr to drones pose
-    auto pose_p = ControlPose::getSharedPosePtr();
+    auto pose_p = control::Pose::getSharedPosePtr();
     //If full position is valid - no need to blind hover
     if(pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
@@ -70,7 +70,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
     ///Get shared_ptr to drones pose
-    auto pose_p = ControlPose::getSharedPosePtr();
+    auto pose_p = control::Pose::getSharedPosePtr();
     //Transition to position hold when position is valid.
     if(pose_p->isPoseValid()) {
         if(cmd_.isValidCMD()) {

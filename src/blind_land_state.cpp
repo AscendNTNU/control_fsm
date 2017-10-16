@@ -33,8 +33,8 @@ void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     RequestEvent req(RequestType::POSHOLD);
     fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req);
     ///Get shared_ptr to drones pose
-    auto pose_p = ControlPose::getSharedPosePtr();
-    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+    auto pose_p = control::Pose::getSharedPosePtr();
+    setpoint_.yaw = static_cast<float>(pose_p->getMavrosCorrectedYaw());
 }
 
 const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {

@@ -57,8 +57,8 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
-    auto pose_p = ControlPose::getSharedPosePtr();
-    std::array<float, 3> position = pose_p->getPositionXYZ();
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point position = pose_p->getPositionXYZ();
     //GoTo blind hover if position not valid, should never occur
     if(!pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
@@ -71,12 +71,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Set setpoint to current position
-    setpoint_.position.x = position[0];
-    setpoint_.position.y = position[1];
+    setpoint_.position.x = position.x;
+    setpoint_.position.y = position.y;
     //Keep old altitude if abort
     //TODO Should we use an default hover altitude in case of ABORT?
     if(!event.isValidRequest() || event.request != RequestType::ABORT) {
-        setpoint_.position.z = position[2];
+        setpoint_.position.z = position.z;
     }
 
     setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
@@ -114,8 +114,8 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
         return; //Avoids nullpointer exception
     }
     auto points = msg->points;
-    auto pose_p = ControlPose::getSharedPosePtr();
-    std::array<float, 3> position = pose_p->getPositionXYZ();
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point position = pose_p->getPositionXYZ();
     //Should never happen!
     if(pose_p == nullptr) {
         //No valid XY position available, no way to determine distance to GB
@@ -123,12 +123,12 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
         return;
     }
     //No need to check obstacles if we're high enough
-    if(position[2] >= FSMConfig::safe_hover_altitude) {
+    if(position.z >= FSMConfig::safe_hover_altitude) {
         return;
     }
 
-    double drone_x = position[0];
-    double drone_y = position[1];
+    double drone_x = position.x;
+    double drone_y = position.y;
     for(int i = 0; i < points.size(); ++i) {
         double dist_squared = std::pow(drone_x - points[i].x, 2) + std::pow(drone_y - points[i].y, 2);
         if(dist_squared < std::pow(FSMConfig::obstacle_too_close_dist, 2)) {

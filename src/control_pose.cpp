@@ -9,8 +9,10 @@
 
 constexpr float PI_HALF = 1.57079632679f;
 
+using control::Pose;
+
 //Static instance
-std::shared_ptr<ControlPose> ControlPose::instance_;
+std::shared_ptr<Pose> Pose::instance_;
 
 bool checkAndReportMsgTimeout(const geometry_msgs::PoseStamped& msg) {
     if(ros::Time::now() - msg.header.stamp > ros::Duration(FSMConfig::valid_data_timeout)){
@@ -20,23 +22,23 @@ bool checkAndReportMsgTimeout(const geometry_msgs::PoseStamped& msg) {
     return false;
 }
 
-ControlPose::ControlPose() {
-    pos_sub_ = n_.subscribe(FSMConfig::mavros_local_pos_topic, 1, &ControlPose::positionCB, this);
+Pose::Pose() {
+    pos_sub_ = n_.subscribe(FSMConfig::mavros_local_pos_topic, 1, &Pose::positionCB, this);
 }
 
 //TODO Write unit test
-std::array<float, 3> ControlPose::getPositionXYZ() {
+control::Point Pose::getPositionXYZ() {
     checkAndReportMsgTimeout(last_position_);
-    std::array<float, 3> temp{};
+    Point temp;
     auto& position = last_position_.pose.position;
-    temp[0] = static_cast<float>(position.x); //From double to float
-    temp[1] = static_cast<float>(position.y); //From double to float
-    temp[2] = static_cast<float>(position.z); //From double to float
+    temp.x = position.x; //From double to float
+    temp.y = position.y; //From double to float
+    temp.z = position.z; //From double to float
     return temp;
 }
 
 //TODO Write unit test
-float ControlPose::getYaw() {
+double Pose::getYaw() {
     checkAndReportMsgTimeout(last_position_);
     auto& orientation = last_position_.pose.orientation;
     double quat_x = orientation.x;
@@ -47,35 +49,35 @@ float ControlPose::getYaw() {
     tf2::Matrix3x3 m(q);
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
-    return static_cast<float>(yaw); //Explicitly casts to float
+    return yaw; //Explicitly casts to float
 }
 
 //TODO Write unit test
-float ControlPose::getMavrosCorrectedYaw() {
+double Pose::getMavrosCorrectedYaw() {
     return getYaw() - PI_HALF;
 }
 
 //TODO Write unit test
-std::array<float, 4> ControlPose::getOrientation() {
+control::Quaternion Pose::getOrientation() {
     checkAndReportMsgTimeout(last_position_);
     auto& orientation = last_position_.pose.orientation;
-    auto quat_x = static_cast<float>(orientation.x);
-    auto quat_y = static_cast<float>(orientation.y);
-    auto quat_z = static_cast<float>(orientation.z);
-    auto quat_w = static_cast<float>(orientation.w);
-    std::array<float, 4> temp {quat_x, quat_y, quat_z, quat_w};
+    auto quat_x = orientation.x;
+    auto quat_y = orientation.y;
+    auto quat_z = orientation.z;
+    auto quat_w = orientation.w;
+    Quaternion temp {quat_x, quat_y, quat_z, quat_w};
     return temp;
 }
 
-std::shared_ptr<ControlPose> ControlPose::getSharedPosePtr() {
+std::shared_ptr<Pose> Pose::getSharedPosePtr() {
     if(instance_ == nullptr) {
         //Only one instance exists - shared across states
-        instance_ = std::shared_ptr<ControlPose>(new ControlPose());
+        instance_ = std::shared_ptr<Pose>(new Pose());
     }
     return instance_; //Returns a copy of shared_ptr
 }
 
-bool ControlPose::isPoseValid() {
+bool Pose::isPoseValid() {
     bool isRecieving = pos_sub_.getNumPublishers() > 0;
     bool validMsg = !checkAndReportMsgTimeout(last_position_);
     return isRecieving && validMsg;
