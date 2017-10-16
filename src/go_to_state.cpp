@@ -9,7 +9,7 @@
 #include "control_fsm/fsm_config.hpp"
 
 constexpr double PI = 3.14159265359;
-constexpr double MAVROS_YAW_CORRECTION_PI_HALF = M_PI_2;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
 
 GoToState::GoToState() : StateInterface::StateInterface() {
