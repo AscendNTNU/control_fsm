@@ -2,15 +2,12 @@
 // Created by haavard on 12.10.17.
 //
 
-#define _USE_MATH_DEFINES // import cmath mathematical constants
-
 #include <control_fsm/fsm_config.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include "control_fsm/tools/control_pose.hpp"
-#include <cmath>
 
-constexpr double MAVROS_YAW_CORRECTION_PI_HALF = M_PI_2;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
 using control::Pose;
 
