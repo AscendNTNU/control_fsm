@@ -9,7 +9,7 @@
 #include "control_fsm/fsm_config.hpp"
 
 constexpr double PI = 3.14159265359;
-constexpr double PI_HALF = 1.57079632679;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
 
 GoToState::GoToState() : StateInterface::StateInterface() {
@@ -231,8 +231,8 @@ void GoToState::loopState(ControlFSM& fsm) {
             delta_y = current_point.y - y_pos;
             //Only change yaw if drone needs to travel a large distance
             if(std::pow(delta_x, 2) + std::pow(delta_y, 2) > std::pow(FSMConfig::no_yaw_correct_dist, 2)) {
-                //-PI_HALF due to mavros bug
-                setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - PI_HALF);
+                //-MAVROS_YAW_CORRECTION_PI_HALF due to mavros bug
+                setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - MAVROS_YAW_CORRECTION_PI_HALF);
             }
         }
     }

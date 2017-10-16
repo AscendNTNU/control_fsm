@@ -7,7 +7,7 @@
 #include <tf2/LinearMath/Matrix3x3.h>
 #include "control_fsm/tools/control_pose.hpp"
 
-constexpr float PI_HALF = 1.57079632679f;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
 using control::Pose;
 
@@ -54,7 +54,7 @@ double Pose::getYaw() {
 
 //TODO Write unit test
 double Pose::getMavrosCorrectedYaw() {
-    return getYaw() - PI_HALF;
+    return getYaw() - MAVROS_YAW_CORRECTION_PI_HALF;
 }
 
 //TODO Write unit test
