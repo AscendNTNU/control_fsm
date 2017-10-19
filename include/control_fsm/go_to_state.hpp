@@ -10,6 +10,8 @@
 #define DEFAULT_SETPOINT_REACHED_MARGIN 0.3
 #define DEFAULT_YAW_REACHED_MARGIN 0.02
 
+
+
 ///Moves drone to XYZ 
 class GoToState : public StateInterface {
 private:
@@ -67,13 +69,17 @@ public:
     GoToState();
     void stateInit(ControlFSM& fsm) override;
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
+    // Get target position
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
+    // Poll drone position and set setpoint
     void loopState(ControlFSM& fsm) override;
+    // 
     void stateEnd(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const { return "GoTo";}
     const mavros_msgs::PositionTarget* getSetpoint();
     bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;
+    void destinationReached(ControlFSM &fsm);
 };
 
 #endif

@@ -12,6 +12,7 @@ constexpr double PI = 3.14159265359;
 constexpr double PI_HALF = 1.57079632679;
 
 
+
 GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
 }
@@ -115,9 +116,12 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
+
     //Get position
     auto pose_p = control::Pose::getSharedPosePtr();
     control::Point current_position = pose_p->getPositionXYZ();
+
+
     //Check that position data is valid
     if(!pose_p->isPoseValid()) {
         EventData event;
@@ -134,45 +138,12 @@ void GoToState::loopState(ControlFSM& fsm) {
     double delta_x = current_position.x - cmd_.position_goal.x;
     double delta_y = current_position.y - cmd_.position_goal.y;
     double delta_z = current_position.z - cmd_.position_goal.z;
-    bool xy_within_reach = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
-    bool z_within_reach = (std::fabs(delta_z) <= FSMConfig::altitude_reached_margin);
-    bool yaw_within_reach = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
+    bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
+    bool z_reached = (std::fabs(delta_z) <= FSMConfig::altitude_reached_margin);
+    bool yaw_reached = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
-    if(xy_within_reach && z_within_reach && yaw_within_reach) {
-        //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-        if(!delay_transition_.enabled) {
-            delay_transition_.started = ros::Time::now();
-            delay_transition_.enabled = true;
-
-            if(cmd_.isValidCMD()) {
-                cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-            }
-        }
-        //Delay transition
-        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-            return;
-        } 
-        //Transition to correct state
-        if(cmd_.isValidCMD()) {
-            switch(cmd_.command_type) {
-                case CommandType::LANDXY:
-                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
-                    break;
-                /*
-                case CommandType::LANDGB:
-                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
-                    break;
-                */
-                case CommandType::GOTOXYZ:
-                    cmd_.finishCMD();
-                    RequestEvent doneEvent(RequestType::POSHOLD);
-                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, doneEvent);
-                    break;
-            }
-        } else {
-            RequestEvent posHoldEvent(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, posHoldEvent);
-        }
+    if(xy_reached && z_reached && yaw_reached) {
+        destinationReached(fsm);
         delay_transition_.enabled = false;
         //Destination reached, no need to excecute the rest of the function
         return;
@@ -184,7 +155,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     //If the destination is not reached, the loop will continue will run
 
     //Only run pathplanner if neccesary.
-    if(xy_within_reach) {
+    if(xy_reached) {
         setpoint_.position.x = cmd_.position_goal.x;
         setpoint_.position.y = cmd_.position_goal.y;
         setpoint_.position.z = cmd_.position_goal.z;
@@ -201,19 +172,6 @@ void GoToState::loopState(ControlFSM& fsm) {
         pos_pub_.publish(current_pos);
     }
 
-    //Only continue if there is a valid plan available
-    if(!current_plan_.valid) {
-        return;
-    } else if(!(bool)current_plan_.plan.feasibility || current_plan_.plan.arrayOfPoints.size() <= 0) {
-        //A plan is recieved, but there are no points. 
-        fsm.handleFSMError("Recieved empty path plan");
-        RequestEvent abort_event(RequestType::ABORT);
-        if(cmd_.isValidCMD()) {
-            cmd_.eventError("No feasable path to target");
-        }
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
 
     //Get current setpoint from plan
     auto& current_point = current_plan_.plan.arrayOfPoints[current_plan_.index]; //geometry_msgs::Point32
@@ -339,4 +297,39 @@ void GoToState::handleManual(ControlFSM &fsm) {
 }
 
 
+void GoToState::destinationReached(ControlFSM &fsm){
+    //Hold current position for a duration - avoiding unwanted velocity before doing anything else
+    if(!delay_transition_.enabled) {
+        delay_transition_.started = ros::Time::now();
+        delay_transition_.enabled = true;
 
+        if(cmd_.isValidCMD()) {
+            cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
+        }
+    }
+    //Delay transition
+    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+        return;
+    } 
+    //Transition to correct state
+    if(cmd_.isValidCMD()) {
+        switch(cmd_.command_type) {
+            case CommandType::LANDXY:
+                fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+                break;
+            /*
+            case CommandType::LANDGB:
+                fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
+                break;
+            */
+            case CommandType::GOTOXYZ:
+                cmd_.finishCMD();
+                RequestEvent doneEvent(RequestType::POSHOLD);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, doneEvent);
+                break;
+        }
+    } else {
+        RequestEvent posHoldEvent(RequestType::POSHOLD);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, posHoldEvent);
+    }
+}
