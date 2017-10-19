@@ -142,14 +142,16 @@ void GoToState::loopState(ControlFSM& fsm) {
     bool z_reached = (std::fabs(delta_z) <= FSMConfig::altitude_reached_margin);
     bool yaw_reached = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
+
     if(xy_reached && z_reached && yaw_reached) {
         destinationReached(fsm);
-        delay_transition_.enabled = false;
         //Destination reached, no need to excecute the rest of the function
+        delay_transition_.enabled = false;
         return;
     } else {
         delay_transition_.enabled = false;
     }
+
 
     /**********************************************************/
     //If the destination is not reached, the loop will continue will run
@@ -172,31 +174,15 @@ void GoToState::loopState(ControlFSM& fsm) {
         pos_pub_.publish(current_pos);
     }
 
-
-    //Get current setpoint from plan
-    auto& current_point = current_plan_.plan.arrayOfPoints[current_plan_.index]; //geometry_msgs::Point32
-    auto& x_pos = current_position.x;
-    auto& y_pos = current_position.y;
-    //Check if we are close enough to current setpoint
-    delta_x = x_pos - current_point.x;
-    delta_y = y_pos - current_point.y;
-    if(std::pow(delta_x, 2) + std::pow(delta_y, 2) <= std::pow(setpoint_reached_margin_, 2)) {
-        //If there are a new setpoint in the plan, change to it.
-        if(current_plan_.plan.arrayOfPoints.size() > (current_plan_.index + 1)) {
-            ++current_plan_.index;
-            current_point = current_plan_.plan.arrayOfPoints[current_plan_.index];
-            delta_x = current_point.x - x_pos;
-            delta_y = current_point.y - y_pos;
-            //Only change yaw if drone needs to travel a large distance
-            if(std::pow(delta_x, 2) + std::pow(delta_y, 2) > std::pow(FSMConfig::no_yaw_correct_dist, 2)) {
-                //-PI_HALF due to mavros bug
-                setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - PI_HALF);
-            }
-        }
+    //Only change yaw if drone needs to travel a large distance
+    if(std::pow(delta_x, 2) + std::pow(delta_y, 2) > std::pow(FSMConfig::no_yaw_correct_dist, 2)) {
+        //-PI_HALF due to mavros bug
+        setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - PI_HALF);
     }
+
     //Set setpoint x and y
-    setpoint_.position.x = current_point.x;
-    setpoint_.position.y = current_point.y;
+    setpoint_.position.x = cmd_.position_goal.x;
+    setpoint_.position.y = cmd_.position_goal.y;
 }
 
 //Returns valid setpoint
