@@ -8,14 +8,7 @@ EstimateAdjustState::EstimateAdjustState() {
 }
 
 void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        if(cmd_.isValidCMD()) {
-            event.eventError("ABORT old CMD first!");
-            fsm.handleFSMWarn("ABORT old CMD before sending new!");
-        } else { 
-            cmd_ = event;
-        }
-    } else if(event.event_type == EventType::REQUEST) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
             cmd_ = EventData();
             cmd_.eventError("ABORT request!");
@@ -23,7 +16,14 @@ void EstimateAdjustState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             fsm.handleFSMWarn("Illegal transition request");
         }
-    } else {
+    } else if(event.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
+            event.eventError("ABORT old CMD first!");
+            fsm.handleFSMWarn("ABORT old CMD before sending new!");
+        } else { 
+            cmd_ = event;
+        }
+    } else  {
         fsm.handleFSMDebug("Ignoring event");
     }
 }

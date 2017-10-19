@@ -13,20 +13,20 @@ TakeoffState::TakeoffState() {
 }
 
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        if(cmd_.isValidCMD()) {
-            cmd_ = event;
-        } else {
-            event.eventError("Finish old CMD before sending new");
-            fsm.handleFSMWarn("ABORT old cmd before sending new");
-        }
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
             cmd_.eventError("Aborting command");
             cmd_ = EventData(); //Aborting commands, but will still continue takeoff
             fsm.handleFSMInfo("Command aborted, but takeoff can't be aborted");
         } else {
             fsm.handleFSMWarn("Illegal transition request");
+        }
+    } else if(event.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
+            cmd_ = event;
+        } else {
+            event.eventError("Finish old CMD before sending new");
+            fsm.handleFSMWarn("ABORT old cmd before sending new");
         }
     } else {
         fsm.handleFSMInfo("Event ignored");

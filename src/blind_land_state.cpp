@@ -8,21 +8,21 @@ BlindLandState::BlindLandState() {
 }
 
 void BlindLandState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.event_type == EventType::GROUNDDETECTED) {
-        //Land completed
-        fsm.transitionTo(ControlFSM::IDLE_STATE, this, event);
-    } else if(event.isValidCMD()) {
-        //Blind land not part of normal operation. 
-        //Any command will be ignored!
-        event.eventError("CMD rejected!");
-        fsm.handleFSMWarn("Blind land not part of normal operation! Ignoring commands!");
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT) {
             fsm.handleFSMWarn("Can't ABORT blind land!");
         } else {
             fsm.handleFSMWarn("Illegal transition request!");
         }
-    } else {
+    } else if(event.isValidCMD()) {
+        //Blind land not part of normal operation. 
+        //Any command will be ignored!
+        event.eventError("CMD rejected!");
+        fsm.handleFSMWarn("Blind land not part of normal operation! Ignoring commands!");
+    } else if(event.event_type == EventType::GROUNDDETECTED) {
+        //Land completed
+        fsm.transitionTo(ControlFSM::IDLE_STATE, this, event);
+    } else  {
         fsm.handleFSMDebug("Event ignored!");
     }
 }
