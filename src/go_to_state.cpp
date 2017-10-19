@@ -148,19 +148,21 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Destination reached, no need to excecute the rest of the function
         delay_transition_.enabled = false;
         return;
-    } else {
-        delay_transition_.enabled = false;
     }
+        
+    delay_transition_.enabled = false;
 
 
     /**********************************************************/
     //If the destination is not reached, the loop will continue will run
 
-    //Only run pathplanner if neccesary.
+    // Set setpoint x and y
+    setpoint_.position.x = cmd_.position_goal.x;
+    setpoint_.position.y = cmd_.position_goal.y;
+    setpoint_.position.z = cmd_.position_goal.z;
+
     if(xy_reached) {
-        setpoint_.position.x = cmd_.position_goal.x;
-        setpoint_.position.y = cmd_.position_goal.y;
-        setpoint_.position.z = cmd_.position_goal.z;
+        
         return;
     } else {
         //Make sure target point is published!!
@@ -179,10 +181,6 @@ void GoToState::loopState(ControlFSM& fsm) {
         //-PI_HALF due to mavros bug
         setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - PI_HALF);
     }
-
-    //Set setpoint x and y
-    setpoint_.position.x = cmd_.position_goal.x;
-    setpoint_.position.y = cmd_.position_goal.y;
 }
 
 //Returns valid setpoint
@@ -191,6 +189,8 @@ const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
     return &setpoint_;
 }
 
+
+// Delete????????????????????????????????????????????????????????????????????????????????????????????
 //New pathplan is recieved
 void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg) {
     //Ignore callback if state is not active
@@ -251,6 +251,7 @@ double GoToState::calculatePathYaw(double dx, double dy) {
     return angle;
 }
 
+// Delete??????????????????????????????????????????????????????????????????????????????????????????????????????
 bool GoToState::stateIsReady(ControlFSM &fsm) {
     //TODO set up obstacles stream for planner
     //Skipping check is allowed for debugging
@@ -258,7 +259,7 @@ bool GoToState::stateIsReady(ControlFSM &fsm) {
     //Makes sure path planner is listening for input
     if(plan_sub_.getNumPublishers() <= 0) {
         fsm.handleFSMWarn("No path planner publisher");
-        return false;    
+        return false;
     } 
     if(target_pub_.getNumSubscribers() <= 0) {
         fsm.handleFSMWarn("No path planner subscriber");
