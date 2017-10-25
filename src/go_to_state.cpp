@@ -243,11 +243,6 @@ void GoToState::stateInit(ControlFSM& fsm)
     setpoint_reached_margin_ = FSMConfig::setpoint_reached_margin;
     yaw_reached_margin_ = FSMConfig::yaw_reached_margin;
 
-    //Set all neccesary publishers and subscribers
-    pos_pub_ = fsm.node_handler_.advertise<geometry_msgs::Point32>(FSMConfig::path_planner_pos_topic, 1);
-    obs_pub_ = fsm.node_handler_.advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::path_planner_obs_topic, 1);
-    target_pub_ = fsm.node_handler_.advertise<geometry_msgs::Point32>(FSMConfig::path_planner_target_topic , 1);
-    plan_sub_ = fsm.node_handler_.subscribe(FSMConfig::path_planner_plan_topic, 1, &GoToState::pathRecievedCB, this);
     fsm.handleFSMInfo("GoTo init completed!");
 }
 

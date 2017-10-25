@@ -52,8 +52,6 @@ private:
     double setpoint_reached_margin_ = DEFAULT_SETPOINT_REACHED_MARGIN;
     ///Margin used to determine if we are close enough to target yaw
     double yaw_reached_margin_ = DEFAULT_YAW_REACHED_MARGIN;
-    ///Callback for path planner
-    void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
     /**
      * @brief Returns a yaw that is a multiple of 90 degrees 
      * @details Drone should fly as straight forward as possible
