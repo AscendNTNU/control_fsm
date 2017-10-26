@@ -74,13 +74,12 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     ///Get shared_ptr to drones pose
     auto pose_p = control::Pose::getSharedPosePtr();
     control::Point position = pose_p->getPositionXYZ();
-    setpoint_.position.x = position.x;
-    setpoint_.position.y = position.y;
 
-    //Z setpoint can be set right away
-    setpoint_.position.z = event.position_goal.z;
-    //Set yaw setpoint to desired target yaw
-    setpoint_.yaw = static_cast<float>(pose_p->getMavrosCorrectedYaw());
+    // Set setpoint
+    setpoint_.position.x = cmd_.position_goal.x;
+    setpoint_.position.y = cmd_.position_goal.y;
+    setpoint_.position.z = cmd_.position_goal.z;
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 
     //Calculate the square distance from drone to target
     double delta_x = position.x - event.position_goal.x;
@@ -141,21 +140,6 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
         
     delay_transition_.enabled = false;
-
-
-    /**********************************************************/
-    //If the destination is not reached, the loop will continue will run
-
-    // Set setpoint x and y
-    setpoint_.position.x = cmd_.position_goal.x;
-    setpoint_.position.y = cmd_.position_goal.y;
-    setpoint_.position.z = cmd_.position_goal.z;
-
-    //Only change yaw if drone needs to travel a large distance
-    if(std::pow(delta_x, 2) + std::pow(delta_y, 2) > std::pow(FSMConfig::no_yaw_correct_dist, 2)) {
-        //-PI_HALF due to mavros bug
-        setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - PI_HALF);
-    }
 }
 
 //Returns valid setpoint
