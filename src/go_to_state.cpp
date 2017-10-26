@@ -5,7 +5,6 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <cmath>
 #include <geometry_msgs/Point32.h>
-#include <ascend_msgs/PathPlannerPlan.h>
 #include "control_fsm/fsm_config.hpp"
 
 constexpr double PI = 3.14159265359;
@@ -74,8 +73,6 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event)
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     is_active_ = true;
     cmd_ = event;
-    //Current plan is invalid until new plan is recieved
-    current_plan_.valid = false;
     //Has not arrived yet
     delay_transition_.enabled = false;
 
@@ -91,7 +88,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
-    //Sets setpoint to current position - until planner is done
     ///Get shared_ptr to drones pose
     auto pose_p = control::Pose::getSharedPosePtr();
     control::Point position = pose_p->getPositionXYZ();
@@ -122,22 +118,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     {
         cmd_.sendFeedback("Planning path to target!");
     }
-    
-    //Send desired goal to path planner
-    geometry_msgs::Point32 dest_point;
-    //Only x and y is used
-    dest_point.x = static_cast<float>(event.position_goal.x);
-    dest_point.y = static_cast<float>(event.position_goal.y);
-
-    if(target_pub_.getNumSubscribers() <= 0) {
-        fsm.handleFSMError("Planner not listening for target!");
-    }
-
-    //Publish target
-    target_pub_.publish(dest_point);
-    fsm.handleFSMInfo("Sent target and position to planner, waiting for result!");
-    
-
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) 
@@ -203,17 +183,11 @@ void GoToState::loopState(ControlFSM& fsm)
     } 
     else 
     {
-        //Make sure target point is published!!
-        if(!safe_publisher_.completed) 
-        {
-            safe_publisher_.publish();
-        }
         
         //Send current position to path planner
         geometry_msgs::Point32 current_pos;
         current_pos.x = static_cast<float>(current_position.x);
         current_pos.y = static_cast<float>(current_position.y);
-        pos_pub_.publish(current_pos);
     }
 
     //Only change yaw if drone needs to travel a large distance

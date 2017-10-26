@@ -17,34 +17,14 @@ class GoToState : public StateInterface {
 private:
 
     struct {
-        bool completed = false;
-        std::function<void()> publish = [](){};
-    } safe_publisher_;
-
-    struct {
         ros::Time started;
         bool enabled = false;
         ros::Duration delayTime;
     } delay_transition_;
 
     EventData cmd_;
-    ///Publisher for the current position - will start the path planner
-    ros::Publisher pos_pub_;
-    ///Publisher for the desired target
-    ros::Publisher target_pub_;
-    ///Publisher for obstacles
-    ros::Publisher obs_pub_;
-    ///Subscriber for path plan
-    ros::Subscriber plan_sub_;
     ///Is state active flag
     bool is_active_ = false;
-
-    ///Contains the latest flight path recieved
-    struct {
-        ascend_msgs::PathPlannerPlan plan;
-        bool valid = false;
-        int index = 0;
-    } current_plan_;
 
     ///Margin used to determine if we have arrived at our destination or not
     double dest_reached_margin_ = DEFAULT_DEST_REACHED_MARGIN;
