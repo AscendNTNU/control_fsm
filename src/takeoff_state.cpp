@@ -8,7 +8,8 @@
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();
-    setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
+    //Ignoring PX and PY, takeoff without XY feedback
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
     setpoint_.position.z = DEFAULT_TAKEOFF_ALTITUDE;
 }
 
@@ -57,9 +58,6 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::IDLE_STATE, this, abort_event);
         return;
     }
-    //Set takeoff setpoint to current XY position
-    setpoint_.position.x = current_position.x;
-    setpoint_.position.y = current_position.y;
     //Set yaw setpoint based on current rotation
     setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
 }
