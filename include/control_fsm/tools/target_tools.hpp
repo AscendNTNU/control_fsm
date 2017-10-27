@@ -3,7 +3,8 @@
 
 namespace control {
 
-/** Returns closest multiplum of 90 degrees to input yaw
+/** 
+ * Returns closest multiplum of 90 degrees to input yaw
  * Also corrects for mavros yaw bug
 */
 double getMavrosCorrectedTargetYaw(double current);
