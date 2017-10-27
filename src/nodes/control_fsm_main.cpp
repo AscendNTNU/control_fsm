@@ -6,6 +6,7 @@
 #include <ascend_msgs/ControlFSMEvent.h>
 #include <std_msgs/String.h>
 #include "control_fsm/debug_server.hpp"
+#include "control_fsm/obstacle_avoidance.hpp"
 
 
 //How often is setpoints published to flightcontroller?
@@ -28,6 +29,9 @@ int main(int argc, char** argv) {
 
     //Statemachine instance
     ControlFSM fsm;
+
+    //Obstacle avoidance instance
+    auto obstacle_avoidance_p = control::ObstacleAvoidance::getSharedInstancePtr();
 
     //Set up neccesary publishers
     ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
@@ -68,9 +72,10 @@ int main(int argc, char** argv) {
     });
 
 
+
     //Wait for all systems to initalize and position to become valid
     fsm.handleFSMInfo("Waiting for necessary data streams!");
-    while(ros::ok() && !fsm.isReady()) {
+    while(ros::ok() && !fsm.isReady() && !obstacle_avoidance_p->isReady()) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
@@ -87,13 +92,18 @@ int main(int argc, char** argv) {
     ros::Rate loopRate(SETPOINT_PUB_RATE);
     //Main loop
     while(ros::ok()) {
-        //Get latest messages
         ros::spinOnce(); //Handle all incoming messages - generates fsm events
+        
         fsm.loopCurrentState(); //Run current FSM state loop
 
-        //Publish setpoints at gived rate
-        const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
-        setpointPub.publish(*pSetpoint);
+        //Get setpoint from current state
+        const mavros_msgs::PositionTarget* state_setpoint_p_ = fsm.getSetpoint();
+        
+        //Run obstacle avoidance on setpoint and get modified (if neccesary)
+        mavros_msgs::PositionTarget drone_setpoint = obstacle_avoidance_p->run(*state_setpoint_p_);
+        
+        //Publish finished setpoint
+        setpointPub.publish(drone_setpoint);
 
         //Sleep for remaining time
         loopRate.sleep();
