@@ -1,6 +1,7 @@
 #include "control_fsm/blind_hover_state.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/control_fsm.hpp"
 #include "control_fsm/event_data.hpp"
 #include "control_fsm/fsm_config.hpp"
@@ -65,7 +66,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     }
 
     setpoint_.position.z = FSMConfig::blind_hover_alt;
-    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getMavrosCorrectedYaw());
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
