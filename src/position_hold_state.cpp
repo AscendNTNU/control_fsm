@@ -80,7 +80,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         setpoint_.position.z = position.z;
     }
 
-    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getMavrosCorrectedYaw());
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
