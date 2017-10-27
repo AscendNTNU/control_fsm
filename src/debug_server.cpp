@@ -78,16 +78,13 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
                 case REQ::END: return RequestType::END;
                 case REQ::PREFLIGHT: return RequestType::PREFLIGHT;
                 case REQ::IDLE: return RequestType::IDLE;
-                case REQ::SHUTDOWN: return RequestType::SHUTDOWN;
                 case REQ::TAKEOFF: return RequestType::TAKEOFF;
                 case REQ::BLINDHOVER: return RequestType::BLINDHOVER;
                 case REQ::POSHOLD: return RequestType::POSHOLD;
                 case REQ::GOTO: return RequestType::GOTO;
                 case REQ::LAND: return RequestType::LAND;
-                case REQ::BLINDLAND: return RequestType::BLINDLAND;
                 //case REQ::TRACKGB: return RequestType::TRACKGB;
                 //case REQ::INTERGB: return RequestType::INTERGB;
-                case REQ::ESTIMATORADJ: return RequestType::ESTIMATORADJ;
                 case REQ::MANUALFLIGHT: return RequestType::MANUALFLIGHT;
                 default: return RequestType::NONE;
             }
