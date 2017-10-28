@@ -6,6 +6,7 @@
 #include <cmath>
 #include <geometry_msgs/Point32.h>
 #include "control_fsm/fsm_config.hpp"
+#include "control_fsm/tools/target_tools.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
