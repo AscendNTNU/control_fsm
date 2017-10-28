@@ -8,7 +8,7 @@
 #include "control_fsm/fsm_config.hpp"
 
 constexpr double PI = 3.14159265359;
-constexpr double PI_HALF = 1.57079632679;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
 
 
@@ -120,8 +120,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Destination reached, no need to excecute the rest of the function
         delay_transition_.enabled = false;
         return;
-    }
-        
+    }   
     delay_transition_.enabled = false;
 }
 

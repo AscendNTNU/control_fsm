@@ -9,15 +9,15 @@ BeginState::BeginState() {
 
 //Begin state only waits for preflight request
 void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        event.eventError("CMD rejected!");
-        fsm.handleFSMWarn("Drone is not yet active - commands ignored");
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::PREFLIGHT) {
             fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
         } else {
             fsm.handleFSMWarn("Invalid transiton request!");
         }
+    } else if(event.isValidCMD()) {
+        event.eventError("CMD rejected!");
+        fsm.handleFSMWarn("Drone is not yet active - commands ignored");
     } else {
         fsm.handleFSMDebug("Event ignored");
     }

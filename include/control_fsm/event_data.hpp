@@ -14,16 +14,13 @@ enum class RequestType {
     END,
     PREFLIGHT,//newcomment
     IDLE, 
-    SHUTDOWN, 
     TAKEOFF, 
     BLINDHOVER, 
     POSHOLD, 
     GOTO, //GOTO XYZ
     LAND, 
-    BLINDLAND, 
     TRACKGB, //Track/follow ground robot
     INTERGB, //Interact with ground robot (tap)
-    ESTIMATORADJ, //Estimator adjust
     MANUALFLIGHT
 };
 

@@ -6,6 +6,7 @@
 #include "control_fsm/fsm_config.hpp"
 #include <ascend_msgs/PointArray.h>
 #include <ros/ros.h>
+#include <control_fsm/tools/target_tools.hpp>
 
 
 //Constructor sets default setpoint type mask
@@ -16,10 +17,7 @@ PositionHoldState::PositionHoldState() {
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     is_active_ = true;
-    if(event.isValidCMD()) {
-        //All valid command needs to go via the GOTO state
-        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         switch(event.request) {
             case RequestType::GOTO:
                 fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
@@ -27,21 +25,17 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
             case RequestType::LAND:
                 fsm.transitionTo(ControlFSM::LAND_STATE, this, event);
                 break;
-            case RequestType::BLINDLAND:
-                fsm.transitionTo(ControlFSM::BLIND_LAND_STATE, this, event);
-                break;
-
             /*case RequestType::TRACKGB:
                 fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, event);
                 break;
             */
-             case RequestType::ESTIMATORADJ:
-                fsm.transitionTo(ControlFSM::ESTIMATE_ADJUST_STATE, this, event);
-                break;
             default:
                 fsm.handleFSMWarn("Transition not allowed");
                 break;
         }
+    } else if(event.isValidCMD()) {
+        //All valid command needs to go via the GOTO state
+        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
     }
 }
 
@@ -79,7 +73,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         setpoint_.position.z = position.z;
     }
 
-    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
