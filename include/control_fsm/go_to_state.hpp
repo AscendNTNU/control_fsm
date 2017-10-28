@@ -8,7 +8,6 @@
 
 #define DEFAULT_DEST_REACHED_MARGIN 0.3
 #define DEFAULT_SETPOINT_REACHED_MARGIN 0.3
-#define DEFAULT_DEST_REACHED_DELAY 0.5
 #define DEFAULT_YAW_REACHED_MARGIN 0.02
 
 ///Moves drone to XYZ 
@@ -18,39 +17,39 @@ private:
     struct {
         bool completed = false;
         std::function<void()> publish = [](){};
-    } safePublisher_;
+    } safe_publisher_;
 
     struct {
         ros::Time started;
         bool enabled = false;
         ros::Duration delayTime;
-    } delayTransition_;
+    } delay_transition_;
 
     EventData cmd_;
     ///Publisher for the current position - will start the path planner
-    ros::Publisher posPub_;
+    ros::Publisher pos_pub_;
     ///Publisher for the desired target
-    ros::Publisher targetPub_;
+    ros::Publisher target_pub_;
     ///Publisher for obstacles
-    ros::Publisher obsPub_;
+    ros::Publisher obs_pub_;
     ///Subscriber for path plan
-    ros::Subscriber planSub_;
+    ros::Subscriber plan_sub_;
     ///Is state active flag
-    bool isActive_ = false;
+    bool is_active_ = false;
 
     ///Contains the latest flight path recieved
     struct {
         ascend_msgs::PathPlannerPlan plan;
         bool valid = false;
         int index = 0;
-    } currentPlan_;
+    } current_plan_;
 
     ///Margin used to determine if we have arrived at our destination or not
-    float destReachedMargin_ = DEFAULT_DEST_REACHED_MARGIN;
+    double dest_reached_margin_ = DEFAULT_DEST_REACHED_MARGIN;
     ///Margin used to determine if we are close enough to a setpoint to switch
-    float setpointReachedMargin_ = DEFAULT_SETPOINT_REACHED_MARGIN;
+    double setpoint_reached_margin_ = DEFAULT_SETPOINT_REACHED_MARGIN;
     ///Margin used to determine if we are close enough to target yaw
-    float yawReachedMargin_ = DEFAULT_YAW_REACHED_MARGIN;
+    double yaw_reached_margin_ = DEFAULT_YAW_REACHED_MARGIN;
     ///Callback for path planner
     void pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg);
     /**
@@ -65,16 +64,15 @@ private:
      */
     double calculatePathYaw(double dx, double dy);
 public:
-     GoToState();
-     void stateInit(ControlFSM& fsm) override;
-     void handleEvent(ControlFSM& fsm, const EventData& event) override;
-     void stateBegin(ControlFSM& fsm, const EventData& event) override;
-     void loopState(ControlFSM& fsm) override;
-     void stateEnd(ControlFSM& fsm, const EventData& event) override;
-     std::string getStateName() const { return "GoTo";}
-     const mavros_msgs::PositionTarget* getSetpoint();
-     bool stateIsReady(ControlFSM &fsm) override;
-
+    GoToState();
+    void stateInit(ControlFSM& fsm) override;
+    void handleEvent(ControlFSM& fsm, const EventData& event) override;
+    void stateBegin(ControlFSM& fsm, const EventData& event) override;
+    void loopState(ControlFSM& fsm) override;
+    void stateEnd(ControlFSM& fsm, const EventData& event) override;
+    std::string getStateName() const { return "GoTo";}
+    const mavros_msgs::PositionTarget* getSetpoint();
+    bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;
 };
 

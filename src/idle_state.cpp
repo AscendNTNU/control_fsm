@@ -12,15 +12,15 @@ IdleState::IdleState() {
 
 void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //All commands needs to get to position hold first
-    if(event.isValidCMD()) {
-        fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::TAKEOFF) {
-            fsm.transitionTo(ControlFSM::TAKEOFFSTATE, this, event);
+            fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, event);
         } else {
             fsm.handleFSMWarn("Invalid transition request");
         }
-    } else {
+    } else if(event.isValidCMD()) {
+        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, event);
+    } else  {
         fsm.handleFSMInfo("Event ignored");
     }
 }
@@ -32,6 +32,6 @@ const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
 }
 
 void IdleState::handleManual(ControlFSM &fsm) {
-    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    RequestEvent manual_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }

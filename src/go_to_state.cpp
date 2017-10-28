@@ -9,7 +9,7 @@
 #include "control_fsm/fsm_config.hpp"
 
 constexpr double PI = 3.14159265359;
-constexpr double PI_HALF = 1.57079632679;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
 
 GoToState::GoToState() : StateInterface::StateInterface() {
@@ -23,18 +23,18 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 cmd_.eventError("ABORT");
                 cmd_ = EventData();
             }
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         } else if(event.request == RequestType::POSHOLD) {
             if(cmd_.isValidCMD()) {
                 fsm.handleFSMWarn("ABORT CMD before sending manual request!");
             } else {
-                fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             }
         } else if(event.request == RequestType::GOTO) {
             if(cmd_.isValidCMD()) {
                 fsm.handleFSMWarn("ABORT CMD before sending manual request!");
             } else {
-                fsm.transitionTo(ControlFSM::GOTOSTATE, this, event);
+                fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
             }
         } else {
             fsm.handleFSMWarn("Illegal transiton request");
@@ -43,46 +43,48 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
         } else {
-            fsm.transitionTo(ControlFSM::GOTOSTATE, this, event); //Transition to itself
+            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event); //Transition to itself
         }
     }
 }
 
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    isActive_ = true;
+    is_active_ = true;
     cmd_ = event;
     //Current plan is invalid until new plan is recieved
-    currentPlan_.valid = false;
+    current_plan_.valid = false;
     //Has not arrived yet
-    delayTransition_.enabled = false;
+    delay_transition_.enabled = false;
 
-    if(!event.positionGoal.valid) {
+    if(!event.position_goal.valid) {
         if(cmd_.isValidCMD()) {
             event.eventError("No valid position target");
             cmd_ = EventData();
         }
-        RequestEvent nEvent(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, nEvent);
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
 
     //Sets setpoint to current position - until planner is done
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-    setpoint_.position.x = pPose->pose.position.x;
-    setpoint_.position.y = pPose->pose.position.y;
+    ///Get shared_ptr to drones pose
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point position = pose_p->getPositionXYZ();
+    setpoint_.position.x = position.x;
+    setpoint_.position.y = position.y;
 
     //Z setpoint can be set right away
-    setpoint_.position.z = event.positionGoal.z;
+    setpoint_.position.z = event.position_goal.z;
     //Set yaw setpoint to desired target yaw
-    setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
+    setpoint_.yaw = static_cast<float>(pose_p->getMavrosCorrectedYaw());
 
     //Calculate the square distance from drone to target
-    double deltaX = pPose->pose.position.x - event.positionGoal.x;
-    double deltaY = pPose->pose.position.y - event.positionGoal.y;
-    double posXYDistSquare = std::pow(deltaX, 2) + std::pow(deltaY, 2);
+    double delta_x = position.x - event.position_goal.x;
+    double delta_y = position.y - event.position_goal.y;
+    double pos_xy_dist_square = std::pow(delta_x, 2) + std::pow(delta_y, 2);
 
     //If only altitude is different, no need for pathplanner
-    if(posXYDistSquare <= std::pow(destReachedMargin_, 2)) {
+    if(pos_xy_dist_square <= std::pow(dest_reached_margin_, 2)) {
         if(cmd_.isValidCMD()) {
             cmd_.sendFeedback("Already at correct X and Y - no need for pathplan");
         }
@@ -92,149 +94,151 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_.sendFeedback("Planning path to target!");
     }
     //Send desired goal to path planner
-    geometry_msgs::Point32 destPoint;
+    geometry_msgs::Point32 dest_point;
     //Only x and y is used
-    destPoint.x = static_cast<float>(event.positionGoal.x);
-    destPoint.y = static_cast<float>(event.positionGoal.y);
+    dest_point.x = static_cast<float>(event.position_goal.x);
+    dest_point.y = static_cast<float>(event.position_goal.y);
 
-    if(targetPub_.getNumSubscribers() <= 0) {
+    if(target_pub_.getNumSubscribers() <= 0) {
         fsm.handleFSMError("Planner not listening for target!");
     }
 
     //Publish target
-    targetPub_.publish(destPoint);
+    target_pub_.publish(dest_point);
     fsm.handleFSMInfo("Sent target and position to planner, waiting for result!");
     
 
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    isActive_ = false;
+    is_active_ = false;
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
     //Get position
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-    //Should never occur, but just in case
-    if(pPose == nullptr) {
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point current_position = pose_p->getPositionXYZ();
+    //Check that position data is valid
+    if(!pose_p->isPoseValid()) {
         EventData event;
-        event.eventType = EventType::POSLOST;
+        event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position");
             cmd_ = EventData();
         }
-        fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         return;
     }
 
     //Check if destination is reached!
-    double deltaX = pPose->pose.position.x - cmd_.positionGoal.x;
-    double deltaY = pPose->pose.position.y - cmd_.positionGoal.y;
-    double deltaZ = pPose->pose.position.z - cmd_.positionGoal.z;
-    bool xyWithinReach = (std::pow(deltaX, 2) + std::pow(deltaY, 2)) <= std::pow(destReachedMargin_, 2);
-    bool zWithinReach = (std::fabs(deltaZ) <= FSMConfig::AltitudeReachedMargin);
-    bool yawWithinReach = (std::fabs(fsm.getMavrosCorrectedYaw() - setpoint_.yaw) <= yawReachedMargin_);
+    double delta_x = current_position.x - cmd_.position_goal.x;
+    double delta_y = current_position.y - cmd_.position_goal.y;
+    double delta_z = current_position.z - cmd_.position_goal.z;
+    bool xy_within_reach = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
+    bool z_within_reach = (std::fabs(delta_z) <= FSMConfig::altitude_reached_margin);
+    bool yaw_within_reach = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
-    if(xyWithinReach && zWithinReach && yawWithinReach) {
+    if(xy_within_reach && z_within_reach && yaw_within_reach) {
         //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-        if(!delayTransition_.enabled) {
-            delayTransition_.started = ros::Time::now();
-            delayTransition_.enabled = true;
+        if(!delay_transition_.enabled) {
+            delay_transition_.started = ros::Time::now();
+            delay_transition_.enabled = true;
+
             if(cmd_.isValidCMD()) {
                 cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
             }
         }
         //Delay transition
-        if(ros::Time::now() - delayTransition_.started < delayTransition_.delayTime) {
+        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
             return;
         } 
         //Transition to correct state
         if(cmd_.isValidCMD()) {
-            switch(cmd_.commandType) {
+            switch(cmd_.command_type) {
                 case CommandType::LANDXY:
-                    fsm.transitionTo(ControlFSM::LANDSTATE, this, cmd_);
+                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                     break;
                 /*
                 case CommandType::LANDGB:
-                    fsm.transitionTo(ControlFSM::TRACKGBSTATE, this, cmd_);
+                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
                     break;
                 */
                 case CommandType::GOTOXYZ:
                     cmd_.finishCMD();
                     RequestEvent doneEvent(RequestType::POSHOLD);
-                    fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, doneEvent);
+                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, doneEvent);
                     break;
             }
         } else {
             RequestEvent posHoldEvent(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, posHoldEvent);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, posHoldEvent);
         }
-        delayTransition_.enabled = false;
+        delay_transition_.enabled = false;
         //Destination reached, no need to excecute the rest of the function
         return;
     } else {
-        delayTransition_.enabled = false;
+        delay_transition_.enabled = false;
     }
 
     /**********************************************************/
     //If the destination is not reached, the loop will continue will run
 
     //Only run pathplanner if neccesary.
-    if(xyWithinReach) {
-        setpoint_.position.x = cmd_.positionGoal.x;
-        setpoint_.position.y = cmd_.positionGoal.y;
-        setpoint_.position.z = cmd_.positionGoal.z;
+    if(xy_within_reach) {
+        setpoint_.position.x = cmd_.position_goal.x;
+        setpoint_.position.y = cmd_.position_goal.y;
+        setpoint_.position.z = cmd_.position_goal.z;
         return;
     } else {
         //Make sure target point is published!!
-        if(!safePublisher_.completed) {
-            safePublisher_.publish();
+        if(!safe_publisher_.completed) {
+            safe_publisher_.publish();
         }
         //Send current position to path planner
-        geometry_msgs::Point32 currentPos;
-        currentPos.x = static_cast<float>(pPose->pose.position.x);
-        currentPos.y = static_cast<float>(pPose->pose.position.y);
-        posPub_.publish(currentPos);
+        geometry_msgs::Point32 current_pos;
+        current_pos.x = static_cast<float>(current_position.x);
+        current_pos.y = static_cast<float>(current_position.y);
+        pos_pub_.publish(current_pos);
     }
 
     //Only continue if there is a valid plan available
-    if(!currentPlan_.valid) {
+    if(!current_plan_.valid) {
         return;
-    } else if(!(bool)currentPlan_.plan.feasibility || currentPlan_.plan.arrayOfPoints.size() <= 0) {
+    } else if(!(bool)current_plan_.plan.feasibility || current_plan_.plan.arrayOfPoints.size() <= 0) {
         //A plan is recieved, but there are no points. 
         fsm.handleFSMError("Recieved empty path plan");
-        RequestEvent abortEvent(RequestType::ABORT);
+        RequestEvent abort_event(RequestType::ABORT);
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No feasable path to target");
         }
-        fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, abortEvent);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
 
     //Get current setpoint from plan
-    auto& currentPoint = currentPlan_.plan.arrayOfPoints[currentPlan_.index]; //geometry_msgs::Point32
-    auto& xPos = pPose->pose.position.x;
-    auto& yPos = pPose->pose.position.y;
+    auto& current_point = current_plan_.plan.arrayOfPoints[current_plan_.index]; //geometry_msgs::Point32
+    auto& x_pos = current_position.x;
+    auto& y_pos = current_position.y;
     //Check if we are close enough to current setpoint
-    deltaX = xPos - currentPoint.x;
-    deltaY = yPos - currentPoint.y;
-    if(std::pow(deltaX, 2) + std::pow(deltaY, 2) <= std::pow(setpointReachedMargin_, 2)) {
+    delta_x = x_pos - current_point.x;
+    delta_y = y_pos - current_point.y;
+    if(std::pow(delta_x, 2) + std::pow(delta_y, 2) <= std::pow(setpoint_reached_margin_, 2)) {
         //If there are a new setpoint in the plan, change to it.
-        if(currentPlan_.plan.arrayOfPoints.size() > (currentPlan_.index + 1)) {
-            ++currentPlan_.index;
-            currentPoint = currentPlan_.plan.arrayOfPoints[currentPlan_.index];
-            deltaX = currentPoint.x - xPos;
-            deltaY = currentPoint.y - yPos;
+        if(current_plan_.plan.arrayOfPoints.size() > (current_plan_.index + 1)) {
+            ++current_plan_.index;
+            current_point = current_plan_.plan.arrayOfPoints[current_plan_.index];
+            delta_x = current_point.x - x_pos;
+            delta_y = current_point.y - y_pos;
             //Only change yaw if drone needs to travel a large distance
-            if(std::pow(deltaX, 2) + std::pow(deltaY, 2) > std::pow(FSMConfig::NoYawCorrectDist, 2)) {
-                //-PI_HALF due to mavros bug
-                setpoint_.yaw = static_cast<float>(calculatePathYaw(deltaX, deltaY) - PI_HALF);
+            if(std::pow(delta_x, 2) + std::pow(delta_y, 2) > std::pow(FSMConfig::no_yaw_correct_dist, 2)) {
+                //-MAVROS_YAW_CORRECTION_PI_HALF due to mavros bug
+                setpoint_.yaw = static_cast<float>(calculatePathYaw(delta_x, delta_y) - MAVROS_YAW_CORRECTION_PI_HALF);
             }
         }
     }
     //Set setpoint x and y
-    setpoint_.position.x = currentPoint.x;
-    setpoint_.position.y = currentPoint.y;
+    setpoint_.position.x = current_point.x;
+    setpoint_.position.y = current_point.y;
 }
 
 //Returns valid setpoint
@@ -246,13 +250,13 @@ const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 //New pathplan is recieved
 void GoToState::pathRecievedCB(const ascend_msgs::PathPlannerPlan::ConstPtr& msg) {
     //Ignore callback if state is not active
-    if(!isActive_) {
+    if(!is_active_) {
         return;
     }
     cmd_.sendFeedback("New path plan recieved!");
-    currentPlan_.plan = *msg;
-    currentPlan_.valid = true;
-    currentPlan_.index = 0;
+    current_plan_.plan = *msg;
+    current_plan_.valid = true;
+    current_plan_.index = 0;
 }
 
 //Initialize state
@@ -260,16 +264,17 @@ void GoToState::stateInit(ControlFSM& fsm) {
 
     //TODO Uneccesary variables - FSMConfig can be used directly
     //Set state variables
-    delayTransition_.delayTime = ros::Duration(FSMConfig::GoToHoldDestTime);
-    destReachedMargin_ = (float) FSMConfig::DestReachedMargin;
-    setpointReachedMargin_ = (float) FSMConfig::SetpointReachedMargin;
-    yawReachedMargin_ = (float) FSMConfig::YawReachedMargin;
+    delay_transition_.delayTime = ros::Duration(FSMConfig::go_to_hold_dest_time);
+    dest_reached_margin_ = FSMConfig::dest_reached_margin;
+    setpoint_reached_margin_ = FSMConfig::setpoint_reached_margin;
+    yaw_reached_margin_ = FSMConfig::yaw_reached_margin;
 
     //Set all neccesary publishers and subscribers
-    posPub_ = fsm.nodeHandler_.advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerPosTopic, 1);
-    obsPub_ = fsm.nodeHandler_.advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::PathPlannerObsTopic, 1);
-    targetPub_ = fsm.nodeHandler_.advertise<geometry_msgs::Point32>(FSMConfig::PathPlannerTargetTopic , 1);
-    planSub_ = fsm.nodeHandler_.subscribe(FSMConfig::PathPlannerPlanTopic, 1, &GoToState::pathRecievedCB, this);
+    pos_pub_ = fsm.node_handler_.advertise<geometry_msgs::Point32>(FSMConfig::path_planner_pos_topic, 1);
+    obs_pub_ = fsm.node_handler_.advertise<ascend_msgs::PathPlannerPlan>(FSMConfig::path_planner_obs_topic, 1);
+    target_pub_ = fsm.node_handler_.advertise<geometry_msgs::Point32>(FSMConfig::path_planner_target_topic , 1);
+    plan_sub_ = fsm.node_handler_.subscribe(FSMConfig::path_planner_plan_topic, 1, &GoToState::pathRecievedCB, this);
+    fsm.handleFSMInfo("GoTo init completed!");
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
@@ -305,21 +310,21 @@ double GoToState::calculatePathYaw(double dx, double dy) {
 bool GoToState::stateIsReady(ControlFSM &fsm) {
     //TODO set up obstacles stream for planner
     //Skipping check is allowed for debugging
-    if(!FSMConfig::RequireAllDataStreams) return true;
+    if(!FSMConfig::require_all_data_streams) return true;
     //Makes sure path planner is listening for input
-    if(planSub_.getNumPublishers() <= 0) {
+    if(plan_sub_.getNumPublishers() <= 0) {
         fsm.handleFSMWarn("No path planner publisher");
         return false;    
     } 
-    if(targetPub_.getNumSubscribers() <= 0) {
+    if(target_pub_.getNumSubscribers() <= 0) {
         fsm.handleFSMWarn("No path planner subscriber");
         return false;
     }
-    if(posPub_.getNumSubscribers() <= 0) {
+    if(pos_pub_.getNumSubscribers() <= 0) {
         fsm.handleFSMWarn("No path planner subscriber");
         return false;
     }
-    if(obsPub_.getNumSubscribers() <= 0) {
+    if(obs_pub_.getNumSubscribers() <= 0) {
         fsm.handleFSMWarn("No path planner subscriber");
         return false;
     }
@@ -329,8 +334,8 @@ bool GoToState::stateIsReady(ControlFSM &fsm) {
 void GoToState::handleManual(ControlFSM &fsm) {
     cmd_.eventError("Lost OFFBOARD");
     cmd_ = EventData();
-    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    RequestEvent manual_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
 
 

@@ -1,6 +1,7 @@
 #include "control_fsm/blind_hover_state.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/control_fsm.hpp"
 #include "control_fsm/event_data.hpp"
 #include "control_fsm/fsm_config.hpp"
@@ -36,19 +37,28 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             fsm.handleFSMWarn("Invalid transition request");
         }
-    } else {
+    } else if(event.isValidCMD()) {
+        if(!cmd_.isValidCMD()) {
+            cmd_ = event; //Hold event until position is regained.
+        } else {
+            event.eventError("CMD rejected!");
+            fsm.handleFSMWarn("ABORT old command first");
+        }
+    } else  {
         fsm.handleFSMInfo("Event ignored!");
     }
 }
 
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
+    ///Get shared_ptr to drones pose
+    auto pose_p = control::Pose::getSharedPosePtr();
     //If full position is valid - no need to blind hover
-    if(fsm.getPositionXYZ() != nullptr) {
+    if(pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event); //Pass command on to next state
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
         } else {
-            RequestEvent rEvent(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, rEvent);
+            RequestEvent req_event(RequestType::POSHOLD);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
         }
         return;
     }
@@ -56,19 +66,21 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
         cmd_ = event;
     }
 
-    setpoint_.position.z = FSMConfig::BlindHoverAlt;
-    setpoint_.yaw = fsm.getMavrosCorrectedYaw();
+    setpoint_.position.z = FSMConfig::blind_hover_alt;
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
+    ///Get shared_ptr to drones pose
+    auto pose_p = control::Pose::getSharedPosePtr();
     //Transition to position hold when position is valid.
-    if(fsm.getPositionXYZ() != nullptr) {
+    if(pose_p->isPoseValid()) {
         if(cmd_.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, cmd_);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
             cmd_ = EventData(); //Reset cmd_
         } else {
             RequestEvent event(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         }
     }
 }
@@ -84,6 +96,6 @@ void BlindHoverState::handleManual(ControlFSM &fsm) {
         cmd_.eventError("Lost OFFBOARD");
         cmd_ = EventData();
     }
-    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    RequestEvent manual_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }

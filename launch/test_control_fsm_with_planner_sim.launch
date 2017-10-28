@@ -14,7 +14,7 @@
         <arg name="topic_planner_target" value="$(arg topic_planner_target)"/>
         <arg name="topic_robot_position" value="$(arg topic_robot_position)" />
         <arg name="topic_planner_obstacles" value="$(arg topic_obstacles)" />
-        <arg name="require_all_streams" value="true"/>
+        <arg name="require_all_streams" value="false"/>
         <arg name="require_obs_detection" value="false"/>
     </include>
 

@@ -7,19 +7,19 @@ PreFlightState::PreFlightState() {
 }
 //Only check for an abort event
 void PreFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        event.eventError("CMD rejected!");
-        fsm.handleFSMWarn("Drone is not yet active - commands ignored");
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT) {
             fsm.handleFSMWarn("Can't abort preflight!");
         } else if(event.request == RequestType::MANUALFLIGHT) {
-            fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, event);
+            fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, event);
         } else {
             fsm.handleFSMWarn("Invalid transition request");
         }
-    } else if(event.eventType == EventType::AUTONOMOUS) {
-        fsm.transitionTo(ControlFSM::IDLESTATE, this, event); //Transition to IDLE when armed and ready
+    } else if(event.isValidCMD()) {
+        event.eventError("CMD rejected!");
+        fsm.handleFSMWarn("Drone is not yet active - commands ignored");
+    } else if(event.event_type == EventType::AUTONOMOUS) {
+        fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE when armed and ready
     } else {
         fsm.handleFSMInfo("Event ignored");
     }

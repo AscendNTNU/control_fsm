@@ -6,59 +6,59 @@
 class FSMConfig {
 public:
     ///Are we close enough to the target?
-    static double DestReachedMargin;
+    static double dest_reached_margin;
     ///Default hover altitude in case of blind hover
-    static double BlindHoverAlt;
+    static double blind_hover_alt;
     ///Takeoff altitude
-    static double TakeoffAltitude;
+    static double takeoff_altitude;
     ///Are we close enough to target altitude
-    static double AltitudeReachedMargin;
+    static double altitude_reached_margin;
     ///Are we close enough to setpoint
-    static double SetpointReachedMargin;
+    static double setpoint_reached_margin;
     ///Is yaw close enough?
-    static double YawReachedMargin;
+    static double yaw_reached_margin;
     ///Topic to recieve path plan
-    static std::string PathPlannerPlanTopic;
+    static std::string path_planner_plan_topic;
     ///Topic to send drone position
-    static std::string PathPlannerPosTopic;
+    static std::string path_planner_pos_topic;
     ///Topic to send path target
-    static std::string PathPlannerTargetTopic;
+    static std::string path_planner_target_topic;
     ///Topic to send obstacles to planner
-    static std::string PathPlannerObsTopic;
+    static std::string path_planner_obs_topic;
     ///Topic to publish FSM error msg
-    static std::string FSMErrorTopic;
+    static std::string fsm_error_topic;
     ///Topic to publish FSM warn msg
-    static std::string FSMWarnTopic;
+    static std::string fsm_warn_topic;
     ///Topic to publish FSM info msg
-    static std::string FSMInfoTopic;
+    static std::string fsm_info_topic;
     ///Topic to publish FSM state changed
-    static std::string FSMStateChangedTopic;
+    static std::string fsm_state_changed_topic;
     ///Topic for recieving local position from FC
-    static std::string MavrosLocalPosTopic;
+    static std::string mavros_local_pos_topic;
     ///Topic for recieving current state from FC
-    static std::string MavrosStateChangedTopic;
+    static std::string mavros_state_changed_topic;
     ///Topic for recieving current state from land detector
-    static std::string LandDetectorTopic;
+    static std::string land_detector_topic;
     ///Buffer size used for FSMError, FSMWarn etc
-    static int FSMStatusBufferSize;
+    static int fsm_status_buffer_size;
     ///Time gotostate waits before transitioning
-    static double GoToHoldDestTime;
+    static double go_to_hold_dest_time;
     ///Distance used to determine if goto yaw should be calculated
-    static double NoYawCorrectDist;
+    static double no_yaw_correct_dist;
     ///Altitude where the drone is safe from all obstacles
-    static double SafeHoverAltitude;
+    static double safe_hover_altitude;
     ///Drone safezone
-    static double ObstacleTooCloseDist;
+    static double obstacle_too_close_dist;
     ///Topic to listen for info about obstacles
-    static std::string LidarTopic;
+    static std::string lidar_topic;
     ///Load paramaters
     static void loadParams();
     ///Finished drone will require all datastreams to be available
-    static bool RequireAllDataStreams;
+    static bool require_all_data_streams;
     ///Makes it possible to disable the use of obstacle detection features
-    static bool RequireObstacleDetection;
+    static bool require_obstacle_detection;
     ///When is data considered old?
-    static double ValidDataTimeout;
+    static double valid_data_timeout;
 };
 
 #endif

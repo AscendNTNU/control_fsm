@@ -49,7 +49,7 @@ struct PositionGoalXYZ {
     double x;
     double y;
     double z;
-    PositionGoalXYZ(double posX, double posY, double posZ) : x(posX), y(posY), z(posZ), valid(true) {}
+    PositionGoalXYZ(double pos_x, double pos_y, double pos_z) : x(pos_x), y(pos_y), z(pos_z), valid(true) {}
     PositionGoalXYZ() : valid(false) {}
 };
 
@@ -59,38 +59,38 @@ class EventData;
 class EventData {
 private:
     ///Callback function when a CMD is completed
-    std::function<void()> onComplete_ = []() {}; //Does nothing by default
+    std::function<void()> on_complete_ = []() {}; //Does nothing by default
     ///Callback function when a CMD fails.
-    std::function<void(std::string)> onError_ = [](std::string) {}; //Does nothing by default
+    std::function<void(std::string)> on_error_ = [](std::string) {}; //Does nothing by default
     //Callback function for sendig feedback during cmd execution
-    std::function<void(std::string)> onFeedback_ = [](std::string){};
+    std::function<void(std::string)> on_feedback_ = [](std::string){};
 public:
 
     ///If event is a request - what type?
     RequestType request = RequestType::NONE; //No request as default
     ///What type of event is it?
-    EventType eventType = EventType::NONE; //No event as default
+    EventType event_type = EventType::NONE; //No event as default
     ///Whats the target (if needed by event)
-    PositionGoalXYZ positionGoal = PositionGoalXYZ(); //Invalid position as default
+    PositionGoalXYZ position_goal = PositionGoalXYZ(); //Invalid position as default
     ///If event is a command, what type?
-    CommandType commandType = CommandType::NONE; //No command as default
+    CommandType command_type = CommandType::NONE; //No command as default
 
     ///Setter function for complete callback
-    void setOnCompleteCallback(std::function<void()> callback) { onComplete_ = callback; }
+    void setOnCompleteCallback(std::function<void()> callback) { on_complete_ = callback; }
     ///Setter function for error callback
-    void setOnErrorCallback(std::function<void(std::string)> callback) { onError_ = callback; }
+    void setOnErrorCallback(std::function<void(std::string)> callback) { on_error_ = callback; }
     ///Setter function for feedback callback
-    void setOnFeedbackCallback(std::function<void(std::string)> callback) {onFeedback_ = callback; }
+    void setOnFeedbackCallback(std::function<void(std::string)> callback) {on_feedback_ = callback; }
     ///Finishes a CMD (calls the _onComplete callback)
-    void finishCMD() const { onComplete_(); }
+    void finishCMD() const { on_complete_(); }
     ///CMD error (calls _onError callback)
-    void eventError(std::string errorMsg) const { onError_(errorMsg); }
+    void eventError(std::string error_msg) const { on_error_(error_msg); }
     ///Sends CMD feedback via _onFeedback callback
-    void sendFeedback(std::string msg) const { onFeedback_(msg); }
+    void sendFeedback(std::string msg) const { on_feedback_(msg); }
     ///Checks if this event is a valid cmd type
-    bool isValidCMD() const { return (eventType == EventType::COMMAND && commandType != CommandType::NONE); }
+    bool isValidCMD() const { return (event_type == EventType::COMMAND && command_type != CommandType::NONE); }
     ///Checks if this event is a valid request type
-    bool isValidRequest() const { return (eventType == EventType::REQUEST && request != RequestType::NONE); }
+    bool isValidRequest() const { return (event_type == EventType::REQUEST && request != RequestType::NONE); }
 };
 
 
@@ -98,12 +98,12 @@ public:
 class LandXYCMDEvent : public EventData {
 private:
     //Altitude to go to before landing
-    const double goToAltitude_ = 1.0f;
+    const double go_to_altitude_ = 1.0f;
 public:
     LandXYCMDEvent(double x, double y) {
-        positionGoal = PositionGoalXYZ(x, y, goToAltitude_);
-        eventType = EventType::COMMAND;
-        commandType = CommandType::LANDXY;
+        position_goal = PositionGoalXYZ(x, y, go_to_altitude_);
+        event_type = EventType::COMMAND;
+        command_type = CommandType::LANDXY;
     }
 };
 
@@ -111,9 +111,9 @@ public:
 class GoToXYZCMDEvent : public EventData {
 public:
     GoToXYZCMDEvent(double x, double y, double z) {
-        positionGoal = PositionGoalXYZ(x,y,z);
-        eventType = EventType::COMMAND;
-        commandType = CommandType::GOTOXYZ;
+        position_goal = PositionGoalXYZ(x,y,z);
+        event_type = EventType::COMMAND;
+        command_type = CommandType::GOTOXYZ;
     }
 };
 
@@ -127,7 +127,7 @@ public:
 class RequestEvent : public EventData {
 public:
     RequestEvent(RequestType r) {
-        eventType = EventType::REQUEST;
+        event_type = EventType::REQUEST;
         request = r;
     }
 };

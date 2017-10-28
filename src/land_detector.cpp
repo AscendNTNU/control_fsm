@@ -11,22 +11,22 @@ LandDetector::LandDetector(std::string topic) : topic_(topic) {
 }
 
 void LandDetector::landCB(const ascend_msgs::BoolStamped &msg) {
-    lastMsg_ = msg;
+    last_msg_ = msg;
 }
 
 bool LandDetector::isOnGround() {
-    if(ros::Time::now() - lastMsg_.header.stamp > ros::Duration(FSMConfig::ValidDataTimeout)) {
-        if(pFsm_ != nullptr) {
-            pFsm_->handleFSMError("LandDetector using old data");
+    if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(FSMConfig::valid_data_timeout)) {
+        if(fsm_p_ != nullptr) {
+            fsm_p_->handleFSMError("LandDetector using old data");
         } else {
             ROS_ERROR("LandDetector using old data!");
         }
     }
-    return lastMsg_.value;
+    return last_msg_.value;
 }
 
-LandDetector::LandDetector(std::string topic, ControlFSM* pFsm) : LandDetector(topic) {
-    pFsm_ = pFsm;
+LandDetector::LandDetector(std::string topic, ControlFSM* p_fsm) : LandDetector(topic) {
+    fsm_p_ = p_fsm;
 }
 
 bool LandDetector::isReady() {

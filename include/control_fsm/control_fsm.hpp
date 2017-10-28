@@ -22,6 +22,8 @@
 
 #include "land_detector.hpp"
 
+#include "tools/control_pose.hpp"
+
 ///Main FSM logic
 class ControlFSM {
 private:
@@ -40,19 +42,20 @@ private:
     
     //Static instances of the different states
     //Also add them to allStates_ vector in constructor
-    static BeginState BEGINSTATE;
-    static PreFlightState PREFLIGHTSTATE;
-    static IdleState IDLESTATE;
-    static TakeoffState TAKEOFFSTATE;
-    static BlindHoverState BLINDHOVERSTATE;
-    static PositionHoldState POSITIONHOLDSTATE;
-    static TrackGBState TRACKGBSTATE;
-    static InteractGBState INTERACTGBSTATE;
-    static GoToState GOTOSTATE;
-    static LandState LANDSTATE;
-    static ManualFlightState MANUALFLIGHTSTATE;
+    static BeginState BEGIN_STATE;
+    static PreFlightState PREFLIGHT_STATE;
+    static IdleState IDLE_STATE;
+    static TakeoffState TAKEOFF_STATE;
+    static BlindHoverState BLIND_HOVER_STATE;
+    static PositionHoldState POSITION_HOLD_STATE;
+    static TrackGBState TRACK_GB_STATE;
+    static InteractGBState INTERACT_GB_STATE;
+    static GoToState GO_TO_STATE;
+    static LandState LAND_STATE;
+    static ManualFlightState MANUAL_FLIGHT_STATE;
+
     ///Only one instance of ControlFSM is allowed - used to check
-    static bool isUsed;
+    static bool is_used;
 
     /**
      * @brief Holds a pointer to current running state
@@ -65,8 +68,8 @@ private:
     struct {
         friend class ControlFSM;
     private:
-        StateInterface* pCurrentState_ = nullptr; //This need to be set to a start state in constructor
-    } stateVault_;
+        StateInterface* current_state_p_ = nullptr; //This need to be set to a start state in constructor
+    } state_vault_;
 
     ///Current drone position
     struct {
@@ -75,28 +78,28 @@ private:
         friend class EstimateAdjustState;
     private:
         geometry_msgs::PoseStamped position;
-        bool isSet = false;
-        bool validXY = true; //Assumes XY is valid if not set otherwise
-    } dronePosition_;
+        bool is_set = false;
+        bool valid_xy = true; //Assumes XY is valid if not set otherwise
+    } drone_position_;
 
     ///Struct holding information about drones state
     struct {
-        bool isOffboard = false;
-        bool isArmed = false;
-        bool isPreflightCompleted = false;
-    } droneState_;
+        bool is_offboard = false;
+        bool is_armed = false;
+        bool is_preflight_completed = false;
+    } drone_state_;
 
     ///Has FSM been initiated?
-    bool statesIsReady_ = false;
+    bool states_is_ready_ = false;
 
     ///Callback when a transition is made
-    std::function<void()> onStateChanged_ = [](){};
+    std::function<void()> on_state_changed_ = [](){};
     ///Callback when an error occurs in FSM
-    std::function<void(const std::string&)> onFSMError_ = [](const std::string& msg){};
+    std::function<void(const std::string&)> on_fsm_error_ = [](const std::string& msg){};
     ///Callback when an warning occurs in FSM
-    std::function<void(const std::string&)> onFSMWarn_ = [](const std::string& msg){};
+    std::function<void(const std::string&)> on_fsm_warn_ = [](const std::string& msg){};
     ///Callbacks when an info message occurs in FSM
-    std::function<void(const std::string&)> onFSMInfo_ = [](const std::string& msg){};
+    std::function<void(const std::string&)> on_fsm_info_ = [](const std::string& msg){};
 
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
@@ -104,17 +107,17 @@ private:
     ControlFSM& operator=(const ControlFSM&) = delete;
 
     ///Shared nodehandle for all states
-    ros::NodeHandle nodeHandler_;
+    ros::NodeHandle node_handler_;
     ///Struct holding all shared ControlFSM ros subscribers
     struct {
         friend class ControlFSM;
     private:
-        ros::Subscriber localPosSub;
-        ros::Subscriber mavrosStateChangedSub;
+        ros::Subscriber mavros_state_changed_sub;
     } subscribers_;
 
-    ///Callback for local position
-    void localPosCB(const geometry_msgs::PoseStamped& input);
+    ///Drones pose
+    std::shared_ptr<control::Pose> drone_pose_p = control::Pose::getSharedPosePtr();
+
     ///Callback for mavros state changed
     void mavrosStateChangedCB(const mavros_msgs::State& state);
 
@@ -122,7 +125,7 @@ private:
     void initStates();
 
     ///LandDetector used to check if drone is on ground or not
-    LandDetector landDetector_;
+    LandDetector land_detector_;
 
 
 
@@ -131,10 +134,10 @@ protected:
      * @brief Changes the current running state
      * @details Allows the current running state to change the current state pointer
      * @param state Which state instance to transition to0
-     * @param _pCaller Which state that requests the transition
+     * @param caller_p Which state that requests the transition
      * @param event Which event triggered the transition request
      */
-    void transitionTo(StateInterface& state, StateInterface* _pCaller, const EventData& event);
+    void transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event);
     
 public:
      
@@ -145,7 +148,7 @@ public:
     ~ControlFSM() {}
 
     ///Get pointer to the current running state
-    StateInterface* getState() { return stateVault_.pCurrentState_; }
+    StateInterface* getState() { return state_vault_.current_state_p_; }
     
     /**
      * @brief Handles incoming (external) events
@@ -158,43 +161,31 @@ public:
     void loopCurrentState(void);
     
     ///Send errormessage to user via ROS_ERROR
-    void handleFSMError(std::string errMsg);
+    void handleFSMError(std::string err_msg);
     
     ///Send info message to user via ROS_INFO
-    void handleFSMInfo(std::string infoMsg);
+    void handleFSMInfo(std::string info_msg);
     
     ///Send warning message to user via ROS_WARN
-    void handleFSMWarn(std::string warnMsg);
+    void handleFSMWarn(std::string warn_msg);
     
     ///Send debug message to user via ROS_DEBUG
-    void handleFSMDebug(std::string debugMsg);
+    void handleFSMDebug(std::string debug_msg);
     
     ///Returns setpoint from current state
     const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
 
-    ///Get current position - will return nullptr if invalid
-    const geometry_msgs::PoseStamped* getPositionXYZ();
-
-    ///Returns actual yaw based on orientation from pose
-    double getOrientationYaw();
-
-    ///Return yaw with pi_half offset correction due to bug in mavros
-    double getMavrosCorrectedYaw();
-
-    /// Get altitude (should always be correct - 1D lidar)
-    double getPositionZ();
-
     ///Sets new callback function for onStateChanged
-    void setOnStateChangedCB(std::function<void()> cb) { onStateChanged_ = cb; }
+    void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }
 
     ///Sets new callback function for onFSMError
-    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {onFSMError_ = cb; }
+    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {on_fsm_error_ = cb; }
     
     ///Sets new callback function for onFSMError
-    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {onFSMWarn_ = cb; }
+    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {on_fsm_warn_ = cb; }
     
     ///Sets new callback function for onFSMError
-    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {onFSMInfo_ = cb; }
+    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {on_fsm_info_ = cb; }
 
     ///Checks if all states are ready
     bool isReady();

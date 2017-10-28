@@ -1,10 +1,12 @@
 #include "control_fsm/land_state.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/control_fsm.hpp"
 
 LandState::LandState() {
-    setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
+    //Ignoring PX and PY - lands without XY feedback
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
     setpoint_.position.z = -1; //Shouldnt matter
 }
 
@@ -15,24 +17,11 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 cmd_.eventError("ABORT request sent. Aborting command");
                 cmd_ = EventData();
             }
-            fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, event);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             return;
         } else {
             fsm.handleFSMWarn("Illegal transition request!");
         }
-    } else if(event.eventType == EventType::GROUNDDETECTED) {
-        //Land is finished
-        if(cmd_.isValidCMD()) {
-            //Only landxy should occur!
-            if(cmd_.commandType == CommandType::LANDXY) {
-                cmd_.finishCMD();
-            } else {
-                cmd_.eventError("Wrong CMD type!");
-                fsm.handleFSMError("Invalid CMD type in land state!");
-            }
-            cmd_ = EventData();
-        }
-        fsm.transitionTo(ControlFSM::IDLESTATE, this, event);
     } else if(event.isValidCMD()) {
         if(cmd_.isValidCMD()) {
             fsm.handleFSMWarn("ABORT should be sent before new command!");
@@ -49,28 +38,30 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Landing!");
     }
-    const geometry_msgs::PoseStamped* pPose = fsm.getPositionXYZ();
-    if(pPose != nullptr) {
-        setpoint_.position.x = pPose->pose.position.x;
-        setpoint_.position.y = pPose->pose.position.y;
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point current_position = pose_p->getPositionXYZ();
+    if(pose_p != nullptr) {
+        //Position XY is ignored in typemask, but the values are set as a precaution.
+        setpoint_.position.x = current_position.x;
+        setpoint_.position.y = current_position.y;
         //Set yaw setpoint based on current rotation
-        setpoint_.yaw = (float) fsm.getMavrosCorrectedYaw();
+        setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
     } else {
         //Should never occur
-        RequestEvent abortEvent(RequestType::ABORT);
+        RequestEvent abort_event(RequestType::ABORT);
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No valid position");
             cmd_ = EventData();
         }
-        fsm.transitionTo(ControlFSM::POSITIONHOLDSTATE, this, abortEvent);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 }
 
 void LandState::loopState(ControlFSM& fsm) {
-    if(fsm.landDetector_.isOnGround()) {
+    if(fsm.land_detector_.isOnGround()) {
         if(cmd_.isValidCMD()) {
             //Only landxy should occur!
-            if(cmd_.commandType == CommandType::LANDXY) {
+            if(cmd_.command_type == CommandType::LANDXY) {
                 cmd_.finishCMD();
             } else {
                 cmd_.eventError("Wrong CMD type!");
@@ -78,8 +69,8 @@ void LandState::loopState(ControlFSM& fsm) {
             }
             cmd_ = EventData();
         }
-        RequestEvent idleRequest(RequestType::IDLE);
-        fsm.transitionTo(ControlFSM::IDLESTATE, this, idleRequest);
+        RequestEvent idle_request(RequestType::IDLE);
+        fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
     }
 }
 
@@ -93,6 +84,6 @@ void LandState::handleManual(ControlFSM &fsm) {
         cmd_.eventError("Lost OFFBOARD!");
         cmd_ = EventData();
     }
-    RequestEvent manualEvent(RequestType::MANUALFLIGHT);
-    fsm.transitionTo(ControlFSM::MANUALFLIGHTSTATE, this, manualEvent);
+    RequestEvent manual_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
