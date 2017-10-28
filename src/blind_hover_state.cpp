@@ -18,14 +18,7 @@ BlindHoverState::BlindHoverState() {
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        if(!cmd_.isValidCMD()) {
-            cmd_ = event; //Hold event until position is regained.
-        } else {
-            event.eventError("CMD rejected!");
-            fsm.handleFSMWarn("ABORT old command first");
-        }
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT){
             if(cmd_.isValidCMD()) {
                 fsm.handleFSMInfo("Aborting CMD");
