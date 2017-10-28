@@ -15,13 +15,10 @@ IdleState ControlFSM::IDLE_STATE;
 TakeoffState ControlFSM::TAKEOFF_STATE;
 BlindHoverState ControlFSM::BLIND_HOVER_STATE;
 PositionHoldState ControlFSM::POSITION_HOLD_STATE;
-ShutdownState ControlFSM::SHUTDOWN_STATE;
-EstimateAdjustState ControlFSM::ESTIMATE_ADJUST_STATE;
 TrackGBState ControlFSM::TRACK_GB_STATE;
 InteractGBState ControlFSM::INTERACT_GB_STATE;
 GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
-BlindLandState ControlFSM::BLIND_LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 bool ControlFSM::is_used = false;
 
