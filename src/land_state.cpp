@@ -21,19 +21,6 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             fsm.handleFSMWarn("Illegal transition request!");
         }
-    } else if(event.event_type == EventType::GROUNDDETECTED) {
-        //Land is finished
-        if(cmd_.isValidCMD()) {
-            //Only landxy should occur!
-            if(cmd_.command_type == CommandType::LANDXY) {
-                cmd_.finishCMD();
-            } else {
-                cmd_.eventError("Wrong CMD type!");
-                fsm.handleFSMError("Invalid CMD type in land state!");
-            }
-            cmd_ = EventData();
-        }
-        fsm.transitionTo(ControlFSM::IDLE_STATE, this, event);
     } else if(event.isValidCMD()) {
         if(cmd_.isValidCMD()) {
             fsm.handleFSMWarn("ABORT should be sent before new command!");
