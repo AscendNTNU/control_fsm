@@ -1,6 +1,7 @@
 #include "control_fsm/blind_hover_state.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/control_fsm.hpp"
 #include "control_fsm/event_data.hpp"
 #include "control_fsm/fsm_config.hpp"
@@ -17,21 +18,8 @@ BlindHoverState::BlindHoverState() {
 }
 
 void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        if(!cmd_.isValidCMD()) {
-            cmd_ = event; //Hold event until position is regained.
-        } else {
-            event.eventError("CMD rejected!");
-            fsm.handleFSMWarn("ABORT old command first");
-        }
-    } else if(event.isValidRequest()) {
-        if(event.request == RequestType::BLINDLAND) {
-            if(cmd_.isValidCMD()) {
-                cmd_.eventError("Manual request overriding cmd");
-                cmd_ = EventData();
-            }
-            fsm.transitionTo(ControlFSM::BLIND_LAND_STATE, this, event);
-        } else if(event.request == RequestType::ABORT){
+    if(event.isValidRequest()) {
+        if(event.request == RequestType::ABORT){
             if(cmd_.isValidCMD()) {
                 fsm.handleFSMInfo("Aborting CMD");
                 cmd_.eventError("ABORT");
@@ -42,7 +30,14 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             fsm.handleFSMWarn("Invalid transition request");
         }
-    } else {
+    } else if(event.isValidCMD()) {
+        if(!cmd_.isValidCMD()) {
+            cmd_ = event; //Hold event until position is regained.
+        } else {
+            event.eventError("CMD rejected!");
+            fsm.handleFSMWarn("ABORT old command first");
+        }
+    } else  {
         fsm.handleFSMInfo("Event ignored!");
     }
 }
@@ -65,7 +60,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     }
 
     setpoint_.position.z = FSMConfig::blind_hover_alt;
-    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {

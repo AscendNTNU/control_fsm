@@ -4,29 +4,31 @@
 #include "control_fsm/control_fsm.hpp"
 #include <cmath>
 #include <string>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/fsm_config.hpp"
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();
-    setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
+    //Ignoring PX and PY, takeoff without XY feedback
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
     setpoint_.position.z = DEFAULT_TAKEOFF_ALTITUDE;
 }
 
 void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidCMD()) {
-        if(cmd_.isValidCMD()) {
-            cmd_ = event;
-        } else {
-            event.eventError("Finish old CMD before sending new");
-            fsm.handleFSMWarn("ABORT old cmd before sending new");
-        }
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
             cmd_.eventError("Aborting command");
             cmd_ = EventData(); //Aborting commands, but will still continue takeoff
             fsm.handleFSMInfo("Command aborted, but takeoff can't be aborted");
         } else {
             fsm.handleFSMWarn("Illegal transition request");
+        }
+    } else if(event.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
+            cmd_ = event;
+        } else {
+            event.eventError("Finish old CMD before sending new");
+            fsm.handleFSMWarn("ABORT old cmd before sending new");
         }
     } else {
         fsm.handleFSMInfo("Event ignored");
@@ -57,11 +59,8 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::IDLE_STATE, this, abort_event);
         return;
     }
-    //Set takeoff setpoint to current XY position
-    setpoint_.position.x = current_position.x;
-    setpoint_.position.y = current_position.y;
     //Set yaw setpoint based on current rotation
-    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {

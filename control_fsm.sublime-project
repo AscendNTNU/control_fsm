@@ -12,6 +12,12 @@
             "shell": true,
             "shell_cmd": "catkin_make",
             "working_dir": "${project_path}/../../"
+        },
+        {
+            "name": "ControlFSM catkin_make run_tests",
+            "shell": true,
+            "shell_cmd": "catkin_make run_tests",
+            "working_dir": "${project_path}/../../"
         }
     ],
     "folders":
