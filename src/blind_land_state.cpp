@@ -1,6 +1,7 @@
 #include "control_fsm/blind_land_state.hpp"
 #include "control_fsm/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/control_fsm.hpp"
 
 BlindLandState::BlindLandState() {
@@ -34,7 +35,7 @@ void BlindLandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req);
     ///Get shared_ptr to drones pose
     auto pose_p = control::Pose::getSharedPosePtr();
-    setpoint_.yaw = static_cast<float>(pose_p->getMavrosCorrectedYaw());
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 const mavros_msgs::PositionTarget* BlindLandState::getSetpoint() {

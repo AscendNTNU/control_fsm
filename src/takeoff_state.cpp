@@ -4,6 +4,7 @@
 #include "control_fsm/control_fsm.hpp"
 #include <cmath>
 #include <string>
+#include <control_fsm/tools/target_tools.hpp>
 #include "control_fsm/fsm_config.hpp"
 
 TakeoffState::TakeoffState() {
@@ -59,7 +60,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
     //Set yaw setpoint based on current rotation
-    setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
