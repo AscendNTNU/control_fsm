@@ -4,7 +4,8 @@
 #include "control_fsm/control_fsm.hpp"
 
 LandState::LandState() {
-    setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
+    //Ignoring PX and PY - lands without XY feedback
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
     setpoint_.position.z = -1; //Shouldnt matter
 }
 
@@ -39,6 +40,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     auto pose_p = control::Pose::getSharedPosePtr();
     control::Point current_position = pose_p->getPositionXYZ();
     if(pose_p != nullptr) {
+        //Position XY is ignored in typemask, but the values are set as a precaution.
         setpoint_.position.x = current_position.x;
         setpoint_.position.y = current_position.y;
         //Set yaw setpoint based on current rotation
