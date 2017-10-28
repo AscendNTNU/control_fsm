@@ -17,10 +17,7 @@ PositionHoldState::PositionHoldState() {
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     is_active_ = true;
-    if(event.isValidCMD()) {
-        //All valid command needs to go via the GOTO state
-        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-    } else if(event.isValidRequest()) {
+    if(event.isValidRequest()) {
         switch(event.request) {
             case RequestType::GOTO:
                 fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
@@ -43,6 +40,9 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 fsm.handleFSMWarn("Transition not allowed");
                 break;
         }
+    } else if(event.isValidCMD()) {
+        //All valid command needs to go via the GOTO state
+        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
     }
 }
 
