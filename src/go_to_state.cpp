@@ -80,23 +80,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     setpoint_.position.y = cmd_.position_goal.y;
     setpoint_.position.z = cmd_.position_goal.z;
     setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
-
-    //Calculate the square distance from drone to target
-    double delta_x = position.x - event.position_goal.x;
-    double delta_y = position.y - event.position_goal.y;
-    double pos_xy_dist_square = std::pow(delta_x, 2) + std::pow(delta_y, 2);
-
-    //If only altitude is different, no need for pathplanner
-    if(pos_xy_dist_square <= std::pow(dest_reached_margin_, 2)) {
-        if(cmd_.isValidCMD()) {
-            cmd_.sendFeedback("Already at correct X and Y - no need for pathplan");
-        }
-        return;
-    }
-    
-    if(cmd_.isValidCMD()) {
-        cmd_.sendFeedback("Planning path to target!");
-    }
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
