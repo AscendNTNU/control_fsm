@@ -13,8 +13,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
 
 void control::ObstacleAvoidance::onModified() {
     //Run all callbacks
-    for(std::function<void()>& cb : on_modified_cb_vec_ ) {
-        cb();
+    for(auto& cb_p : on_modified_cb_set_ ) {
+        (*cb_p)();
     }
 }
 
@@ -33,4 +33,14 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::getShare
         instance_p_ = std::shared_ptr<ObstacleAvoidance>(new ObstacleAvoidance);
     }
     return instance_p_;
+}
+
+void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {
+    for(auto it = on_modified_cb_set_.begin(); it != on_modified_cb_set_.end(); ++it) {
+        if(*it == cb_p) {
+            on_modified_cb_set_.erase(it);
+            //std::set - no duplicates
+            return;
+        }
+    }
 }

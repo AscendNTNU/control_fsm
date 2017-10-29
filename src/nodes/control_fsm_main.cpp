@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
         fsm.loopCurrentState(); //Run current FSM state loop
 
         //Get setpoint from current state
-        const mavros_msgs::PositionTarget* state_setpoint_p = fsm.getSetpoint();
+        const mavros_msgs::PositionTarget* state_setpoint_p_ = fsm.getSetpoint();
         
         //Run obstacle avoidance on setpoint and get modified (if neccesary)
         mavros_msgs::PositionTarget drone_setpoint = obstacle_avoidance_p->run(*state_setpoint_p_);
