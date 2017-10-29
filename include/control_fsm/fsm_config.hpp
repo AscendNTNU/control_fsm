@@ -17,14 +17,6 @@ public:
     static double setpoint_reached_margin;
     ///Is yaw close enough?
     static double yaw_reached_margin;
-    ///Topic to recieve path plan
-    static std::string path_planner_plan_topic;
-    ///Topic to send drone position
-    static std::string path_planner_pos_topic;
-    ///Topic to send path target
-    static std::string path_planner_target_topic;
-    ///Topic to send obstacles to planner
-    static std::string path_planner_obs_topic;
     ///Topic to publish FSM error msg
     static std::string fsm_error_topic;
     ///Topic to publish FSM warn msg

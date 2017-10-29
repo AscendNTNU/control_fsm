@@ -215,10 +215,11 @@ void GoToState::destinationReached(ControlFSM &fsm){
                 fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
                 break;
             */
-            case CommandType::GOTOXYZ:
+            case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent doneEvent(RequestType::POSHOLD);
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, doneEvent);
+                }
                 break;
             default:
                 fsm.handleFSMWarn("Unrecognized command type");

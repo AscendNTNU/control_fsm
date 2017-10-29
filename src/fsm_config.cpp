@@ -9,10 +9,6 @@ double FSMConfig::setpoint_reached_margin = 0.3;
 double FSMConfig::yaw_reached_margin = 0.02;
 double FSMConfig::no_yaw_correct_dist = 0.2;
 double FSMConfig::valid_data_timeout = 2.0; //2 seconds
-std::string FSMConfig::path_planner_plan_topic = "control/planner/plan";
-std::string FSMConfig::path_planner_pos_topic = "control/planner/position";
-std::string FSMConfig::path_planner_target_topic = "control/planner/target";
-std::string FSMConfig::path_planner_obs_topic = "control/planner/obstacles";
 std::string FSMConfig::fsm_error_topic = "control/fsm/on_error";
 std::string FSMConfig::fsm_warn_topic = "control/fsm/on_warn";
 std::string FSMConfig::fsm_info_topic = "control/fsm/on_info";
@@ -69,11 +65,6 @@ void FSMConfig::loadParams() {
     getDoubleParam("setp_reached_margin", setpoint_reached_margin);
     getDoubleParam("dest_reached_margin", dest_reached_margin);
     getDoubleParam("no_yaw_correct_dist", no_yaw_correct_dist);
-    //Planner params
-    getStringParam("control_planner_plan", path_planner_plan_topic);
-    getStringParam("control_planner_position", path_planner_pos_topic);
-    getStringParam("control_planner_target", path_planner_target_topic);
-    getStringParam("control_planner_obstacles", path_planner_obs_topic);
     //FSM debug params
     getStringParam("fsm_error_topic", fsm_error_topic);
     getStringParam("fsm_warn_topic", fsm_warn_topic);
