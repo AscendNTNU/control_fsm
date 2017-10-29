@@ -46,11 +46,13 @@ enum class CommandType {
 ///Defines a position goal
 struct PositionGoalXYZ {
     bool valid = false;
+    bool z_valid = false;
     double x;
     double y;
     double z;
-    PositionGoalXYZ(double pos_x, double pos_y, double pos_z) : x(pos_x), y(pos_y), z(pos_z), valid(true) {}
+    PositionGoalXYZ(double pos_x, double pos_y, double pos_z) : x(pos_x), y(pos_y), z(pos_z), valid(true), z_valid(true) {}
     PositionGoalXYZ() : valid(false) {}
+    PositionGoalXYZ(double pos_z) : z(pos_z), z_valid(true) {}
 };
 
 class EventData;
