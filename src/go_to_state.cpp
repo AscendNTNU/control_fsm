@@ -80,7 +80,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     setpoint_.position.x = cmd_.position_goal.x;
     setpoint_.position.y = cmd_.position_goal.y;
     setpoint_.position.z = cmd_.position_goal.z;
-    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
+    setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
@@ -219,6 +219,9 @@ void GoToState::destinationReached(ControlFSM &fsm){
                 cmd_.finishCMD();
                 RequestEvent doneEvent(RequestType::POSHOLD);
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, doneEvent);
+                break;
+            default:
+                fsm.handleFSMWarn("Unrecognized command type");
                 break;
         }
     } 
