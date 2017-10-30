@@ -57,6 +57,8 @@ public:
     const mavros_msgs::PositionTarget* getSetpoint();
     bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;
+
+    ///Handles delayed transition when position is reached
     void destinationReached(ControlFSM &fsm);
 };
 
