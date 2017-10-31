@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
       actionlib
       ascend_msgs
       tf2
-    roslaunch
+      roslaunch
 )
 
 ###################################
