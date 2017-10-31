@@ -118,11 +118,10 @@ void GoToState::loopState(ControlFSM& fsm) {
 
     if(xy_reached && z_reached && yaw_reached) {
         destinationReached(fsm);
-        //Destination reached, no need to excecute the rest of the function
+    }
+    else{
         delay_transition_.enabled = false;
-        return;
-    }   
-    delay_transition_.enabled = false;
+    }
 }
 
 //Returns valid setpoint
@@ -230,4 +229,6 @@ void GoToState::destinationReached(ControlFSM &fsm){
         RequestEvent posHoldEvent(RequestType::POSHOLD);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, posHoldEvent);
     }
+
+    delay_transition_.enabled = false;
 }
