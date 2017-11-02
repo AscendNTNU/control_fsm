@@ -124,10 +124,6 @@ private:
     ///Initializes all states
     void initStates();
 
-    ///LandDetector used to check if drone is on ground or not
-    LandDetector land_detector_;
-
-
 
 protected:
     /**

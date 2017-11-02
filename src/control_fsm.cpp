@@ -83,7 +83,7 @@ void ControlFSM::handleFSMDebug(std::string debug_msg) {
     ROS_DEBUG("%s", (std::string("[Control FSM] ") + debug_msg).c_str());
 }
 
-ControlFSM::ControlFSM() : land_detector_(FSMConfig::land_detector_topic, this) {
+ControlFSM::ControlFSM() {
     //Only one instance of ControlFSM is allowed
     assert(!ControlFSM::is_used);
     //ROS must be initialized!
@@ -136,7 +136,7 @@ bool ControlFSM::isReady() {
             return false;
         }
         //Land detector must be ready
-        if (!land_detector_.isReady()) {
+        if (!LandDetector::getSharedInstancePtr()->isReady()) {
             this->handleFSMWarn("Missing land detector stream!");
             return false;
         }
