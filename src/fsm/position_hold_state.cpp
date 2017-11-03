@@ -7,6 +7,7 @@
 #include <ascend_msgs/PointArray.h>
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
+#include <control/tools/logger.hpp>
 
 
 //Constructor sets default setpoint type mask
@@ -30,7 +31,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 break;
             */
             default:
-                fsm.handleFSMWarn("Transition not allowed");
+                control::handleWarnMsg("Transition not allowed");
                 break;
         }
     } else if(event.isValidCMD()) {
@@ -92,7 +93,7 @@ bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
     if(lidar_sub_.getNumPublishers() > 0) {
         return true;
     } else {
-        fsm.handleFSMWarn("No lidar publisher in posHold");
+        control::handleWarnMsg("No lidar publisher in posHold");
         return false;
     }
 }
@@ -105,7 +106,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
         return;
     }
     if(fsm_p_ == nullptr) {
-        ROS_ERROR("FSM pointer = nullptr! Critical!");
+        control::handleErrorMsg("FSM pointer = nullptr! Critical!");
         return; //Avoids nullpointer exception
     }
     auto points = msg->points;
@@ -114,7 +115,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     //Should never happen!
     if(pose_p == nullptr) {
         //No valid XY position available, no way to determine distance to GB
-        fsm_p_->handleFSMError("Position not available! Should not happen!");
+        control::handleWarnMsg("Position not available! Should not happen!");
         return;
     }
     //No need to check obstacles if we're high enough

@@ -2,6 +2,7 @@
 #include "control/fsm/control_fsm.hpp"
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control/tools/logger.hpp>
 
 BeginState::BeginState() {
     setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE;
@@ -13,13 +14,13 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(event.request == RequestType::PREFLIGHT) {
             fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
         } else {
-            fsm.handleFSMWarn("Invalid transiton request!");
+            control::handleWarnMsg("Invalid transiton request!");
         }
     } else if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
-        fsm.handleFSMWarn("Drone is not yet active - commands ignored");
+        control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else {
-        fsm.handleFSMDebug("Event ignored");
+        control::handleInfoMsg("Event ignored!");
     }
 }
 

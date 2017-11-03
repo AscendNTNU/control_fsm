@@ -2,6 +2,7 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
+#include <control/tools/logger.hpp>
 #include "control/fsm/control_fsm.hpp"
 
 LandState::LandState() {
@@ -20,14 +21,14 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             return;
         } else {
-            fsm.handleFSMWarn("Illegal transition request!");
+            control::handleWarnMsg("Illegal transition request!");
         }
     } else if(event.isValidCMD()) {
         if(cmd_.isValidCMD()) {
-            fsm.handleFSMWarn("ABORT should be sent before new command!");
+            control::handleWarnMsg("ABORT should be sent before new command!");
             event.eventError("ABORT should be sent before new command!");
         } else {
-            fsm.handleFSMWarn("Not accepting CMDs before land is completed!");
+            control::handleWarnMsg("Not accepting CMDs before land is completed!");
             event.eventError("Not accpeting CMDs before land is completed!");
         }
     }
@@ -65,7 +66,7 @@ void LandState::loopState(ControlFSM& fsm) {
                 cmd_.finishCMD();
             } else {
                 cmd_.eventError("Wrong CMD type!");
-                fsm.handleFSMError("Invalid CMD type in land state!");
+                control::handleErrorMsg("Invalid CMD type in land state!");
             }
             cmd_ = EventData();
         }

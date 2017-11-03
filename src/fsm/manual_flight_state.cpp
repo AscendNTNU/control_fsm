@@ -2,6 +2,7 @@
 #include "control/fsm/control_fsm.hpp"
 #include "control/tools/setpoint_msg_defines.h"
 #include <geometry_msgs/PoseStamped.h>
+#include <control/tools/logger.hpp>
 
 ManualFlightState::ManualFlightState() {
     setpoint_.type_mask = default_mask;
@@ -10,14 +11,14 @@ ManualFlightState::ManualFlightState() {
 void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
         if(event.request == RequestType::PREFLIGHT) {
-            fsm.handleFSMWarn("Going back to preflight, land drone before offboard");
+            control::handleWarnMsg("Going back to preflight, land drone before offboard");
             fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
         } else {
-            fsm.handleFSMWarn("Invalid transition request");
+            control::handleWarnMsg("Invalid transition request");
         }
     } else if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
-        fsm.handleFSMWarn("Drone is not yet active - commands ignored");
+        control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else if(event.event_type == EventType::AUTONOMOUS) {
         if(fsm.land_detector_.isOnGround()) {
             fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
@@ -25,7 +26,7 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
         }
     } else {
-        fsm.handleFSMInfo("Event ignored");
+        control::handleInfoMsg("Event ignored");
     }
 }
 

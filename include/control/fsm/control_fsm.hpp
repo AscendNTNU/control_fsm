@@ -93,12 +93,6 @@ private:
 
     ///Callback when a transition is made
     std::function<void()> on_state_changed_ = [](){};
-    ///Callback when an error occurs in FSM
-    std::function<void(const std::string&)> on_fsm_error_ = [](const std::string& msg){};
-    ///Callback when an warning occurs in FSM
-    std::function<void(const std::string&)> on_fsm_warn_ = [](const std::string& msg){};
-    ///Callbacks when an info message occurs in FSM
-    std::function<void(const std::string&)> on_fsm_info_ = [](const std::string& msg){};
 
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
@@ -158,33 +152,13 @@ public:
     
     ///Loops the current running state
     void loopCurrentState(void);
-    
-    ///Send errormessage to user via ROS_ERROR
-    void handleFSMError(std::string err_msg);
-    
-    ///Send info message to user via ROS_INFO
-    void handleFSMInfo(std::string info_msg);
-    
-    ///Send warning message to user via ROS_WARN
-    void handleFSMWarn(std::string warn_msg);
-    
-    ///Send debug message to user via ROS_DEBUG
-    void handleFSMDebug(std::string debug_msg);
+
     
     ///Returns setpoint from current state
     const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
 
     ///Sets new callback function for onStateChanged
     void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }
-
-    ///Sets new callback function for onFSMError
-    void setOnFSMErrorCB(std::function<void(const std::string&)> cb) {on_fsm_error_ = cb; }
-    
-    ///Sets new callback function for onFSMError
-    void setOnFSMWarnCB(std::function<void(const std::string&)> cb) {on_fsm_warn_ = cb; }
-    
-    ///Sets new callback function for onFSMError
-    void setOnFSMInfoCB(std::function<void(const std::string&)> cb) {on_fsm_info_ = cb; }
 
     ///Checks if all states are ready
     bool isReady();

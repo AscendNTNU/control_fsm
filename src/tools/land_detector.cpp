@@ -1,6 +1,7 @@
 //
 // Created by haavard on 01.06.17.
 //
+#include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/land_detector.hpp"
 #include "control/fsm/control_fsm.hpp"
@@ -16,11 +17,7 @@ void LandDetector::landCB(const ascend_msgs::BoolStamped &msg) {
 
 bool LandDetector::isOnGround() {
     if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(control::Config::valid_data_timeout)) {
-        if(fsm_p_ != nullptr) {
-            fsm_p_->handleFSMError("LandDetector using old data");
-        } else {
-            ROS_ERROR("LandDetector using old data!");
-        }
+        control::handleErrorMsg("Land detector using old data");
     }
     return last_msg_.value;
 }

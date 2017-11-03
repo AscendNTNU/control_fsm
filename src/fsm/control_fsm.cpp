@@ -4,6 +4,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/config.hpp>
+#include <control/tools/logger.hpp>
 
 #ifndef PI_HALF
 #define PI_HALF 1.57079632679
@@ -30,20 +31,20 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
         getState()->stateEnd(*this, event);
         //Set the current state pointer
         state_vault_.current_state_p_ = &state;
-        handleFSMInfo("Current state: " + getState()->getStateName());
+        control::handleInfoMsg("Current state: " + getState()->getStateName());
         //Pass event to new current state
         getState()->stateBegin(*this, event);
         //Notify state has changed
         on_state_changed_();
     } else {
-        handleFSMError("Transition request made by not active state");
+        control::handleErrorMsg("Transition request made by not active state");
     }
 }
 
 //Send external event to current state and to "next" state
 void ControlFSM::handleEvent(const EventData& event) {
     if(getState() == nullptr) {
-        handleFSMError("Bad implementation of FSM - FSM allways need a state");
+        control::handleErrorMsg("Bad implementation of FSM - FSM allways need a state");
         return;
     }
     if(event.event_type == EventType::MANUAL) {
@@ -58,29 +59,6 @@ void ControlFSM::handleEvent(const EventData& event) {
 void ControlFSM::loopCurrentState(void) {
     assert(getState() != nullptr);
     getState()->loopState(*this);
-}
-
-//Send error message to user via ROS
-void ControlFSM::handleFSMError(std::string err_msg) {
-    ROS_ERROR("%s", (std::string("[Control FSM] ") + err_msg).c_str());
-    on_fsm_error_(err_msg);
-}
-
-//Send info message to user via ROS
-void ControlFSM::handleFSMInfo(std::string info_msg) {
-    ROS_INFO("%s",(std::string("[Control FSM] ") + info_msg).c_str());
-    on_fsm_info_(info_msg);
-}
-
-//Send warning to user via ROS
-void ControlFSM::handleFSMWarn(std::string warn_msg) {
-    ROS_WARN("%s", (std::string("[Control FSM] ") + warn_msg).c_str());
-    on_fsm_warn_(warn_msg);
-}
-
-//Send debug message to user via ROS
-void ControlFSM::handleFSMDebug(std::string debug_msg) {
-    ROS_DEBUG("%s", (std::string("[Control FSM] ") + debug_msg).c_str());
 }
 
 ControlFSM::ControlFSM() : land_detector_(control::Config::land_detector_topic, this) {
@@ -117,7 +95,7 @@ bool ControlFSM::isReady() {
 
     //All states must run their own checks
     for(auto it = StateInterface::cbegin(); it != StateInterface::cend(); it++) {
-        this->handleFSMInfo((*it)->getStateName() + " is testing");
+        control::handleInfoMsg((*it)->getStateName() + " is testing");
         if(!(*it)->stateIsReady(*this)) return false;
     }
 
@@ -126,18 +104,18 @@ bool ControlFSM::isReady() {
 
         //Check that we're recieving position
         if(!drone_pose_p->isPoseValid()) {
-            this->handleFSMWarn("Missing position data");
+            control::handleWarnMsg("Missing position data");
             return false;
         }
 
         //Mavros must publish state data
         if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
-            this->handleFSMWarn("Missing mavros state info!");
+            control::handleWarnMsg("Missing mavros state info!");
             return false;
         }
         //Land detector must be ready
         if (!land_detector_.isReady()) {
-            this->handleFSMWarn("Missing land detector stream!");
+            control::handleWarnMsg("Missing land detector stream!");
             return false;
         }
     }
@@ -149,7 +127,7 @@ bool ControlFSM::isReady() {
 
 void ControlFSM::startPreflight() {
     if(!isReady()) {
-        this->handleFSMWarn("FSM not ready, can't transition to preflight!");
+        control::handleWarnMsg("FSM not ready, can't transition to preflight!");
         return;
     }
     RequestEvent event(RequestType::PREFLIGHT);
