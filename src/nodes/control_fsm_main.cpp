@@ -1,11 +1,11 @@
 #include <ros/ros.h>
 
-#include "control_fsm/ControlFSM.hpp"
-#include "control_fsm/ActionServer.hpp"
-#include "control_fsm/FSMConfig.hpp"
+#include "control/fsm/control_fsm.hpp"
+#include "control/fsm/action_server.hpp"
+#include "control/tools/config.hpp"
 #include <ascend_msgs/ControlFSMEvent.h>
 #include <std_msgs/String.h>
-#include "control_fsm/DebugServer.hpp"
+#include "control/fsm/debug_server.hpp"
 
 
 //How often is setpoints published to flightcontroller?
@@ -14,27 +14,27 @@ constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 constexpr char mavrosSetpointTopic[] = "mavros/setpoint_raw/local";
 
 int main(int argc, char** argv) {
+    using control::Config;
     //Init ros and nodehandles
     ros::init(argc, argv, "control_fsm_main");
     ros::NodeHandle n;
     ros::NodeHandle np("~");
 
     //Load ros params
-    FSMConfig::loadParams();
+    control::Config::loadParams();
 
-    if(!FSMConfig::RequireAllDataStreams || !FSMConfig::RequireObstacleDetection) {
+    if(!Config::require_all_data_streams || !Config::require_obstacle_detection) {
         ROS_WARN("One or more debug param features is activated!");
     }
 
     //Statemachine instance
     ControlFSM fsm;
-
     //Set up neccesary publishers
     ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
-    ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(FSMConfig::FSMStateChangedTopic, FSMConfig::FSMStatusBufferSize);
-    ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(FSMConfig::FSMErrorTopic, FSMConfig::FSMStatusBufferSize);
-    ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(FSMConfig::FSMInfoTopic, FSMConfig::FSMStatusBufferSize);
-    ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(FSMConfig::FSMWarnTopic, FSMConfig::FSMStatusBufferSize);
+    ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(control::Config::fsm_state_changed_topic, Config::fsm_status_buffer_size);
+    ros::Publisher fsmOnErrorPub = n.advertise<std_msgs::String>(Config::fsm_error_topic, Config::fsm_status_buffer_size);
+    ros::Publisher fsmOnInfoPub = n.advertise<std_msgs::String>(Config::fsm_info_topic, Config::fsm_status_buffer_size);
+    ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(Config::fsm_warn_topic, Config::fsm_status_buffer_size);
 
     //Set up debug server
     DebugServer debugServer(&fsm);

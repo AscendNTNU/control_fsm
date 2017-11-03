@@ -50,7 +50,7 @@ http://gameprogrammingpatterns.com/state.html
     - If there is: Terminate, or pass the CMD on (depending on current state)
 - Each state is responsible for delivering valid setpoints (through getSetpoint method)
 - Each state should be as independent as possible.
-- Use FSMConfig class (static) for loading ros parameters
+- Use Config class (static) for loading ros parameters
 - Be sure to update state diagram when adding / removing states
 
 **Doxygen support is added.**
@@ -76,18 +76,6 @@ Name: "takeoff_altitude", Description: Altitude setpoint for takeoff
 ```
 ```
 Name: "altitude_reached_margin", Description: Allowed altitude error for takeoff
-```
-```
-Name: "control_planner_plan", Description: Topic for recieving path plan from planner
-```
-```
-Name: "control_planner_position", Description: Topic for publishing position to planner
-```
-```
-Name: "control_planner_target", Description: Topic for publishing target to planner
-```
-```
-Name: "control_planner_obstacles", Description: Topic for publishing obstacles to planner
 ```
 ```
 Name: "setp_reached_margin", Description: How close we have to be to a setpoint before switching (in a path plan)

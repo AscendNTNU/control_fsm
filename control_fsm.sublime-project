@@ -12,6 +12,12 @@
             "shell": true,
             "shell_cmd": "catkin_make",
             "working_dir": "${project_path}/../../"
+        },
+        {
+            "name": "ControlFSM catkin_make run_tests",
+            "shell": true,
+            "shell_cmd": "catkin_make run_tests",
+            "working_dir": "${project_path}/../../"
         }
     ],
     "folders":
@@ -24,5 +30,10 @@
             ],
             "path": "."
         }
-    ]
+    ], 
+    "settings":
+    {
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true
+    }
 }
