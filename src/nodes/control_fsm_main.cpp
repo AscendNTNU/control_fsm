@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     control::Config::loadParams();
 
     if(!Config::require_all_data_streams || !Config::require_obstacle_detection) {
-        ROS_WARN("One or more debug param features is activated!");
+        control::handleWarnMsg("One or more debug param features is activated!");
     }
 
     //Statemachine instance
