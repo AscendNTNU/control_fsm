@@ -135,9 +135,14 @@ bool ControlFSM::isReady() {
             this->handleFSMWarn("Missing mavros state info!");
             return false;
         }
-        //Land detector must be ready
-        if (!LandDetector::getSharedInstancePtr()->isReady()) {
-            this->handleFSMWarn("Missing land detector stream!");
+        try {
+            //Land detector must be ready
+            if (!LandDetector::getSharedInstancePtr()->isReady()) {
+                this->handleFSMWarn("Missing land detector stream!");
+                return false;
+            }
+        } catch(const std::bad_alloc& e) {
+            handleFSMError("Exception: " + std::string(e.what()));
             return false;
         }
     }

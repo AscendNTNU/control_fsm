@@ -5,7 +5,7 @@
 
     <include file="$(find control_fsm)/launch/control_fsm.launch">
         <arg name="topic_land_detector" value="/mavros/extended_state"/>
-        <arg name="require_all_streams" value="false"/>
+        <arg name="require_all_streams" value="true"/>
         <arg name="require_obs_detection" value="false"/>
     </include>
 
