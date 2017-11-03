@@ -3,9 +3,9 @@
 //
 
 #include <control/exceptions/RosNotInitializedException.hpp>
-#include <control/fsm_config.hpp>
 #include <utility>
 #include <std_msgs/String.h>
+#include <control/tools/config.hpp>
 #include "control/tools/logger.hpp"
 
 ///Class responsible for publishing status messages to topics
@@ -29,9 +29,10 @@ std::shared_ptr<ROSTopicLogger> ROSTopicLogger::shared_instance_p_;
 
 ///Constructor initializes publishers
 ROSTopicLogger::ROSTopicLogger() {
-    error_pub_ = nh_.advertise<std_msgs::String>(FSMConfig::fsm_error_topic, FSMConfig::fsm_status_buffer_size);
-    warn_pub_ = nh_.advertise<std_msgs::String>(FSMConfig::fsm_warn_topic, FSMConfig::fsm_status_buffer_size);
-    info_pub_ = nh_.advertise<std_msgs::String>(FSMConfig::fsm_info_topic, FSMConfig::fsm_status_buffer_size);
+    using control::Config;
+    error_pub_ = nh_.advertise<std_msgs::String>(Config::fsm_error_topic, Config::fsm_status_buffer_size);
+    warn_pub_ = nh_.advertise<std_msgs::String>(Config::fsm_warn_topic, Config::fsm_status_buffer_size);
+    info_pub_ = nh_.advertise<std_msgs::String>(Config::fsm_info_topic, Config::fsm_status_buffer_size);
 }
 
 ///Returns shared_ptr to shared instance IF ros is initialized.
