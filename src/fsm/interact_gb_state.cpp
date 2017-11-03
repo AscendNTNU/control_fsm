@@ -1,5 +1,5 @@
-#include "control_fsm/interact_gb_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/interact_gb_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 
 InteractGBState::InteractGBState() {

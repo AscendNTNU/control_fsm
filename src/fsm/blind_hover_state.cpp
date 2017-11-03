@@ -1,10 +1,10 @@
-#include "control_fsm/blind_hover_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/blind_hover_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
-#include <control_fsm/tools/target_tools.hpp>
-#include "control_fsm/control_fsm.hpp"
-#include "control_fsm/event_data.hpp"
-#include "control_fsm/fsm_config.hpp"
+#include <control/tools/target_tools.hpp>
+#include "control/fsm/control_fsm.hpp"
+#include "control/fsm/event_data.hpp"
+#include "control/tools/config.hpp"
 
 #define DEFAULT_BLIND_HOVER_ALTITUDE 1.0f    
 
@@ -59,7 +59,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
         cmd_ = event;
     }
 
-    setpoint_.position.z = FSMConfig::blind_hover_alt;
+    setpoint_.position.z = control::Config::blind_hover_alt;
     setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 

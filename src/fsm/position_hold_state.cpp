@@ -1,12 +1,12 @@
-#include "control_fsm/position_hold_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/position_hold_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <geometry_msgs/PoseStamped.h>
-#include "control_fsm/control_fsm.hpp"
-#include "control_fsm/event_data.hpp"
-#include "control_fsm/fsm_config.hpp"
+#include "control/fsm/control_fsm.hpp"
+#include "control/fsm/event_data.hpp"
+#include "control/tools/config.hpp"
 #include <ascend_msgs/PointArray.h>
 #include <ros/ros.h>
-#include <control_fsm/tools/target_tools.hpp>
+#include <control/tools/target_tools.hpp>
 
 
 //Constructor sets default setpoint type mask
@@ -43,7 +43,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     if(fsm_p_ == nullptr) {
         fsm_p_ = &fsm;
     }
-    safe_hover_alt_ = FSMConfig::safe_hover_altitude;
+    safe_hover_alt_ = control::Config::safe_hover_altitude;
     //No need to check other commands
     if(event.isValidCMD()) {
         //All valid commands need to go to correct place on arena before anything else
@@ -78,16 +78,16 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateInit(ControlFSM &fsm) {
     fsm_p_ = &fsm;
-    lidar_sub_ = fsm.node_handler_.subscribe(FSMConfig::lidar_topic, 1, &PositionHoldState::obsCB, this);
+    lidar_sub_ = fsm.node_handler_.subscribe(control::Config::lidar_topic, 1, &PositionHoldState::obsCB, this);
 }
 
 bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
-
+    using control::Config;
     //Return true if obstacle detection is disabled
-    if(!FSMConfig::require_obstacle_detection) return true;
+    if(!Config::require_obstacle_detection) return true;
 
     //Skipping check is allowed in debug mode
-    if(!FSMConfig::require_all_data_streams) return true;
+    if(!Config::require_all_data_streams) return true;
 
     if(lidar_sub_.getNumPublishers() > 0) {
         return true;
@@ -98,6 +98,7 @@ bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
 }
 
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
+    using control::Config;
     //TODO TEST!!!
     //Only check if neccesary
     if(!is_active_ || setpoint_.position.z >= safe_hover_alt_) {
@@ -117,7 +118,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
         return;
     }
     //No need to check obstacles if we're high enough
-    if(position.z >= FSMConfig::safe_hover_altitude) {
+    if(position.z >= Config::safe_hover_altitude) {
         return;
     }
 
@@ -125,7 +126,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     double drone_y = position.y;
     for(int i = 0; i < points.size(); ++i) {
         double dist_squared = std::pow(drone_x - points[i].x, 2) + std::pow(drone_y - points[i].y, 2);
-        if(dist_squared < std::pow(FSMConfig::obstacle_too_close_dist, 2)) {
+        if(dist_squared < std::pow(Config::obstacle_too_close_dist, 2)) {
             setpoint_.position.z = safe_hover_alt_;
             return; //No need to check the rest!
         }
