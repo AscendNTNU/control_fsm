@@ -1,6 +1,7 @@
 #include "control/fsm/idle_state.hpp"
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
+#include <control/tools/logger.hpp>
 #include "control/fsm/event_data.hpp"
 #include "control/fsm/control_fsm.hpp"
 
@@ -16,12 +17,12 @@ void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(event.request == RequestType::TAKEOFF) {
             fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, event);
         } else {
-            fsm.handleFSMWarn("Invalid transition request");
+            control::handleWarnMsg("Invalid transition request");
         }
     } else if(event.isValidCMD()) {
         fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, event);
     } else  {
-        fsm.handleFSMInfo("Event ignored");
+        control::handleInfoMsg("Event ignored");
     }
 }
 

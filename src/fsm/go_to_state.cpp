@@ -5,6 +5,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <cmath>
 #include <geometry_msgs/Point32.h>
+#include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
 
@@ -28,22 +29,22 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } 
         else if(event.request == RequestType::POSHOLD) {
             if(cmd_.isValidCMD()) {
-                fsm.handleFSMWarn("ABORT CMD before sending manual request!");
-            } 
+                control::handleWarnMsg("ABORT CMD before sending manual request!");
+            }
             else {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             }
         } 
         else if(event.request == RequestType::GOTO) {
             if(cmd_.isValidCMD()) {
-                fsm.handleFSMWarn("ABORT CMD before sending manual request!");
+                control::handleWarnMsg("ABORT CMD before sending manual request!");
             } 
             else {
                 fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
             }
         } 
         else {
-            fsm.handleFSMWarn("Illegal transiton request");
+            control::handleWarnMsg("Illegal transiton request");
         }
     } 
     else if(event.isValidCMD()) {
@@ -142,7 +143,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
     setpoint_reached_margin_ = Config::setpoint_reached_margin;
     yaw_reached_margin_ = Config::yaw_reached_margin;
 
-    fsm.handleFSMInfo("GoTo init completed!");
+    control::handleInfoMsg("GoTo init completed!");
 }
 
 //Calculates a yaw setpoints that is a multiple of 90 degrees
@@ -222,7 +223,7 @@ void GoToState::destinationReached(ControlFSM &fsm){
                 }
                 break;
             default:
-                fsm.handleFSMWarn("Unrecognized command type");
+                control::handleWarnMsg("Unrecognized command type");
                 break;
         }
     } 

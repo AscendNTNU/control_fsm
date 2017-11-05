@@ -1,4 +1,5 @@
 
+#include <control/tools/logger.hpp>
 #include "control/fsm/debug_server.hpp"
 #include "control/fsm/event_data.hpp"
 
@@ -13,7 +14,7 @@ DebugServer::DebugServer(ControlFSM* p_fsm) : fsm_p_(p_fsm) {
 
 bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
     if(!fsm_p_->isReady()) {
-        fsm_p_->handleFSMWarn("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
+        control::handleWarnMsg("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
     }
     EventData event = generateDebugEvent(req);
     //If request event is not valid

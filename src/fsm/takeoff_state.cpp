@@ -5,6 +5,7 @@
 #include <cmath>
 #include <string>
 #include <control/tools/target_tools.hpp>
+#include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
 
 TakeoffState::TakeoffState() {
@@ -19,19 +20,19 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(event.request == RequestType::ABORT && cmd_.isValidCMD()) {
             cmd_.eventError("Aborting command");
             cmd_ = EventData(); //Aborting commands, but will still continue takeoff
-            fsm.handleFSMInfo("Command aborted, but takeoff can't be aborted");
+            control::handleInfoMsg("Command aborted, but takeoff can't be aborted");
         } else {
-            fsm.handleFSMWarn("Illegal transition request");
+            control::handleWarnMsg("Illegal transition request");
         }
     } else if(event.isValidCMD()) {
         if(cmd_.isValidCMD()) {
             cmd_ = event;
         } else {
             event.eventError("Finish old CMD before sending new");
-            fsm.handleFSMWarn("ABORT old cmd before sending new");
+            control::handleWarnMsg("ABORT old cmd before sending new");
         }
     } else {
-        fsm.handleFSMInfo("Event ignored");
+        control::handleInfoMsg("Event ignored");
     }
 }
 
@@ -51,7 +52,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     control::Point current_position = pose_p->getPositionXYZ();
     //If no position is available - abort takeoff
     if(!pose_p->isPoseValid()) {
-        fsm.handleFSMError("No position available");
+        control::handleErrorMsg("No position available");
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position available");
             cmd_ = EventData();

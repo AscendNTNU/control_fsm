@@ -2,6 +2,7 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
+#include <control/tools/logger.hpp>
 #include "control/fsm/control_fsm.hpp"
 #include "control/fsm/event_data.hpp"
 #include "control/tools/config.hpp"
@@ -21,24 +22,24 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT){
             if(cmd_.isValidCMD()) {
-                fsm.handleFSMInfo("Aborting CMD");
+                control::handleInfoMsg("Aborting CMD");
                 cmd_.eventError("ABORT");
                 cmd_ = EventData();
             } else {
-                fsm.handleFSMWarn("Can't abort blind hover");
+                control::handleWarnMsg("Can't abort blind hover");
             }
         } else {
-            fsm.handleFSMWarn("Invalid transition request");
+            control::handleWarnMsg("Invalid transition request");
         }
     } else if(event.isValidCMD()) {
         if(!cmd_.isValidCMD()) {
             cmd_ = event; //Hold event until position is regained.
         } else {
             event.eventError("CMD rejected!");
-            fsm.handleFSMWarn("ABORT old command first");
+            control::handleInfoMsg("ABORT old command first");
         }
     } else  {
-        fsm.handleFSMInfo("Event ignored!");
+        control::handleInfoMsg("Event ignored!");
     }
 }
 

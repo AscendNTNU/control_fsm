@@ -1,6 +1,7 @@
 //
 // Created by haavard on 01.06.17.
 //
+#include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/land_detector.hpp"
 #include "control/fsm/control_fsm.hpp"
@@ -19,7 +20,7 @@ void LandDetector::landCB(const mavros_msgs::ExtendedState &msg) {
 
 bool LandDetector::isOnGround() {
     if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(control::Config::valid_data_timeout)) {
-        ROS_ERROR("[Control FSM] Using old land detector data!");
+        control::handleErrorMsg("Land detector using old data");
     }
     return last_msg_.landed_state == LANDED_STATE_ON_GROUND;
 }
@@ -34,7 +35,7 @@ std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() throw(std::ba
         try {
             shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
         } catch (const std::bad_alloc& e) {
-            ROS_ERROR("[Control FSM] Couldn't allocate memory for land detector!");
+            control::handleErrorMsg("Couldn't allocate memory for land detector!");
             throw;
         }
     }

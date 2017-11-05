@@ -5,6 +5,7 @@
 #include "control/tools/config.hpp"
 #include <ascend_msgs/ControlFSMEvent.h>
 #include <std_msgs/String.h>
+#include <control/tools/logger.hpp>
 #include "control/fsm/debug_server.hpp"
 
 
@@ -24,7 +25,7 @@ int main(int argc, char** argv) {
     control::Config::loadParams();
 
     if(!Config::require_all_data_streams || !Config::require_obstacle_detection) {
-        ROS_WARN("One or more debug param features is activated!");
+        control::handleWarnMsg("One or more debug param features is activated!");
     }
 
     //Statemachine instance
@@ -49,39 +50,21 @@ int main(int argc, char** argv) {
         fsmOnStateChangedPub.publish(msg);
     });
 
-    fsm.setOnFSMErrorCB([&](const std::string& errMsg) {
-        std_msgs::String msg;
-        msg.data = errMsg;
-        fsmOnErrorPub.publish(msg);
-    });
-
-    fsm.setOnFSMWarnCB([&](const std::string& warnMsg) {
-        std_msgs::String msg;
-        msg.data = warnMsg;
-        fsmOnWarnPub.publish(msg);
-    });
-
-    fsm.setOnFSMInfoCB([&](const std::string& infoMsg) {
-        std_msgs::String msg;
-        msg.data = infoMsg;
-        fsmOnInfoPub.publish(msg);
-    });
-
 
     //Wait for all systems to initalize and position to become valid
-    fsm.handleFSMInfo("Waiting for necessary data streams!");
+    control::handleInfoMsg("Waiting for necessary data streams!");
     while(ros::ok() && !fsm.isReady()) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
-    fsm.handleFSMInfo("Necessary data streams are ready!");
+    control::handleInfoMsg("Necessary data streams are ready!");
 
     //Actionserver is started when the system is ready
     ActionServer cmdServer(&fsm);
 
     //Preflight is finished and system is ready for use!
     /**************************************************/
-    fsm.handleFSMInfo("FSM is ready!");
+    control::handleInfoMsg("FSM is ready!");
     fsm.startPreflight(); //Transition to preflight!
     //Used to maintain a fixed loop rate
     ros::Rate loopRate(SETPOINT_PUB_RATE);
