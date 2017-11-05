@@ -2,10 +2,10 @@
 // Created by haavard on 12.10.17.
 //
 
-#include <control_fsm/fsm_config.hpp>
+#include <control/tools/config.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
-#include "control_fsm/tools/control_pose.hpp"
+#include "control/tools/control_pose.hpp"
 
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
@@ -15,7 +15,7 @@ using control::Pose;
 std::shared_ptr<Pose> Pose::instance_;
 
 bool checkAndReportMsgTimeout(const geometry_msgs::PoseStamped& msg) {
-    if(ros::Time::now() - msg.header.stamp > ros::Duration(FSMConfig::valid_data_timeout)){
+    if(ros::Time::now() - msg.header.stamp > ros::Duration(control::Config::valid_data_timeout)){
         //TODO Report error
         return true;
     }
@@ -23,7 +23,7 @@ bool checkAndReportMsgTimeout(const geometry_msgs::PoseStamped& msg) {
 }
 
 Pose::Pose() {
-    pos_sub_ = n_.subscribe(FSMConfig::mavros_local_pos_topic, 1, &Pose::positionCB, this);
+    pos_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &Pose::positionCB, this);
 }
 
 //TODO Write unit test

@@ -1,6 +1,6 @@
-#include "control_fsm/preflight_state.hpp"
-#include "control_fsm/control_fsm.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/preflight_state.hpp"
+#include "control/fsm/control_fsm.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 
 PreFlightState::PreFlightState() {
     setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE;

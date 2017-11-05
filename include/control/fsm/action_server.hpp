@@ -1,7 +1,7 @@
 #ifndef ACTION_SERVER_HPP
 #define ACTION_SERVER_HPP
 #include <actionlib/server/simple_action_server.h>
-#include <control_fsm/control_fsm.hpp>
+#include <control/fsm/control_fsm.hpp>
 #include <ascend_msgs/ControlFSMAction.h>
 #include <ros/ros.h>
 

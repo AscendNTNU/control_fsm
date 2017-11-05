@@ -4,7 +4,7 @@
 #include "event_data.hpp"
 #include <iostream>
 #include <mavros_msgs/PositionTarget.h>
-#include "setpoint_msg_defines.h"
+#include "control/tools/setpoint_msg_defines.h"
 #include <vector>
 
 class ControlFSM;

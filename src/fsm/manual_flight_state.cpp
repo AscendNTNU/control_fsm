@@ -1,6 +1,6 @@
-#include "control_fsm/manual_flight_state.hpp"
-#include "control_fsm/control_fsm.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/manual_flight_state.hpp"
+#include "control/fsm/control_fsm.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <geometry_msgs/PoseStamped.h>
 
 ManualFlightState::ManualFlightState() {

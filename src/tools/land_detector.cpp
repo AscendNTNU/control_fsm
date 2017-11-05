@@ -1,9 +1,9 @@
 //
 // Created by haavard on 01.06.17.
 //
-#include "control_fsm/fsm_config.hpp"
-#include "control_fsm/land_detector.hpp"
-#include "control_fsm/control_fsm.hpp"
+#include "control/tools/config.hpp"
+#include "control/tools/land_detector.hpp"
+#include "control/fsm/control_fsm.hpp"
 
 LandDetector::LandDetector(std::string topic) : topic_(topic) {
     assert(ros::isInitialized());
@@ -15,7 +15,7 @@ void LandDetector::landCB(const ascend_msgs::BoolStamped &msg) {
 }
 
 bool LandDetector::isOnGround() {
-    if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(FSMConfig::valid_data_timeout)) {
+    if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(control::Config::valid_data_timeout)) {
         if(fsm_p_ != nullptr) {
             fsm_p_->handleFSMError("LandDetector using old data");
         } else {

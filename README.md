@@ -50,7 +50,7 @@ http://gameprogrammingpatterns.com/state.html
     - If there is: Terminate, or pass the CMD on (depending on current state)
 - Each state is responsible for delivering valid setpoints (through getSetpoint method)
 - Each state should be as independent as possible.
-- Use FSMConfig class (static) for loading ros parameters
+- Use Config class (static) for loading ros parameters
 - Be sure to update state diagram when adding / removing states
 
 **Doxygen support is added.**
