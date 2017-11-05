@@ -3,19 +3,14 @@
 #include "control/fsm/debug_server.hpp"
 #include "control/fsm/event_data.hpp"
 
-DebugServer::DebugServer(ControlFSM* p_fsm) : fsm_p_(p_fsm) {
+DebugServer::DebugServer() {
     //Must be constructed after ros init
     assert(ros::isInitialized());
-    //Can't be nullptr
-    assert(fsm_p_);
     //Advertise service! 
     server_ = nh_.advertiseService("control_fsm_debug", &DebugServer::handleDebugEvent, this);
 }
 
 bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
-    if(!fsm_p_->isReady()) {
-        control::handleWarnMsg("Preflight not complete, however FSM do respond to debug requests! Be careful!!");
-    }
     EventData event = generateDebugEvent(req);
     //If request event is not valid
     if(event.event_type == EventType::REQUEST && !event.isValidRequest()) {
@@ -47,9 +42,8 @@ bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
             ROS_WARN("[Control FSM Debug] Manual CMD error: %s", errMsg.c_str());
         });
     }
-    fsm_p_->handleEvent(event);
+    event_queue_.push(event);
     resp.accepted = true;
-    resp.stateName = fsm_p_->getState()->getStateName();
     return true;
 
 }
@@ -110,5 +104,10 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
         })();
     }
     return event;
+}
+
+std::queue<EventData> DebugServer::getAndClearQueue() {
+    //Moves all elements
+    return std::move(event_queue_);
 }
 

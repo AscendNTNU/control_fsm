@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(Config::fsm_warn_topic, Config::fsm_status_buffer_size);
 
     //Set up debug server
-    DebugServer debugServer(&fsm);
+    DebugServer debugServer;
 
     //Spin once to get first messages
     ros::spinOnce();
@@ -72,6 +72,15 @@ int main(int argc, char** argv) {
     while(ros::ok()) {
         //Get latest messages
         ros::spinOnce(); //Handle all incoming messages - generates fsm events
+
+        if(!debugServer.isQueueEmpty()) {
+            auto event_queue = debugServer.getAndClearQueue();
+            while(!event_queue.empty()) {
+                fsm.handleEvent(event_queue.front());
+                event_queue.pop();
+            }
+        }
+
         fsm.loopCurrentState(); //Run current FSM state loop
 
         //Publish setpoints at gived rate

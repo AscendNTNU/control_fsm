@@ -3,6 +3,7 @@
 
 #include "control_fsm.hpp"
 #include <ascend_msgs/ControlFSMEvent.h>
+#include <queue>
 
 
 
@@ -10,9 +11,10 @@ class DebugServer {
     using Response = ascend_msgs::ControlFSMEvent::Response;
     using Request = ascend_msgs::ControlFSMEvent::Request;
 private:
-    ControlFSM* fsm_p_ = nullptr;
     ros::ServiceServer server_;
     ros::NodeHandle nh_;
+    ///Queue containing events
+    std::queue<EventData> event_queue_;
 
     bool handleDebugEvent(Request& req, Response& resp);
     EventData generateDebugEvent(Request&);
@@ -21,7 +23,10 @@ private:
     DebugServer(const DebugServer&) = delete;
 
 public:
-    DebugServer(ControlFSM* p_fsm);
+    DebugServer();
+    std::queue<EventData> getAndClearQueue();
+    bool isQueueEmpty() { return event_queue_.empty(); }
+
 
 };
 
