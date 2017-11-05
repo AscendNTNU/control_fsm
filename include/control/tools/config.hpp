@@ -43,10 +43,8 @@ public:
     static double obstacle_too_close_dist;
     ///Topic to listen for info about obstacles
     static std::string lidar_topic;
-
     ///Load paramaters
     static void loadParams();
-
     ///Finished drone will require all datastreams to be available
     static bool require_all_data_streams;
     ///Makes it possible to disable the use of obstacle detection features

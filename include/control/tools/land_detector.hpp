@@ -8,6 +8,12 @@
 #include <ros/ros.h>
 #include <mavros_msgs/ExtendedState.h>
 #include <memory>
+#include <control/exceptions/ROSNotInitializedException.hpp>
+
+namespace {
+using control::ROSNotInitializedException;
+using std::bad_alloc;
+}
 
 class LandDetector {
 
@@ -31,7 +37,7 @@ public:
     ///Is data streams available and ready?
     bool isReady();
     ///Get shared_ptr to shared instance - singleton pattern
-    static std::shared_ptr<LandDetector> getSharedInstancePtr() throw(std::bad_alloc);
+    static std::shared_ptr<LandDetector> getSharedInstancePtr();
 };
 
 #endif //CONTROL_FSM_LANDDETECTOR_HPP

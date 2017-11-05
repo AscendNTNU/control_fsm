@@ -30,7 +30,10 @@ bool LandDetector::isReady() {
     return sub_.getNumPublishers() > 0;
 }
 
-std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() throw(std::bad_alloc) {
+std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() {
+    if(!ros::isInitialized()) {
+        throw ROSNotInitializedException();
+    }
     if(shared_instance_p_ == nullptr) {
         try {
             shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);

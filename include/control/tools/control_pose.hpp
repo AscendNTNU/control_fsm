@@ -4,6 +4,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <array>
 #include <std_msgs/Header.h>
+#include <control/exceptions/ROSNotInitializedException.hpp>
 
 namespace control {
 struct Point {
