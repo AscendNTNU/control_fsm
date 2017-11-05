@@ -1,8 +1,8 @@
-#include "control_fsm/land_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/land_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
-#include <control_fsm/tools/target_tools.hpp>
-#include "control_fsm/control_fsm.hpp"
+#include <control/tools/target_tools.hpp>
+#include "control/fsm/control_fsm.hpp"
 
 LandState::LandState() {
     //Ignoring PX and PY - lands without XY feedback

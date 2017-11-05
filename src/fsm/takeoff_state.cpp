@@ -1,11 +1,11 @@
-#include "control_fsm/takeoff_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/takeoff_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
-#include "control_fsm/control_fsm.hpp"
+#include "control/fsm/control_fsm.hpp"
 #include <cmath>
 #include <string>
-#include <control_fsm/tools/target_tools.hpp>
-#include "control_fsm/fsm_config.hpp"
+#include <control/tools/target_tools.hpp>
+#include "control/tools/config.hpp"
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();
@@ -37,10 +37,11 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Set relevant parameters
+    using control::Config;
     //Takeoff altitude
-    setpoint_.position.z = FSMConfig::takeoff_altitude;
+    setpoint_.position.z = Config::takeoff_altitude;
     //Takeoff finished threshold
-    altitude_reached_margin_ = FSMConfig::altitude_reached_margin;
+    altitude_reached_margin_ = Config::altitude_reached_margin;
 
     if(event.isValidCMD()) {
         cmd_ = event;

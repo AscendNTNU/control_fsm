@@ -1,16 +1,16 @@
 //
 // Created by haavard on 01.06.17.
 //
-#include "control_fsm/fsm_config.hpp"
-#include "control_fsm/land_detector.hpp"
-#include "control_fsm/control_fsm.hpp"
+#include "control/tools/config.hpp"
+#include "control/tools/land_detector.hpp"
+#include "control/fsm/control_fsm.hpp"
 
 constexpr uint8_t LANDED_STATE_ON_GROUND = mavros_msgs::ExtendedState::LANDED_STATE_ON_GROUND;
 std::shared_ptr<LandDetector> LandDetector::shared_instance_p_;
 
 LandDetector::LandDetector() {
     assert(ros::isInitialized());
-    sub_ = nh_.subscribe(FSMConfig::land_detector_topic, 1, &LandDetector::landCB, this);
+    sub_ = nh_.subscribe(control::Config::land_detector_topic, 1, &LandDetector::landCB, this);
 }
 
 void LandDetector::landCB(const mavros_msgs::ExtendedState &msg) {
@@ -18,7 +18,7 @@ void LandDetector::landCB(const mavros_msgs::ExtendedState &msg) {
 }
 
 bool LandDetector::isOnGround() {
-    if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(FSMConfig::valid_data_timeout)) {
+    if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(control::Config::valid_data_timeout)) {
         ROS_ERROR("[Control FSM] Using old land detector data!");
     }
     return last_msg_.landed_state == LANDED_STATE_ON_GROUND;

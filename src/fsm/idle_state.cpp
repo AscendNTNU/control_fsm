@@ -1,8 +1,8 @@
-#include "control_fsm/idle_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/idle_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
-#include "control_fsm/event_data.hpp"
-#include "control_fsm/control_fsm.hpp"
+#include "control/fsm/event_data.hpp"
+#include "control/fsm/control_fsm.hpp"
 
 //Sets setpoint type to IDLE
 IdleState::IdleState() {

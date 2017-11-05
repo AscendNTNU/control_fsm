@@ -1,12 +1,12 @@
-#include "control_fsm/go_to_state.hpp"
-#include "control_fsm/setpoint_msg_defines.h"
+#include "control/fsm/go_to_state.hpp"
+#include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
-#include "control_fsm/control_fsm.hpp"
+#include "control/fsm/control_fsm.hpp"
 #include <geometry_msgs/PoseStamped.h>
 #include <cmath>
 #include <geometry_msgs/Point32.h>
-#include "control_fsm/fsm_config.hpp"
-#include "control_fsm/tools/target_tools.hpp"
+#include "control/tools/config.hpp"
+#include "control/tools/target_tools.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
@@ -112,7 +112,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     double delta_y = current_position.y - cmd_.position_goal.y;
     double delta_z = current_position.z - cmd_.position_goal.z;
     bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
-    bool z_reached = (std::fabs(delta_z) <= FSMConfig::altitude_reached_margin);
+    bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
     bool yaw_reached = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
 
@@ -134,12 +134,13 @@ const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
 
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
-    //TODO Uneccesary variables - FSMConfig can be used directly
+    using control::Config;
+    //TODO Uneccesary variables - Config can be used directly
     //Set state variables
-    delay_transition_.delayTime = ros::Duration(FSMConfig::go_to_hold_dest_time);
-    dest_reached_margin_ = FSMConfig::dest_reached_margin;
-    setpoint_reached_margin_ = FSMConfig::setpoint_reached_margin;
-    yaw_reached_margin_ = FSMConfig::yaw_reached_margin;
+    delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
+    dest_reached_margin_ = Config::dest_reached_margin;
+    setpoint_reached_margin_ = Config::setpoint_reached_margin;
+    yaw_reached_margin_ = Config::yaw_reached_margin;
 
     fsm.handleFSMInfo("GoTo init completed!");
 }

@@ -1,30 +1,32 @@
-#include "control_fsm/fsm_config.hpp"
+#include "control/tools/config.hpp"
 #include <assert.h>
 
-double FSMConfig::dest_reached_margin = 0.3;
-double FSMConfig::blind_hover_alt = 1.0;
-double FSMConfig::takeoff_altitude = 1.0;
-double FSMConfig::altitude_reached_margin = 0.1;
-double FSMConfig::setpoint_reached_margin = 0.3;
-double FSMConfig::yaw_reached_margin = 0.02;
-double FSMConfig::no_yaw_correct_dist = 0.2;
-double FSMConfig::valid_data_timeout = 2.0; //2 seconds
-std::string FSMConfig::fsm_error_topic = "control/fsm/on_error";
-std::string FSMConfig::fsm_warn_topic = "control/fsm/on_warn";
-std::string FSMConfig::fsm_info_topic = "control/fsm/on_info";
-std::string FSMConfig::fsm_state_changed_topic = "control/fsm/state_changed";
-std::string FSMConfig::mavros_local_pos_topic = "mavros/local_position/pose";
-std::string FSMConfig::mavros_state_changed_topic = "mavros/state";
-std::string FSMConfig::land_detector_topic = "/landdetector";
-int FSMConfig::fsm_status_buffer_size = 10;
-double FSMConfig::go_to_hold_dest_time = 0.5;
-double FSMConfig::safe_hover_altitude = 2.0;
-double FSMConfig::obstacle_too_close_dist = 2.0;
-std::string FSMConfig::lidar_topic = "perception/obstacles/lidar";
-bool FSMConfig::require_all_data_streams = true;
-bool FSMConfig::require_obstacle_detection = true;
+using control::Config;
 
-void FSMConfig::loadParams() {
+double Config::dest_reached_margin = 0.3;
+double Config::blind_hover_alt = 1.0;
+double Config::takeoff_altitude = 1.0;
+double Config::altitude_reached_margin = 0.1;
+double Config::setpoint_reached_margin = 0.3;
+double Config::yaw_reached_margin = 0.02;
+double Config::no_yaw_correct_dist = 0.2;
+double Config::valid_data_timeout = 2.0; //2 seconds
+std::string Config::fsm_error_topic = "control/fsm/on_error";
+std::string Config::fsm_warn_topic = "control/fsm/on_warn";
+std::string Config::fsm_info_topic = "control/fsm/on_info";
+std::string Config::fsm_state_changed_topic = "control/fsm/state_changed";
+std::string Config::mavros_local_pos_topic = "mavros/local_position/pose";
+std::string Config::mavros_state_changed_topic = "mavros/state";
+std::string Config::land_detector_topic = "/landdetector";
+int Config::fsm_status_buffer_size = 10;
+double Config::go_to_hold_dest_time = 0.5;
+double Config::safe_hover_altitude = 2.0;
+double Config::obstacle_too_close_dist = 2.0;
+std::string Config::lidar_topic = "perception/obstacles/lidar";
+bool Config::require_all_data_streams = true;
+bool Config::require_obstacle_detection = true;
+
+void Config::loadParams() {
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var) {
         if(!n.getParam(name, var)) {

@@ -1,6 +1,6 @@
 
-#include "control_fsm/debug_server.hpp"
-#include "control_fsm/event_data.hpp"
+#include "control/fsm/debug_server.hpp"
+#include "control/fsm/event_data.hpp"
 
 DebugServer::DebugServer(ControlFSM* p_fsm) : fsm_p_(p_fsm) {
     //Must be constructed after ros init

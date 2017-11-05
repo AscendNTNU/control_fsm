@@ -1,9 +1,9 @@
-#include "control_fsm/control_fsm.hpp"
+#include "control/fsm/control_fsm.hpp"
 #include <ros/ros.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <control_fsm/control_fsm.hpp>
-#include <control_fsm/fsm_config.hpp>
+#include <control/fsm/control_fsm.hpp>
+#include <control/tools/config.hpp>
 
 #ifndef PI_HALF
 #define PI_HALF 1.57079632679
@@ -95,7 +95,7 @@ ControlFSM::ControlFSM() {
     this->initStates();
 
     //Subscribe to neccesary topics
-    std::string& stateTopic = FSMConfig::mavros_state_changed_topic;
+    std::string& stateTopic = control::Config::mavros_state_changed_topic;
     subscribers_.mavros_state_changed_sub = node_handler_.subscribe(stateTopic, 1, &ControlFSM::mavrosStateChangedCB, this);
 
     //Make sure no other instances of ControlFSM is allowed
@@ -122,7 +122,7 @@ bool ControlFSM::isReady() {
     }
 
     //Some checks can be skipped for debugging purposes
-    if(FSMConfig::require_all_data_streams) {
+    if(control::Config::require_all_data_streams) {
 
         //Check that we're recieving position
         if(!drone_pose_p->isPoseValid()) {

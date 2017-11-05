@@ -13,16 +13,15 @@
 #include "takeoff_state.hpp"
 #include "blind_hover_state.hpp"
 #include "position_hold_state.hpp"
-#include "estimate_adjust_state.hpp"
 #include "track_gb_state.hpp"
 #include "interact_gb_state.hpp"
 #include "go_to_state.hpp"
 #include "land_state.hpp"
 #include "manual_flight_state.hpp"
 
-#include "land_detector.hpp"
+#include "control/tools/land_detector.hpp"
 
-#include "tools/control_pose.hpp"
+#include "control/tools/control_pose.hpp"
 
 ///Main FSM logic
 class ControlFSM {
