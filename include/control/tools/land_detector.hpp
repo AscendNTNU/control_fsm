@@ -10,11 +10,6 @@
 #include <memory>
 #include <control/exceptions/ROSNotInitializedException.hpp>
 
-namespace {
-using control::ROSNotInitializedException;
-using std::bad_alloc;
-}
-
 class LandDetector {
 
 private:

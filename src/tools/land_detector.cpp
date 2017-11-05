@@ -32,7 +32,7 @@ bool LandDetector::isReady() {
 
 std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() {
     if(!ros::isInitialized()) {
-        throw ROSNotInitializedException();
+        throw control::ROSNotInitializedException();
     }
     if(shared_instance_p_ == nullptr) {
         try {
