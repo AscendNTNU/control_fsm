@@ -61,7 +61,7 @@ void ControlFSM::loopCurrentState(void) {
     getState()->loopState(*this);
 }
 
-ControlFSM::ControlFSM() : land_detector_(control::Config::land_detector_topic, this) {
+ControlFSM::ControlFSM() {
     //Only one instance of ControlFSM is allowed
     assert(!ControlFSM::is_used);
     //ROS must be initialized!
@@ -120,7 +120,7 @@ bool ControlFSM::isReady() {
                 return false;
             }
         } catch(const std::bad_alloc& e) {
-            handleFSMError("Exception: " + std::string(e.what()));
+            control::handleErrorMsg("Exception: " + std::string(e.what()));
             return false;
         }
     }
