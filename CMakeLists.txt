@@ -41,18 +41,24 @@ include_directories(
       ${catkin_INCLUDE_DIRS}
 )
 
-file(GLOB control_fsm_SRC "src/*.cpp")
+file(GLOB control_fsm_SRC "src/fsm/*.cpp")
+file(GLOB control_tools_SRC "src/tools/*.cpp")
+
+
 
 ## Declare a C++ library
+#State machine
 add_library(control_fsm_lib
-  ${control_fsm_SRC}
+        ${control_fsm_SRC}
+)
+#Control tools not directly related to the FSM
+add_library(control_tools_lib
+        ${control_tools_SRC}
 )
 
-roslaunch_add_file_check(launch)
-
-
 target_link_libraries(control_fsm_lib
-    ${catkin_LIBRARIES}
+        ${catkin_LIBRARIES}
+        control_tools_lib
 )
 
 ## Declare a C++ executable
@@ -74,6 +80,8 @@ target_link_libraries(land_detector_node ${catkin_LIBRARIES})
 add_dependencies(control_fsm_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(land_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(control_tools_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 catkin_add_gtest(utest test/utest.cpp)
 target_link_libraries(utest control_fsm_lib)
+roslaunch_add_file_check(launch)
