@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
         fsm.loopCurrentState(); //Run current FSM state loop
 
         //Publish setpoints at gived rate
-        const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+        const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpointPtr();
         setpointPub.publish(*pSetpoint);
 
         //Sleep for remaining time

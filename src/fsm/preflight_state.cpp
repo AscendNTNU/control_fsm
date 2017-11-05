@@ -31,7 +31,7 @@ void PreFlightState::stateBegin(ControlFSM &fsm, const EventData &event) {
 }
 
 //Returns setpoint
-const mavros_msgs::PositionTarget* PreFlightState::getSetpoint() { 
+const mavros_msgs::PositionTarget* PreFlightState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }
