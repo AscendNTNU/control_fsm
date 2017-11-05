@@ -21,7 +21,8 @@ InteractGBState ControlFSM::INTERACT_GB_STATE;
 GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
-bool ControlFSM::is_used = false;
+
+std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_;
 
 //Change the current running state - be carefull to only change into an allowed state
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
@@ -62,10 +63,6 @@ void ControlFSM::loopCurrentState(void) {
 }
 
 ControlFSM::ControlFSM() {
-    //Only one instance of ControlFSM is allowed
-    assert(!ControlFSM::is_used);
-    //ROS must be initialized!
-    assert(ros::isInitialized());
     //Set starting state
     state_vault_.current_state_p_ = &BEGIN_STATE;
 
@@ -75,9 +72,6 @@ ControlFSM::ControlFSM() {
     //Subscribe to neccesary topics
     std::string& stateTopic = control::Config::mavros_state_changed_topic;
     subscribers_.mavros_state_changed_sub = node_handler_.subscribe(stateTopic, 1, &ControlFSM::mavrosStateChangedCB, this);
-
-    //Make sure no other instances of ControlFSM is allowed
-    ControlFSM::is_used = true;
 }
 
 void ControlFSM::initStates() {
@@ -167,6 +161,26 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
 void ControlFSM::handleManual() {
     getState()->handleManual(*this);
 }
+
+std::shared_ptr<ControlFSM> ControlFSM::getSharedInstancePtr() {
+
+    if(!ros::isInitialized()) {
+        throw control::ROSNotInitializedException();
+    }
+
+    if(shared_instance_p_ == nullptr) {
+        try {
+            shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
+        } catch(const std::bad_alloc& e) {
+            std::string err_msg = "ControlFSM allocation failure: ";
+            err_msg += e.what();
+            control::handleErrorMsg(err_msg);
+            throw;
+        }
+    }
+    return shared_instance_p_;
+}
+
 
 
 

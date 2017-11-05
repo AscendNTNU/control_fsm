@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     }
 
     //Statemachine instance
-    ControlFSM fsm;
+    auto fsm_p = ControlFSM::getSharedInstancePtr();
     //Set up neccesary publishers
     ros::Publisher setpointPub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
     ros::Publisher fsmOnStateChangedPub = n.advertise<std_msgs::String>(control::Config::fsm_state_changed_topic, Config::fsm_status_buffer_size);
@@ -38,44 +38,44 @@ int main(int argc, char** argv) {
     ros::Publisher fsmOnWarnPub = n.advertise<std_msgs::String>(Config::fsm_warn_topic, Config::fsm_status_buffer_size);
 
     //Set up debug server
-    DebugServer debugServer(&fsm);
+    DebugServer debugServer(fsm_p.get());
 
     //Spin once to get first messages
     ros::spinOnce();
 
     //Set FSM callbacks
-    fsm.setOnStateChangedCB([&](){
+    fsm_p->setOnStateChangedCB([&](){
         std_msgs::String msg;
-        msg.data = fsm.getState()->getStateName();
+        msg.data = fsm_p->getState()->getStateName();
         fsmOnStateChangedPub.publish(msg);
     });
 
 
     //Wait for all systems to initalize and position to become valid
     control::handleInfoMsg("Waiting for necessary data streams!");
-    while(ros::ok() && !fsm.isReady()) {
+    while(ros::ok() && !fsm_p->isReady()) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
     control::handleInfoMsg("Necessary data streams are ready!");
 
     //Actionserver is started when the system is ready
-    ActionServer cmdServer(&fsm);
+    ActionServer cmdServer(fsm_p.get());
 
     //Preflight is finished and system is ready for use!
     /**************************************************/
     control::handleInfoMsg("FSM is ready!");
-    fsm.startPreflight(); //Transition to preflight!
+    fsm_p->startPreflight(); //Transition to preflight!
     //Used to maintain a fixed loop rate
     ros::Rate loopRate(SETPOINT_PUB_RATE);
     //Main loop
     while(ros::ok()) {
         //Get latest messages
         ros::spinOnce(); //Handle all incoming messages - generates fsm events
-        fsm.loopCurrentState(); //Run current FSM state loop
+        fsm_p->loopCurrentState(); //Run current FSM state loop
 
         //Publish setpoints at gived rate
-        const mavros_msgs::PositionTarget* pSetpoint = fsm.getSetpoint();
+        const mavros_msgs::PositionTarget* pSetpoint = fsm_p->getSetpoint();
         setpointPub.publish(*pSetpoint);
 
         //Sleep for remaining time

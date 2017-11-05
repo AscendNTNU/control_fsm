@@ -6,6 +6,9 @@
 #define DEFAULT_TAKEOFF_ALTITUDE 1.0f 
 #define DEFAULT_TAKEOFF_ALTITUDE_REACHED_MARGIN 0.1
 
+///Forward decleration
+class ControlFSM;
+
 ///Takeoff state
 class TakeoffState : public StateInterface {
 private:
@@ -20,6 +23,5 @@ public:
     const mavros_msgs::PositionTarget* getSetpoint() override;
     void handleManual(ControlFSM &fsm) override;
 };
-
 
 #endif
