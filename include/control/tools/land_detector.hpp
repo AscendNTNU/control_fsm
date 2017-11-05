@@ -6,25 +6,32 @@
 #define CONTROL_FSM_LANDDETECTOR_HPP
 
 #include <ros/ros.h>
-#include <ascend_msgs/BoolStamped.h>
-
-class ControlFSM;
+#include <mavros_msgs/ExtendedState.h>
+#include <memory>
 
 class LandDetector {
 
 private:
-    std::string topic_;
-    ControlFSM* fsm_p_ = nullptr;
+    ///Shared instance - singleton pattern
+    static std::shared_ptr<LandDetector> shared_instance_p_;
+    ///ROS Nodehandle
     ros::NodeHandle nh_;
+    ///Subscriber for land detector messages
     ros::Subscriber sub_;
-    ascend_msgs::BoolStamped last_msg_;
-    void landCB(const ascend_msgs::BoolStamped& msg);
+    ///Last recieved message
+    mavros_msgs::ExtendedState last_msg_;
+    ///Callback for last recieved message
+    void landCB(const mavros_msgs::ExtendedState& msg);
+    ///Private constructor
+    LandDetector();
 
 public:
-    LandDetector(std::string topic);
-    LandDetector(std::string topic, ControlFSM* p_fsm);
+    ///Is drone in the air or landed?
     bool isOnGround();
+    ///Is data streams available and ready?
     bool isReady();
+    ///Get shared_ptr to shared instance - singleton pattern
+    static std::shared_ptr<LandDetector> getSharedInstancePtr() throw(std::bad_alloc);
 };
 
 #endif //CONTROL_FSM_LANDDETECTOR_HPP

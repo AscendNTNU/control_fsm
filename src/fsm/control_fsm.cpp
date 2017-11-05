@@ -83,7 +83,7 @@ void ControlFSM::handleFSMDebug(std::string debug_msg) {
     ROS_DEBUG("%s", (std::string("[Control FSM] ") + debug_msg).c_str());
 }
 
-ControlFSM::ControlFSM() : land_detector_(control::Config::land_detector_topic, this) {
+ControlFSM::ControlFSM() {
     //Only one instance of ControlFSM is allowed
     assert(!ControlFSM::is_used);
     //ROS must be initialized!
@@ -135,9 +135,14 @@ bool ControlFSM::isReady() {
             this->handleFSMWarn("Missing mavros state info!");
             return false;
         }
-        //Land detector must be ready
-        if (!land_detector_.isReady()) {
-            this->handleFSMWarn("Missing land detector stream!");
+        try {
+            //Land detector must be ready
+            if (!LandDetector::getSharedInstancePtr()->isReady()) {
+                this->handleFSMWarn("Missing land detector stream!");
+                return false;
+            }
+        } catch(const std::bad_alloc& e) {
+            handleFSMError("Exception: " + std::string(e.what()));
             return false;
         }
     }
