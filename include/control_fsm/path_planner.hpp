@@ -22,7 +22,8 @@ private:
 	float32 g;
 	// Sum of g and h
 	float32 f;
-
+public:
+	Node(float32 x, float32 y):x(x), y(y){}4
 };
 
 
