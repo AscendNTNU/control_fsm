@@ -5,6 +5,8 @@
 #include <ascend_msgs/PathPlannerPlan.h>
 #include "control/tools/control_pose.hpp"
 #include <list>
+#include <queue>
+#include <math.h>
 
 
 #define FIELD_LENGTH 20
@@ -22,14 +24,18 @@ private:
 	// Sum of g and h
 	float32 f;
 public:
-	Node(float32 x, float32 y):x(x), y(y){}4
+	Node(float32 x, float32 y, float32 g, float32 h):x(x), y(y), g(g), h(h){f = g+h;}
+	// Implemented only for the closed list priority queue
+	friend bool operator< (const Node &lhs, const Node &rhs);
+	float32 getX() const {return x;}
+	float32 getY() const {return y;}
 };
 
 class PathPlanner{
 private:
 	Node graph[FIELD_LENGTH][FIELD_LENGTH];
 
-	std::list<Node> open_list;
+	std::priority_queue<Node> open_list;
 	std::list<Node> closed_list;
 
 	std::list<Node> plan;
@@ -41,6 +47,9 @@ private:
 
 public:
     PathPlanner(float32 current_x, float32 current_y, float32 target_x, float32 target_y);
+    void initializeGraph();
+    float32 calculateHeuristic(float32 x, float32 y);
+    float32 calculateG(float32 x, float32 y);
 };
 
 #endif // PATH_PLANNER_HPP
