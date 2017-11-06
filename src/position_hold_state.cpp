@@ -67,6 +67,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     setpoint_.position.x = position.x;
     setpoint_.position.y = position.y;
 
+    //If positiongoal is valid, but it's not a command
     if(event.position_goal.valid) {
         //Set xy setpoint to positionGoal if we're close enough for it to be safe
         double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
