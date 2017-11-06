@@ -7,6 +7,8 @@
 #include <list>
 #include <queue>
 #include <math.h>
+#include <iostream>
+#include <iomanip>
 
 
 #define FIELD_LENGTH 20
@@ -14,43 +16,45 @@
 
 class Node{
 private:
-	float32 x;
-	float32 y;
+    float x;
+    float y;
 
-	// heuristic, use Euclidian distance
-	float32 h;
-	float32 g;
-	// Sum of g and h
-	float32 f;
+    // heuristic, use Euclidian distance
+    float h;
+    float g;
+    // Sum of g and h
+    float f;
 public:
-	Node();
-	Node(float32 x, float32 y, float32 g, float32 h):x(x), y(y), g(g), h(h){f = g+h;}
-	// Implemented only for the closed list priority queue
-	friend bool operator< (const Node &lhs, const Node &rhs);
-	float32 getX() const {return x;}
-	float32 getY() const {return y;}
+    Node();
+    Node(float x, float y, float g, float h):x(x), y(y), g(g), h(h){f = g+h;}
+
+    float getX() const {return x;}
+    float getY() const {return y;}
+    float getF() const {return f;}
+
+    // Implemented only for the closed list priority queue
+    friend bool operator< (const Node &lhs, const Node &rhs);
 };
 
 
 class PathPlanner{
 private:
-	Node graph[FIELD_LENGTH][FIELD_LENGTH];
+    Node* graph[FIELD_LENGTH][FIELD_LENGTH];
 
-	std::priority_queue<Node> open_list;
-	std::list<Node> closed_list;
+    std::priority_queue<Node> open_list;
+    std::list<Node> closed_list;
 
-	std::list<Node> plan;
+    std::list<Node> plan;
 
-	Node end_node;
-	Node start_node;
-	
-	ascend_msgs::PathPlannerPlan current_plan_;
+    Node* end_node;
+    Node* start_node;
 
 public:
-    PathPlanner(float32 current_x, float32 current_y, float32 target_x, float32 target_y);
+    PathPlanner(float current_x, float current_y, float target_x, float target_y);
     void initializeGraph();
-    float32 calculateHeuristic(float32 x, float32 y);
-    float32 calculateG(float32 x, float32 y);
+    float calculateHeuristic(float x, float y);
+    float calculateG(float x, float y);
+    void printGraph();
 };
 
 #endif // PATH_PLANNER_HPP
