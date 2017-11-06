@@ -141,7 +141,7 @@ void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
 }
 
 //Returns setpoint
-const mavros_msgs::PositionTarget* PositionHoldState::getSetpoint() {
+const mavros_msgs::PositionTarget* PositionHoldState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }

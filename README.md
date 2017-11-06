@@ -48,7 +48,7 @@ http://gameprogrammingpatterns.com/state.html
 - It shouldn't be possible to send a new command if another is running. (ABORT first)
 - Remeber to check if there is any active command before transitioning
     - If there is: Terminate, or pass the CMD on (depending on current state)
-- Each state is responsible for delivering valid setpoints (through getSetpoint method)
+- Each state is responsible for delivering valid setpoints (through getSetpointPtr method)
 - Each state should be as independent as possible.
 - Use Config class (static) for loading ros parameters
 - Be sure to update state diagram when adding / removing states

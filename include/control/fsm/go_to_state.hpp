@@ -54,7 +54,7 @@ public:
     // 
     void stateEnd(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const { return "GoTo";}
-    const mavros_msgs::PositionTarget* getSetpoint();
+    const mavros_msgs::PositionTarget* getSetpointPtr();
     bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;
 

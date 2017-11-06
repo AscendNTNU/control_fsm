@@ -126,7 +126,7 @@ void GoToState::loopState(ControlFSM& fsm) {
 }
 
 //Returns valid setpoint
-const mavros_msgs::PositionTarget* GoToState::getSetpoint() {
+const mavros_msgs::PositionTarget* GoToState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }

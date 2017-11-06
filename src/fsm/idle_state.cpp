@@ -26,7 +26,7 @@ void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
-const mavros_msgs::PositionTarget* IdleState::getSetpoint() {
+const mavros_msgs::PositionTarget* IdleState::getSetpointPtr() {
     //Sets timestamp, and returns setpoint_ as const pointer
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;

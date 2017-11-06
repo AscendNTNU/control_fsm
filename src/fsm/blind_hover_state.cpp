@@ -79,7 +79,7 @@ void BlindHoverState::loopState(ControlFSM& fsm) {
     }
 }
 
-const mavros_msgs::PositionTarget* BlindHoverState::getSetpoint() {
+const mavros_msgs::PositionTarget* BlindHoverState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }
