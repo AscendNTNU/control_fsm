@@ -6,6 +6,7 @@
 #include <string>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
+#include <control/exceptions/PoseNotValidException.hpp>
 #include "control/tools/config.hpp"
 
 TakeoffState::TakeoffState() {
@@ -48,11 +49,15 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Takeoff!!");
     }
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
-    //If no position is available - abort takeoff
-    if(!pose_p->isPoseValid()) {
-        control::handleErrorMsg("No position available");
+    std::shared_ptr<control::Pose> pose_p;
+    try {
+        pose_p = control::Pose::getSharedPosePtr();
+        if(!pose_p->isPoseValid()) {
+            throw control::PoseNotValidException();
+        }
+    } catch(const std::exception& e) {
+        //If no position is available - abort takeoff
+        control::handleErrorMsg(std::string("No position available: ") + e.what());
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position available");
             cmd_ = EventData();
@@ -66,7 +71,19 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
+    ///No exception can be thrown, already tested in stateBegin.
     auto pose_p = control::Pose::getSharedPosePtr();
+    if(!pose_p->isPoseValid()) {
+        //Abort takeoff - land!
+        control::handleErrorMsg("Position lost - landing!");
+        if(cmd_.isValidCMD()) {
+            cmd_.eventError("No position available, aborting");
+            cmd_ = EventData();
+        }
+        RequestEvent event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::LAND_STATE, this, event);
+        return;
+    }
     control::Point current_position = pose_p->getPositionXYZ();
     if(current_position.z > (setpoint_.position.z - altitude_reached_margin_)) {
         if(cmd_.isValidCMD()) {

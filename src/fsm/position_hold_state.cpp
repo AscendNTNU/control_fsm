@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
+#include <control/exceptions/PoseNotValidException.hpp>
 
 
 //Constructor sets default setpoint type mask
@@ -51,13 +52,18 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
         return;
     }
-
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-    //GoTo blind hover if position not valid, should never occur
-    if(!pose_p->isPoseValid()) {
+    //Get pose
+    std::shared_ptr<control::Pose> pose_p;
+    try {
+        pose_p = control::Pose::getSharedPosePtr();
+        if(!pose_p->isPoseValid()) {
+            throw control::PoseNotValidException();
+        }
+    } catch (const std::exception& e){
+        //Transition to blindhover if pose not valid
+        control::handleErrorMsg(std::string("No pose available: ") + e.what());
         if(event.isValidCMD()) {
-            event.eventError("No valid position!");
+            event.eventError("No valid pose!");
         }
         EventData n_event;
         n_event.event_type = EventType::POSLOST;
@@ -65,6 +71,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
+    control::Point position = pose_p->getPositionXYZ();
     //Set setpoint to current position
     setpoint_.position.x = position.x;
     setpoint_.position.y = position.y;
@@ -98,6 +105,7 @@ bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
     }
 }
 
+//Will be removed!
 void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
     using control::Config;
     //TODO TEST!!!

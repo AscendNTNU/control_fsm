@@ -31,18 +31,22 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-    auto land_detector = LandDetector::getSharedInstancePtr();
+    try {
+        auto pose_p = control::Pose::getSharedPosePtr();
+        control::Point position = pose_p->getPositionXYZ();
+        auto land_detector = LandDetector::getSharedInstancePtr();
 
-    if(land_detector->isOnGround()) {
-        setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
-    } else {
-        setpoint_.type_mask = default_mask;
-        setpoint_.position.x = position.x;
-        setpoint_.position.y = position.y;
-        setpoint_.position.z = position.z;
-        setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+        if (land_detector->isOnGround()) {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
+        } else {
+            setpoint_.type_mask = default_mask;
+            setpoint_.position.x = position.x;
+            setpoint_.position.y = position.y;
+            setpoint_.position.z = position.z;
+            setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
+        }
+    } catch (const std::exception& e) {
+        control::handleErrorMsg(std::string("Exception in Manual state: ") + e.what());
     }
 }
 

@@ -44,38 +44,45 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
-    ///Get shared_ptr to drones pose
-    auto pose_p = control::Pose::getSharedPosePtr();
-    //If full position is valid - no need to blind hover
-    if(pose_p->isPoseValid()) {
-        if(event.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
-        } else {
-            RequestEvent req_event(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
+    //Set default blind hover altitude
+    setpoint_.position.z = control::Config::blind_hover_alt;
+    try {
+        //Get shared_ptr to pose
+        auto pose_p = control::Pose::getSharedPosePtr();
+        if(pose_p->isPoseValid()) {
+            if(event.isValidCMD()) {
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
+            } else {
+                RequestEvent req_event(RequestType::POSHOLD);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
+            }
+            return;
         }
-        return;
+    } catch(const std::exception& e) {
+        control::handleErrorMsg(std::string("No pose available: ") + e.what());
     }
+    //If full position is valid - no need to blind hover
     if(event.isValidCMD()) {
         cmd_ = event;
     }
-
-    setpoint_.position.z = control::Config::blind_hover_alt;
-    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
-    ///Get shared_ptr to drones pose
-    auto pose_p = control::Pose::getSharedPosePtr();
-    //Transition to position hold when position is valid.
-    if(pose_p->isPoseValid()) {
-        if(cmd_.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
-            cmd_ = EventData(); //Reset cmd_
-        } else {
-            RequestEvent event(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+    try {
+        ///Get shared_ptr to drones pose
+        auto pose_p = control::Pose::getSharedPosePtr();
+        //Transition to position hold when position is valid.
+        if (pose_p->isPoseValid()) {
+            if (cmd_.isValidCMD()) {
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
+                cmd_ = EventData(); //Reset cmd_
+            } else {
+                RequestEvent event(RequestType::POSHOLD);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            }
         }
+    }catch(const std::exception& e) {
+        control::handleErrorMsg(std::string("Pose not available: ") + e.what());
     }
 }
 
