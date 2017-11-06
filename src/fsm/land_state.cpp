@@ -39,40 +39,27 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Landing!");
     }
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
-    if(pose_p != nullptr) {
-        //Position XY is ignored in typemask, but the values are set as a precaution.
-        setpoint_.position.x = current_position.x;
-        setpoint_.position.y = current_position.y;
-        //Set yaw setpoint based on current rotation
-        setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
-    } else {
-        //Should never occur
-        RequestEvent abort_event(RequestType::ABORT);
-        if(cmd_.isValidCMD()) {
-            cmd_.eventError("No valid position");
-            cmd_ = EventData();
-        }
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-    }
 }
 
 void LandState::loopState(ControlFSM& fsm) {
-    auto land_detector = LandDetector::getSharedInstancePtr();
-    if(land_detector->isOnGround()) {
-        if(cmd_.isValidCMD()) {
-            //Only landxy should occur!
-            if(cmd_.command_type == CommandType::LANDXY) {
-                cmd_.finishCMD();
-            } else {
-                cmd_.eventError("Wrong CMD type!");
-                control::handleErrorMsg("Invalid CMD type in land state!");
+    try {
+        auto land_detector_p = LandDetector::getSharedInstancePtr();
+        if(land_detector_p->isOnGround()) {
+            if(cmd_.isValidCMD()) {
+                //Only landxy should occur!
+                if(cmd_.command_type == CommandType::LANDXY) {
+                    cmd_.finishCMD();
+                } else {
+                    cmd_.eventError("Wrong CMD type!");
+                    control::handleErrorMsg("Invalid CMD type in land state!");
+                }
+                cmd_ = EventData();
             }
-            cmd_ = EventData();
+            RequestEvent idle_request(RequestType::IDLE);
+            fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
         }
-        RequestEvent idle_request(RequestType::IDLE);
-        fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
+    } catch (const std::exception& e) {
+        control::handleErrorMsg(std::string("No land detector available: ") + e.what());
     }
 }
 

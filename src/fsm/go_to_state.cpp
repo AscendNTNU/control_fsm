@@ -6,6 +6,7 @@
 #include <cmath>
 #include <geometry_msgs/Point32.h>
 #include <control/tools/logger.hpp>
+#include <control/exceptions/PoseNotValidException.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
 
@@ -91,22 +92,28 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 void GoToState::loopState(ControlFSM& fsm) {
 
     //Get position
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
-
-
-    //Check that position data is valid
-    if(!pose_p->isPoseValid()) {
+    std::shared_ptr<control::Pose> pose_p;
+    try {
+        pose_p = control::Pose::getSharedPosePtr();
+        if(!pose_p->isPoseValid()) {
+            //Throw exception if pose is invalid
+            throw control::PoseNotValidException();
+        }
+    } catch(const std::exception& e) {
+        //Transition back to poshold if exception is thrown
         EventData event;
         event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position");
             cmd_ = EventData();
         }
-        
+
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         return;
     }
+
+    //Get position
+    control::Point current_position = pose_p->getPositionXYZ();
 
     //Check if destination is reached!
     double delta_x = current_position.x - cmd_.position_goal.x;
