@@ -79,7 +79,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     }
 }
 
-const mavros_msgs::PositionTarget* TakeoffState::getSetpoint() {
+const mavros_msgs::PositionTarget* TakeoffState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }

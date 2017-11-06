@@ -11,7 +11,7 @@ public:
     std::string getStateName() const override { return "ManualFlight"; }
     void loopState(ControlFSM& fsm) override;
     //Returns setpoint
-    const mavros_msgs::PositionTarget* getSetpoint() override;
+    const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
 };
 

@@ -158,7 +158,7 @@ public:
 
     
     ///Returns setpoint from current state
-    const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
+    const mavros_msgs::PositionTarget* getSetpointPtr() { return getState()->getSetpointPtr(); }
 
     ///Sets new callback function for onStateChanged
     void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }

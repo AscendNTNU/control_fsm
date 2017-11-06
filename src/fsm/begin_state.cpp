@@ -25,7 +25,7 @@ void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 //Returns IDLE setpoints - nothing will though happen as drone should be disarmed
-const mavros_msgs::PositionTarget* BeginState::getSetpoint() {
+const mavros_msgs::PositionTarget* BeginState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
      return &setpoint_;
 }
