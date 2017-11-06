@@ -4,6 +4,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <array>
 #include <std_msgs/Header.h>
+#include <control/exceptions/ROSNotInitializedException.hpp>
 
 namespace control {
 struct Point {
@@ -66,7 +67,11 @@ public:
     ///Get header - includes timestamp
     std_msgs::Header getHeader() { return last_position_.header; }
 
-    ///Returns pointer to instance
+    /**Returns pointer to instance
+     * @throw control::ROSNotInitializedException
+     * @throw std::bad_alloc
+     * @return shared_ptr to shared instance (singleton) of control::pose
+     */
     static std::shared_ptr<Pose> getSharedPosePtr();
 
     ///Check if pose is recieved

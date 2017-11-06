@@ -4,8 +4,9 @@
 #include "control/fsm/event_data.hpp"
 
 DebugServer::DebugServer(ControlFSM* p_fsm) : fsm_p_(p_fsm) {
-    //Must be constructed after ros init
-    assert(ros::isInitialized());
+    if(!ros::isInitialized()) {
+        throw control::ROSNotInitializedException();
+    }
     //Can't be nullptr
     assert(fsm_p_);
     //Advertise service! 

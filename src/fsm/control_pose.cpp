@@ -5,6 +5,8 @@
 #include <control/tools/config.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
+#include <control/exceptions/ROSNotInitializedException.hpp>
+#include <control/tools/logger.hpp>
 #include "control/tools/control_pose.hpp"
 
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
@@ -70,9 +72,19 @@ control::Quaternion Pose::getOrientation() {
 }
 
 std::shared_ptr<Pose> Pose::getSharedPosePtr() {
+    if(!ros::isInitialized()) {
+        throw control::ROSNotInitializedException();
+    }
+
     if(instance_ == nullptr) {
-        //Only one instance exists - shared across states
-        instance_ = std::shared_ptr<Pose>(new Pose());
+        try {
+            //Only one instance exists - shared across states
+            instance_ = std::shared_ptr<Pose>(new Pose());
+        } catch (const std::bad_alloc& e) {
+            std::string err_msg = std::string("Pose allocation failed: ") + std::string(e.what());
+            control::handleErrorMsg(err_msg);
+            throw;
+        }
     }
     return instance_; //Returns a copy of shared_ptr
 }

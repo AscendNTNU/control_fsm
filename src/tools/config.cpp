@@ -1,7 +1,9 @@
 #include "control/tools/config.hpp"
 #include <assert.h>
+#include <control/exceptions/ROSNotInitializedException.hpp>
 
 using control::Config;
+using control::ROSNotInitializedException;
 
 double Config::dest_reached_margin = 0.3;
 double Config::blind_hover_alt = 1.0;
@@ -27,6 +29,10 @@ bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
 
 void Config::loadParams() {
+    if(!ros::isInitialized()) {
+        throw ROSNotInitializedException();
+    }
+
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var) {
         if(!n.getParam(name, var)) {
