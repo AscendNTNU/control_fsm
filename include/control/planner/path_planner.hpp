@@ -12,7 +12,6 @@
 #define FIELD_LENGTH 20
 
 
-
 class Node{
 private:
 	float32 x;
@@ -30,6 +29,7 @@ public:
 	float32 getX() const {return x;}
 	float32 getY() const {return y;}
 };
+
 
 class PathPlanner{
 private:

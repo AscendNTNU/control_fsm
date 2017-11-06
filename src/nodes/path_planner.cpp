@@ -13,8 +13,8 @@ PathPlanner::PathPlanner(float32 current_x, float32 current_y, float32 target_x,
 }
 
 void PathPlanner::initializeGraph(){
-	for (x = 0; x < FIELD_LENGTH; x++){
-		for (y = 0; y < FIELD_LENGTH; y++){
+	for (int x = 0; x < FIELD_LENGTH; x++){
+		for (int y = 0; y < FIELD_LENGTH; y++){
 			graph[x][y] = Node(x, y, computeHeuristic(x,y), calculateG(x,y));
 			open_list.push(graph[x][y]);
 		}
