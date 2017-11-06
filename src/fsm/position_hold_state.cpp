@@ -72,7 +72,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     if(event.position_goal.valid) {
         //Set xy setpoint to positionGoal if we're close enough for it to be safe
         double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
-        if(xy_dist_square <= std::pow(FSMConfig::setpoint_reached_margin, 2)) {
+        if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
             setpoint_.position.x = event.position_goal.x;
             setpoint_.position.y = event.position_goal.y;
         }
@@ -82,10 +82,10 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //TODO Should we use an default hover altitude in case of ABORT?
     if(!event.isValidRequest() || event.request != RequestType::ABORT) {
         setpoint_.position.z = position.z;
-        //Set setpoint altitude to positionGoal if valid
+        //Set setpoint altitude to position_goal if valid
         if(event.position_goal.z_valid) {
-            //Set xy setpoint to positionGoal if we're close enough for it to be safe
-            if(std::fabs(position.z - event.position_goal.z) <= FSMConfig::setpoint_reached_margin) {
+            //Set z setpoint to position_goal if we're close enough for it to be safe
+            if(std::fabs(position.z - event.position_goal.z) <= control::Config::altitude_reached_margin) {
                 setpoint_.position.z = event.position_goal.z;
             }
         }

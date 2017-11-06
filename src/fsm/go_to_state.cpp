@@ -218,8 +218,9 @@ void GoToState::destinationReached(ControlFSM &fsm){
             */
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
-                RequestEvent doneEvent(RequestType::POSHOLD);
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, doneEvent);
+                RequestEvent done_event(RequestType::POSHOLD);
+                done_event.position_goal = cmd_.position_goal;
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
                 }
                 break;
             default:
@@ -228,8 +229,9 @@ void GoToState::destinationReached(ControlFSM &fsm){
         }
     } 
     else {
-        RequestEvent posHoldEvent(RequestType::POSHOLD);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, posHoldEvent);
+        RequestEvent pos_hold_event(RequestType::POSHOLD);
+        pos_hold_event.position_goal = cmd_.position_goal;
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
     }
 
     delay_transition_.enabled = false;
