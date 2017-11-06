@@ -18,7 +18,7 @@ void TrackGBState::loopState(ControlFSM& fsm) {
     //TODO Implement ground robot tracking
 }
 
-const mavros_msgs::PositionTarget* TrackGBState::getSetpoint() {
+const mavros_msgs::PositionTarget* TrackGBState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }
