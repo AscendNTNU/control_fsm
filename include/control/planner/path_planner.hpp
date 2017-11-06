@@ -23,6 +23,7 @@ private:
 	// Sum of g and h
 	float32 f;
 public:
+	Node();
 	Node(float32 x, float32 y, float32 g, float32 h):x(x), y(y), g(g), h(h){f = g+h;}
 	// Implemented only for the closed list priority queue
 	friend bool operator< (const Node &lhs, const Node &rhs);

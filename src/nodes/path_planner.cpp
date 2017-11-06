@@ -1,7 +1,7 @@
 #include "control/planner/path_planner.hpp"
 
 
-friend bool operator< (const Node &lhs, const Node &rhs){
+bool operator< (const Node &lhs, const Node &rhs){
 	return lhs.f > rhs.f;
 }
 
