@@ -7,6 +7,7 @@
 
 #include <ros/exception.h>
 namespace control {
+///Thrown if ros::init hasn't been called
 class ROSNotInitializedException : std::runtime_error {
 public:
     ROSNotInitializedException() : std::runtime_error("ROS is not initialized!") {}

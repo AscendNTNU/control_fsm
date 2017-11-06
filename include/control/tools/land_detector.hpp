@@ -31,7 +31,11 @@ public:
     bool isOnGround();
     ///Is data streams available and ready?
     bool isReady();
-    ///Get shared_ptr to shared instance - singleton pattern
+    /**Get shared_ptr to shared instance - singleton pattern
+     * @throw control::ROSNotInitialized
+     * @throw std::bad_alloc
+     * @return shared_ptr to shared instance (singleton)
+     */
     static std::shared_ptr<LandDetector> getSharedInstancePtr();
 };
 

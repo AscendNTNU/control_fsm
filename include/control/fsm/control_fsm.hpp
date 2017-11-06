@@ -133,7 +133,11 @@ protected:
     
 public:
 
-    ///Get shared instance pointer - singleton pattern
+    /**Get shared instance pointer - singleton patter
+     * @throw control::ROSNotInitialized
+     * @throw std::bad_alloc
+     * @return shared_ptr to shared instance - singleton
+     */
     static std::shared_ptr<ControlFSM> getSharedInstancePtr();
 
     ///Destructor not used to anything specific.

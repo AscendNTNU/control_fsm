@@ -43,7 +43,9 @@ public:
     static double obstacle_too_close_dist;
     ///Topic to listen for info about obstacles
     static std::string lidar_topic;
-    ///Load paramaters
+    /**Load paramaters
+     * @throw control::ROSNotInitializedException
+     */
     static void loadParams();
     ///Finished drone will require all datastreams to be available
     static bool require_all_data_streams;
