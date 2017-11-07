@@ -9,6 +9,7 @@
 #include <math.h>
 #include <iostream>
 #include <iomanip>
+#include <array>
 
 
 #define FIELD_LENGTH 20
@@ -39,7 +40,7 @@ public:
 
 class PathPlanner{
 private:
-    Node* graph[FIELD_LENGTH][FIELD_LENGTH];
+    std::array<std::array<Node*, FIELD_LENGTH>, FIELD_LENGTH> graph;
 
     std::priority_queue<Node> open_list;
     std::list<Node> closed_list;
