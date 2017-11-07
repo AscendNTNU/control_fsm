@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include <memory>
 
 
 #define FIELD_LENGTH 20
@@ -40,15 +41,15 @@ public:
 
 class PathPlanner{
 private:
-    std::array<std::array<Node*, FIELD_LENGTH>, FIELD_LENGTH> graph;
+    std::array<std::array<std::unique_ptr<Node>, FIELD_LENGTH>, FIELD_LENGTH> graph;
 
     std::priority_queue<Node> open_list;
     std::list<Node> closed_list;
 
     std::list<Node> plan;
 
-    Node* end_node;
-    Node* start_node;
+    std::unique_ptr<Node> end_node;
+    std::unique_ptr<Node> start_node;
 
 public:
     PathPlanner(float current_x, float current_y, float target_x, float target_y);
