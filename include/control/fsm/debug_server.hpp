@@ -15,16 +15,20 @@ private:
     ros::NodeHandle nh_;
     ///Queue containing events
     std::queue<EventData> event_queue_;
-
+    ///Service callback
     bool handleDebugEvent(Request& req, Response& resp);
+    ///Generates message
     EventData generateDebugEvent(Request&);
     //Remove copyconstructor and operator=
     DebugServer operator=(const DebugServer&) = delete;
     DebugServer(const DebugServer&) = delete;
 
 public:
+    ///Constructor
     DebugServer();
+    ///Moves queue 
     std::queue<EventData> getAndClearQueue();
+    ///Checks if queue is empty
     bool isQueueEmpty() { return event_queue_.empty(); }
 
 

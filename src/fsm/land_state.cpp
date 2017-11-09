@@ -76,7 +76,7 @@ void LandState::loopState(ControlFSM& fsm) {
     }
 }
 
-const mavros_msgs::PositionTarget* LandState::getSetpoint() {
+const mavros_msgs::PositionTarget* LandState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }

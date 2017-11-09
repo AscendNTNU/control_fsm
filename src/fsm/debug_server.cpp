@@ -4,8 +4,10 @@
 #include "control/fsm/event_data.hpp"
 
 DebugServer::DebugServer() {
-    //Must be constructed after ros init
-    assert(ros::isInitialized());
+    //Make sure ROS is initialized
+    if(!ros::isInitialized()) {
+        throw control::ROSNotInitializedException();
+    }
     //Advertise service! 
     server_ = nh_.advertiseService("control_fsm_debug", &DebugServer::handleDebugEvent, this);
 }
@@ -33,13 +35,17 @@ bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
 
     if(event.isValidCMD()) {
         event.setOnCompleteCallback([](){
-            ROS_INFO("[Control FSM Debug] Manual CMD finished");
+                control::handleInfoMsg("Manual CMD finished");
         });
         event.setOnFeedbackCallback([](std::string msg){
-            ROS_INFO("[Control FSM Debug] Manual CMD feedback: %s", msg.c_str());
+                std::string to_print = "Manual CMD feedback: ";
+                to_print += msg;
+                control::handleInfoMsg(to_print);
         });
-        event.setOnErrorCallback([](std::string errMsg) {
-            ROS_WARN("[Control FSM Debug] Manual CMD error: %s", errMsg.c_str());
+        event.setOnErrorCallback([](std::string err_msg) {
+                std::string to_print = "Manual CMD error: ";
+                to_print += err_msg;
+                control::handleInfoMsg(to_print);
         });
     }
     event_queue_.push(event);
@@ -107,7 +113,8 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
 }
 
 std::queue<EventData> DebugServer::getAndClearQueue() {
-    //Moves all elements
-    return std::move(event_queue_);
+    std::queue<EventData> temp;
+    std::swap(temp, event_queue_);
+    return temp;
 }
 
