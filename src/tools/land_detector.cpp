@@ -7,7 +7,7 @@
 #include "control/fsm/control_fsm.hpp"
 
 constexpr uint8_t LANDED_STATE_ON_GROUND = mavros_msgs::ExtendedState::LANDED_STATE_ON_GROUND;
-std::shared_ptr<LandDetector> LandDetector::shared_instance_p_;
+std::shared_ptr<LandDetector> LandDetector::shared_instance_p_ = nullptr;
 
 LandDetector::LandDetector() {
     assert(ros::isInitialized());
@@ -31,10 +31,10 @@ bool LandDetector::isReady() {
 }
 
 std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() {
-    if(!ros::isInitialized()) {
-        throw control::ROSNotInitializedException();
-    }
     if(shared_instance_p_ == nullptr) {
+        if(!ros::isInitialized()) {
+            throw control::ROSNotInitializedException();
+        }
         try {
             shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
         } catch (const std::bad_alloc& e) {

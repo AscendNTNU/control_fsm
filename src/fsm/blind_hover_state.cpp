@@ -65,6 +65,8 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     if(event.isValidCMD()) {
         cmd_ = event;
     }
+
+    control::handleWarnMsg("No valid pose available, blindhovering!");
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {

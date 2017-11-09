@@ -14,11 +14,11 @@ constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 using control::Pose;
 
 //Static instance
-std::shared_ptr<Pose> Pose::instance_;
+std::shared_ptr<Pose> Pose::instance_ = nullptr;
 
 bool checkAndReportMsgTimeout(const geometry_msgs::PoseStamped& msg) {
     if(ros::Time::now() - msg.header.stamp > ros::Duration(control::Config::valid_data_timeout)){
-        //TODO Report error
+        control::handleErrorMsg("Pose: Using old data");
         return true;
     }
     return false;
@@ -72,11 +72,10 @@ control::Quaternion Pose::getOrientation() {
 }
 
 std::shared_ptr<Pose> Pose::getSharedPosePtr() {
-    if(!ros::isInitialized()) {
-        throw control::ROSNotInitializedException();
-    }
-
     if(instance_ == nullptr) {
+        if(!ros::isInitialized()) {
+            throw control::ROSNotInitializedException();
+        }
         try {
             //Only one instance exists - shared across states
             instance_ = std::shared_ptr<Pose>(new Pose());
