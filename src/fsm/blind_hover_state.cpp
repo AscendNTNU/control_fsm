@@ -86,7 +86,7 @@ void BlindHoverState::loopState(ControlFSM& fsm) {
             }
         }
     }catch(const std::exception& e) {
-        control::handleErrorMsg(std::string("Pose not available: ") + e.what());
+        control::handleCriticalMsg(e.what());
     }
 }
 

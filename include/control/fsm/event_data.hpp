@@ -49,7 +49,7 @@ struct PositionGoalXYZ {
     double x;
     double y;
     double z;
-    PositionGoalXYZ(double pos_x, double pos_y, double pos_z) : x(pos_x), y(pos_y), z(pos_z), valid(true) {}
+    PositionGoalXYZ(double pos_x, double pos_y, double pos_z) : valid(true), x(pos_x), y(pos_y), z(pos_z) {}
     PositionGoalXYZ() : valid(false) {}
 };
 

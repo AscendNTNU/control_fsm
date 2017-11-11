@@ -77,16 +77,15 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     ///Get shared_ptr to drones pose
     try {
         auto pose_p = control::Pose::getSharedPosePtr();
-        control::Point position = pose_p->getPositionXYZ();
         // Set setpoint
         setpoint_.position.x = cmd_.position_goal.x;
         setpoint_.position.y = cmd_.position_goal.y;
         setpoint_.position.z = cmd_.position_goal.z;
         setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
     } catch(const std::exception& e) {
+        //Critical bug - no recovery
         //Transition to position hold if no pose available
         control::handleCriticalMsg(e.what());
-        control::handleErrorMsg("No pose available - aborting goto");
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
@@ -106,18 +105,18 @@ void GoToState::loopState(ControlFSM& fsm) {
             //Throw exception if pose is invalid
             throw control::PoseNotValidException();
         }
-    } catch(const std::exception& e) {
+    } catch(const control::PoseNotValidException& e) {
         //Transition back to poshold if exception is thrown
+        control::handleErrorMsg(std::string("No valid pose available: ") + std::string(e.what())); 
         EventData event;
         event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position");
             cmd_ = EventData();
         }
-
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         return;
-    }
+    } //Critical failures aren't possible!
 
     //Get position
     control::Point current_position = pose_p->getPositionXYZ();

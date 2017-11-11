@@ -8,7 +8,7 @@
 #include <stdexcept>
 namespace control {
 ///Thrown when pose is available, but not valid
-class PoseNotValidException : std::runtime_error {
+class PoseNotValidException : public std::runtime_error {
 public:
     PoseNotValidException() : std::runtime_error("Pose not valid") {}
 };
