@@ -51,7 +51,8 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
         auto pose_p = control::Pose::getSharedPosePtr();
         if(pose_p->isPoseValid()) {
             if(event.isValidCMD()) {
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
+                //Pass command on to next state 
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             } else {
                 RequestEvent req_event(RequestType::POSHOLD);
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
@@ -59,7 +60,8 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
             return;
         }
     } catch(const std::exception& e) {
-        control::handleErrorMsg(std::string("No pose available: ") + e.what());
+        //Exceptions should NEVER occur! Critical bug!
+        control::handleCriticalMsg(e.what());
     }
     //If full position is valid - no need to blind hover
     if(event.isValidCMD()) {
