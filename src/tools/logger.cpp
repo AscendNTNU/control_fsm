@@ -93,3 +93,7 @@ void control::handleInfoMsg(std::string message) {
     }
     ROS_INFO("[Control]: %s", message.c_str());
 }
+
+void control::handleCriticalMsg(const char* message) {
+    ROS_ERROR("[Control] CRITICAL: %s", message);
+}

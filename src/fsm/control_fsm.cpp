@@ -170,9 +170,7 @@ std::shared_ptr<ControlFSM> ControlFSM::getSharedInstancePtr() {
         try {
             shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
         } catch(const std::bad_alloc& e) {
-            std::string err_msg = "ControlFSM allocation failure: ";
-            err_msg += e.what();
-            control::handleErrorMsg(err_msg);
+            control::handleCriticalMsg(e.what());
             throw;
         }
     }

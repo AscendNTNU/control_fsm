@@ -80,8 +80,7 @@ std::shared_ptr<Pose> Pose::getSharedPosePtr() {
             //Only one instance exists - shared across states
             instance_ = std::shared_ptr<Pose>(new Pose());
         } catch (const std::bad_alloc& e) {
-            std::string err_msg = std::string("Pose allocation failed: ") + std::string(e.what());
-            control::handleErrorMsg(err_msg);
+            control::handleCriticalMsg(e.what());
             throw;
         }
     }
