@@ -131,7 +131,7 @@ void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
 
     double drone_x = position.x;
     double drone_y = position.y;
-    for(int i = 0; i < points.size(); ++i) {
+    for(unsigned int i = 0; i < points.size(); ++i) {
         double dist_squared = std::pow(drone_x - points[i].x, 2) + std::pow(drone_y - points[i].y, 2);
         if(dist_squared < std::pow(Config::obstacle_too_close_dist, 2)) {
             setpoint_.position.z = safe_hover_alt_;
