@@ -26,7 +26,9 @@ private:
 public:
     ///Constructor
     DebugServer();
-    ///Moves queue 
+    /**Moves queue to caller
+     * \return Moved queue of all current debug events
+     */
     std::queue<EventData> getAndClearQueue();
     ///Checks if queue is empty
     bool isQueueEmpty() { return event_queue_.empty(); }

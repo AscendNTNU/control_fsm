@@ -115,6 +115,6 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
 std::queue<EventData> DebugServer::getAndClearQueue() {
     std::queue<EventData> temp;
     std::swap(temp, event_queue_);
-    return temp;
+    return temp; //Returned by move constructor
 }
 
