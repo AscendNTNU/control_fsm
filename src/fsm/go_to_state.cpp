@@ -75,14 +75,21 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     ///Get shared_ptr to drones pose
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-
-    // Set setpoint
-    setpoint_.position.x = cmd_.position_goal.x;
-    setpoint_.position.y = cmd_.position_goal.y;
-    setpoint_.position.z = cmd_.position_goal.z;
-    setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
+    try {
+        auto pose_p = control::Pose::getSharedPosePtr();
+        control::Point position = pose_p->getPositionXYZ();
+        // Set setpoint
+        setpoint_.position.x = cmd_.position_goal.x;
+        setpoint_.position.y = cmd_.position_goal.y;
+        setpoint_.position.z = cmd_.position_goal.z;
+        setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
+    } catch(const std::exception& e) {
+        //Transition to position hold if no pose available
+        control::handleCriticalMsg(e.what());
+        control::handleErrorMsg("No pose available - aborting goto");
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+    }
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {

@@ -61,10 +61,8 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         }
     } catch (const std::exception& e){
         //Transition to blindhover if pose not valid
-        control::handleErrorMsg(std::string("No pose available: ") + e.what());
-        if(event.isValidCMD()) {
-            event.eventError("No valid pose!");
-        }
+        control::handleCriticalMsg(e.what());
+        //No need to handle commands - not recoverable
         EventData n_event;
         n_event.event_type = EventType::POSLOST;
         fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, n_event);

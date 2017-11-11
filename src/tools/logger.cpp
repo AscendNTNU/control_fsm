@@ -95,5 +95,5 @@ void control::handleInfoMsg(std::string message) {
 }
 
 void control::handleCriticalMsg(const char* message) {
-    ROS_ERROR("[Control] CRITICAL: %s", message);
+    ROS_ERROR("[Control] CRITICAL: %s - TAKE MANUAL CONTROL NOW!", message);
 }

@@ -59,7 +59,7 @@ void LandState::loopState(ControlFSM& fsm) {
             fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
         }
     } catch (const std::exception& e) {
-        control::handleErrorMsg(std::string("No land detector available: ") + e.what());
+        control::handleCriticalMsg(e.what());
     }
 }
 
