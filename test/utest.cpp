@@ -2,8 +2,8 @@
 // Created by haavard on 15.10.17.
 //
 
-#include <control_fsm/tools/target_tools.hpp>
-#include <control_fsm/control_fsm.hpp>
+#include <control/tools/target_tools.hpp>
+#include <control/fsm/control_fsm.hpp>
 #include "gtest/gtest.h"
 
 constexpr double PI_HALF = 1.57079632679;

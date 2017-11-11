@@ -1,9 +1,5 @@
 <launch>
     <!--FSM topics-->
-    <arg name="topic_planner_plan" default="/control/planner/plan" />
-    <arg name="topic_planner_target" default="/control/planner/target"/>
-    <arg name="topic_robot_position" default="/control/planner/current_position"/>
-    <arg name="topic_planner_obstacles" default="/control/planner/obstacles"/>
     <arg name="topic_lidar" default="/perception/obstacles/lidar"/>
     <arg name="topic_mavros_position" default="/mavros/local_position/pose"/>
     <arg name="topic_mavros_state" default="/mavros/state"/>
@@ -33,10 +29,6 @@
         <param name="blind_hover_altitude" value="$(arg blind_hover_altitude)"/>
         <param name="takeoff_altitude" value="$(arg takeoff_altitude)"/>
         <param name="altitude_reached_margin" value="$(arg altitude_reached_margin)"/>
-        <param name="control_planner_plan" value="$(arg topic_planner_plan)"/>
-        <param name="control_planner_position" value="$(arg topic_robot_position)"/>
-        <param name="control_planner_target" value="$(arg topic_planner_target)"/>
-        <param name="control_planner_obstacles" value="$(arg topic_planner_obstacles)"/>
         <param name="setp_reached_margin" value="$(arg setp_reached_margin)"/>
         <param name="fsm_error_topic" value="control/fsm/on_error"/>
         <param name="fsm_info_topic" value="control/fsm/on_info"/>
