@@ -37,14 +37,14 @@ ROSTopicLogger::ROSTopicLogger() {
 
 ///Returns shared_ptr to shared instance IF ros is initialized.
 std::shared_ptr<ROSTopicLogger> ROSTopicLogger::getSharedInstancePtr() {
-    if(!ros::isInitialized()) {
-        return nullptr;
-    }
     if(shared_instance_p_ == nullptr) {
+        if(!ros::isInitialized()) {
+            return nullptr;
+        }
         try {
             shared_instance_p_ = std::shared_ptr<ROSTopicLogger>(new ROSTopicLogger);
         } catch(const std::bad_alloc& e) {
-            control::handleErrorMsg("Exception in ROSTopicLogger: " + std::string(e.what()));
+            control::handleCriticalMsg(e.what());
             return nullptr;
         }
     }

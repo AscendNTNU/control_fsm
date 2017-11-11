@@ -38,7 +38,7 @@ std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() {
         try {
             shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
         } catch (const std::bad_alloc& e) {
-            control::handleErrorMsg("Couldn't allocate memory for land detector!");
+            control::handleCriticalMsg(e.what());
             throw;
         }
     }
