@@ -46,7 +46,8 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
             setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
         }
     } catch (const std::exception& e) {
-        control::handleErrorMsg(std::string("Exception in Manual state: ") + e.what());
+        //Critical exception - no recovering
+        control::handleCriticalMsg(e.what());
     }
 }
 
