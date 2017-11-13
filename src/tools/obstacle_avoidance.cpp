@@ -1,4 +1,4 @@
-#include "control_fsm/obstacle_avoidance.hpp"
+#include "control/tools/obstacle_avoidance.hpp"
 
 //Static instance
 std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance_p_;
