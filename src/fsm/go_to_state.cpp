@@ -219,6 +219,7 @@ void GoToState::destinationReached(ControlFSM &fsm){
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);
+                //Attempt to hold position target
                 done_event.position_goal = cmd_.position_goal;
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
                 }
