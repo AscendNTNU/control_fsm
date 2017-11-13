@@ -191,23 +191,24 @@ void GoToState::handleManual(ControlFSM &fsm) {
 
 
 void GoToState::destinationReached(ControlFSM &fsm){
-    //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-    if(!delay_transition_.enabled) {
-        delay_transition_.started = ros::Time::now();
-        delay_transition_.enabled = true;
-
-        if(cmd_.isValidCMD()) {
-            cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-        }
-    }
-    //Delay transition
-    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-        return;
-    } 
     //Transition to correct state
     if(cmd_.isValidCMD()) {
         switch(cmd_.command_type) {
             case CommandType::LANDXY:
+                //Hold current position for a duration - avoiding unwanted velocity before doing anything else
+                if(!delay_transition_.enabled) {
+                    delay_transition_.started = ros::Time::now();
+                    delay_transition_.enabled = true;
+
+                    if(cmd_.isValidCMD()) {
+                        cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
+                    }
+                }
+                //Delay transition
+                if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+                    return;
+                } 
+                
                 fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                 break;
             //TODO(rendellc): why is this commented out?
