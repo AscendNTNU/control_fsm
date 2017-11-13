@@ -51,7 +51,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //Should never occur
         RequestEvent abort_event(RequestType::ABORT);
         if(cmd_.isValidCMD()) {
-            cmd_.eventError("No xyz_valid position");
+            cmd_.eventError("No valid position");
             cmd_ = EventData();
         }
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);

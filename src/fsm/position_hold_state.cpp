@@ -57,7 +57,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //GoTo blind hover if position not valid, should never occur
     if(!pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
-            event.eventError("No xyz_valid position!");
+            event.eventError("No valid position!");
         }
         EventData n_event;
         n_event.event_type = EventType::POSLOST;

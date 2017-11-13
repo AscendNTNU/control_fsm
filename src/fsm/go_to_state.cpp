@@ -65,7 +65,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     if(!event.position_goal.xyz_valid) {
         if(cmd_.isValidCMD()) {
-            event.eventError("No xyz_valid position target");
+            event.eventError("No valid position target");
             cmd_ = EventData();
         }
         RequestEvent abort_event(RequestType::ABORT);
