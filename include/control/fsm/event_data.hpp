@@ -44,13 +44,15 @@ enum class CommandType {
 };
 
 ///Defines a position goal
-struct PositionGoalXYZ {
-    bool valid = false;
+struct PositionGoal {
+    bool xyz_valid = false;
+    bool z_valid = false;
     double x;
     double y;
     double z;
-    PositionGoalXYZ(double pos_x, double pos_y, double pos_z) : valid(true), x(pos_x), y(pos_y), z(pos_z) {}
-    PositionGoalXYZ() : valid(false) {}
+    PositionGoal(double pos_x, double pos_y, double pos_z) : xyz_valid(true), z_valid(true), x(pos_x), y(pos_y), z(pos_z) {}
+    PositionGoal() {}
+    PositionGoal(double pos_z) : z_valid(true), z(pos_z) {}
 };
 
 class EventData;
@@ -71,7 +73,7 @@ public:
     ///What type of event is it?
     EventType event_type = EventType::NONE; //No event as default
     ///Whats the target (if needed by event)
-    PositionGoalXYZ position_goal = PositionGoalXYZ(); //Invalid position as default
+    PositionGoal position_goal = PositionGoal(); //Invalid position as default
     ///If event is a command, what type?
     CommandType command_type = CommandType::NONE; //No command as default
 
@@ -101,7 +103,7 @@ private:
     const double go_to_altitude_ = 1.0f;
 public:
     LandXYCMDEvent(double x, double y) {
-        position_goal = PositionGoalXYZ(x, y, go_to_altitude_);
+        position_goal = PositionGoal(x, y, go_to_altitude_);
         event_type = EventType::COMMAND;
         command_type = CommandType::LANDXY;
     }
@@ -111,7 +113,7 @@ public:
 class GoToXYZCMDEvent : public EventData {
 public:
     GoToXYZCMDEvent(double x, double y, double z) {
-        position_goal = PositionGoalXYZ(x,y,z);
+        position_goal = PositionGoal(x,y,z);
         event_type = EventType::COMMAND;
         command_type = CommandType::GOTOXYZ;
     }

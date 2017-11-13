@@ -55,6 +55,9 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             } else {
                 RequestEvent req_event(RequestType::POSHOLD);
+                if(event.position_goal.z_valid) {
+                    req_event.position_goal = event.position_goal;
+                }
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
             }
             return;
