@@ -57,7 +57,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //GoTo blind hover if position not valid, should never occur
     if(!pose_p->isPoseValid()) {
         if(event.isValidCMD()) {
-            event.eventError("No valid position!");
+            event.eventError("No xy_valid position!");
         }
         EventData n_event;
         n_event.event_type = EventType::POSLOST;
@@ -69,7 +69,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     setpoint_.position.y = position.y;
 
     //If positiongoal is valid, but it's not a command
-    if(event.position_goal.valid) {
+    if(event.position_goal.xy_valid) {
         //Set xy setpoint to positionGoal if we're close enough for it to be safe
         double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
         if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {

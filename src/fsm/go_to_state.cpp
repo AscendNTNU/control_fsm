@@ -63,9 +63,9 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Has not arrived yet
     delay_transition_.enabled = false;
 
-    if(!event.position_goal.valid) {
+    if(!event.position_goal.xy_valid) {
         if(cmd_.isValidCMD()) {
-            event.eventError("No valid position target");
+            event.eventError("No xy_valid position target");
             cmd_ = EventData();
         }
         RequestEvent abort_event(RequestType::ABORT);
