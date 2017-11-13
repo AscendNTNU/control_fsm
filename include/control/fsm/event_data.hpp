@@ -45,12 +45,12 @@ enum class CommandType {
 
 ///Defines a position goal
 struct PositionGoal {
-    bool xy_valid = false;
+    bool xyz_valid = false;
     bool z_valid = false;
     double x;
     double y;
     double z;
-    PositionGoal(double pos_x, double pos_y, double pos_z) : xy_valid(true), z_valid(true), x(pos_x), y(pos_y), z(pos_z) {}
+    PositionGoal(double pos_x, double pos_y, double pos_z) : xyz_valid(true), z_valid(true), x(pos_x), y(pos_y), z(pos_z) {}
     PositionGoal() {}
     PositionGoal(double pos_z) : z_valid(true), z(pos_z) {}
 };
