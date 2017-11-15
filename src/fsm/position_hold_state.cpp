@@ -17,7 +17,6 @@ PositionHoldState::PositionHoldState() {
 
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    is_active_ = true;
     if(event.isValidRequest()) {
         switch(event.request) {
             case RequestType::GOTO:
@@ -41,10 +40,6 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    if(fsm_p_ == nullptr) {
-        fsm_p_ = &fsm;
-    }
-    safe_hover_alt_ = control::Config::safe_hover_altitude;
     //No need to check other commands
     if(event.isValidCMD()) {
         //All valid commands need to go to correct place on arena before anything else
@@ -91,69 +86,6 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         }
     }
     setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
-}
-
-void PositionHoldState::stateInit(ControlFSM &fsm) {
-    fsm_p_ = &fsm;
-    lidar_sub_ = fsm.node_handler_.subscribe(control::Config::lidar_topic, 1, &PositionHoldState::obsCB, this);
-}
-
-bool PositionHoldState::stateIsReady(ControlFSM &fsm) {
-    using control::Config;
-    //Return true if obstacle detection is disabled
-    if(!Config::require_obstacle_detection) return true;
-
-    //Skipping check is allowed in debug mode
-    if(!Config::require_all_data_streams) return true;
-
-    if(lidar_sub_.getNumPublishers() > 0) {
-        return true;
-    } else {
-        control::handleWarnMsg("No lidar publisher in posHold");
-        return false;
-    }
-}
-
-void PositionHoldState::obsCB(const ascend_msgs::PointArray::ConstPtr& msg) {
-    using control::Config;
-    //TODO TEST!!!
-    //Only check if neccesary
-    if(!is_active_ || setpoint_.position.z >= safe_hover_alt_) {
-        return;
-    }
-    if(fsm_p_ == nullptr) {
-        control::handleErrorMsg("FSM pointer = nullptr! Critical!");
-        return; //Avoids nullpointer exception
-    }
-    auto points = msg->points;
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-    //Should never happen!
-    if(pose_p == nullptr) {
-        //No valid XY position available, no way to determine distance to GB
-        control::handleWarnMsg("Position not available! Should not happen!");
-        return;
-    }
-    //No need to check obstacles if we're high enough
-    if(position.z >= Config::safe_hover_altitude) {
-        return;
-    }
-
-    double drone_x = position.x;
-    double drone_y = position.y;
-    for(int i = 0; i < points.size(); ++i) {
-        double dist_squared = std::pow(drone_x - points[i].x, 2) + std::pow(drone_y - points[i].y, 2);
-        if(dist_squared < std::pow(Config::obstacle_too_close_dist, 2)) {
-            setpoint_.position.z = safe_hover_alt_;
-            return; //No need to check the rest!
-        }
-    }
-
-
-}
-
-void PositionHoldState::stateEnd(ControlFSM &fsm, const EventData& eventData) {
-    is_active_ = false;
 }
 
 //Returns setpoint
