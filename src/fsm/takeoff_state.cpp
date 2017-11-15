@@ -74,6 +74,8 @@ void TakeoffState::loopState(ControlFSM& fsm) {
             cmd_ = EventData();
         } else {
             RequestEvent event(RequestType::BLINDHOVER);
+            //Pass on altitude target
+            event.position_goal = PositionGoal(setpoint_.position.z);
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event);
         }
     }
