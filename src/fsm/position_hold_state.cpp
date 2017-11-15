@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
-#include <control/exceptions/PoseNotValidException.hpp>
+#include <control/exceptions/pose_not_valid_exception.hpp>
 
 
 //Constructor sets default setpoint type mask

@@ -5,7 +5,7 @@
 #include <control/tools/config.hpp>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
-#include <control/exceptions/ROSNotInitializedException.hpp>
+#include <control/exceptions/ros_not_initialized_exception.hpp>
 #include <control/tools/logger.hpp>
 #include "control/tools/control_pose.hpp"
 

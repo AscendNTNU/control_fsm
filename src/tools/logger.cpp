@@ -2,7 +2,7 @@
 // Created by haavard on 03.11.17.
 //
 
-#include <control/exceptions/ROSNotInitializedException.hpp>
+#include <control/exceptions/ros_not_initialized_exception.hpp>
 #include <utility>
 #include <std_msgs/String.h>
 #include <control/tools/config.hpp>

@@ -8,7 +8,7 @@
 #include <ros/ros.h>
 #include <mavros_msgs/ExtendedState.h>
 #include <memory>
-#include <control/exceptions/ROSNotInitializedException.hpp>
+#include <control/exceptions/ros_not_initialized_exception.hpp>
 
 class LandDetector {
 
