@@ -8,7 +8,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     //TODO Implement obstacle avoidance
 
     //Return true if setpoint has been modified.
-    return true;
+    return false;
 }
 
 void control::ObstacleAvoidance::onModified() {
