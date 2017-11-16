@@ -1,24 +1,6 @@
 #include "control/planner/path_planner.hpp"
 
 
-bool operator< (const Node &lhs, const Node &rhs){
-	return lhs.f > rhs.f;
-}
-
-bool Node::isValid(){
-    return (x>0 && x<FIELD_LENGTH && y>0 && y<FIELD_LENGTH);
-}
-
-void Node::updateF(float new_g){
-    if(new_g < g){
-        g = new_g;
-    }
-    f = g+h;
-}
-
-
-
-
 PathPlanner::PathPlanner(float current_x, float current_y, float target_x, float target_y){
     start_node = Node(current_x, current_y, 0, 0);
     start_node.setParentX(0);
