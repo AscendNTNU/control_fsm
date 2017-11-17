@@ -1,7 +1,6 @@
 #ifndef CONTROL_POSE
 #define CONTROL_POSE
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include <cmath>
 namespace control {
 namespace pose {
 //Anonymous namespace - only available in this file
@@ -13,11 +12,9 @@ namespace {
  */
 template<typename T>
 double quat2yaw(T q) {
-    tf2::Quaternion quat(q.x, q.y, q.z, q.w);
-    tf2::Matrix3x3 m(quat);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-    return yaw;
+    double siny = 2.0 * (q.w * q.z + q.x * q.y);
+    double cosy = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);  
+    return std::atan2(siny, cosy);
 }
 
 /**Calculates yaw based on quaternion and corrects for mavros bug
