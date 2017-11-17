@@ -41,7 +41,7 @@ mavros_msgs::State DroneHandler::getCurrentState() {
 geometry_msgs::PoseStamped DroneHandler::getPose() {
     using control::Config;
     if(ros::Time::now() - last_pose_.header.stamp > ros::Duration(Config::valid_data_timeout)) {
-        control::handleErrorMsg("DroneState: Using old pose");
+        control::handleErrorMsg("DroneHandler: Using old pose");
     }
     return last_pose_;
 }
@@ -49,7 +49,7 @@ geometry_msgs::PoseStamped DroneHandler::getPose() {
 mavros_msgs::State DroneHandler::getState() {
     using control::Config;
     if(ros::Time::now() - last_state_.header.stamp > ros::Duration(Config::valid_data_timeout)) {
-        control::handleErrorMsg("DroneState: Using old state"); 
+        control::handleErrorMsg("DroneHandler: Using old state"); 
     }
     return last_state_;
 }
