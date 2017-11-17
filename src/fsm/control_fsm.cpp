@@ -25,18 +25,19 @@ ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_ = nullptr;
 
 //Change the current running state - be carefull to only change into an allowed state
+//Due to poor design, transitionTo has no strong nothrow guarantees - not exception safe!! 
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
     //Only current running state is allowed to change state
     if(getState() == caller_p) {
-        //Run stateEnd on current running state before transitioning
-        getState()->stateEnd(*this, event);
-        //Set the current state pointer
-        state_vault_.current_state_p_ = &state;
-        control::handleInfoMsg("Current state: " + getState()->getStateName());
-        //Pass event to new current state
-        getState()->stateBegin(*this, event);
-        //Notify state has changed
-        on_state_changed_();
+            //Run stateEnd on current running state before transitioning
+            getState()->stateEnd(*this, event);
+            //Set the current state pointer
+            state_vault_.current_state_p_ = &state;
+            control::handleInfoMsg("Current state: " + getState()->getStateName());
+            //Pass event to new current state
+            getState()->stateBegin(*this, event);
+            //Notify state has changed
+            on_state_changed_();
     } else {
         control::handleErrorMsg("Transition request made by not active state");
     }
@@ -45,7 +46,7 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
 //Send external event to current state and to "next" state
 void ControlFSM::handleEvent(const EventData& event) {
     if(getState() == nullptr) {
-        control::handleErrorMsg("Bad implementation of FSM - FSM allways need a state");
+        control::handleCriticalMsg("Bad implementation of FSM - FSM allways need a state");
         return;
     }
     if(event.event_type == EventType::MANUAL) {
@@ -58,8 +59,15 @@ void ControlFSM::handleEvent(const EventData& event) {
 
 //Runs state specific code on current state
 void ControlFSM::loopCurrentState(void) {
-    assert(getState() != nullptr);
-    getState()->loopState(*this);
+    try {
+        assert(getState() != nullptr);
+        getState()->loopState(*this);
+    } catch(const std::exception& e) {
+        //If exceptions aren't handled by states - notify and go to blind hover
+        control::handleCriticalMsg(e.what());
+        RequestEvent abort_event(RequestType::ABORT);
+        transitionTo(BLIND_HOVER_STATE, getState(), abort_event);
+    }
 }
 
 ControlFSM::ControlFSM() {
@@ -95,26 +103,24 @@ bool ControlFSM::isReady() {
 
     //Some checks can be skipped for debugging purposes
     if(control::Config::require_all_data_streams) {
-
-        //Check that we're recieving position
-        if(!drone_pose_p->isPoseValid()) {
-            control::handleWarnMsg("Missing position data");
-            return false;
-        }
-
-        //Mavros must publish state data
-        if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
-            control::handleWarnMsg("Missing mavros state info!");
-            return false;
-        }
         try {
+            //Check that we're recieving position
+            if(!drone_pose_p->isPoseValid()) {
+                control::handleWarnMsg("Missing position data");
+                return false;
+            }
+            //Mavros must publish state data
+            if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
+                control::handleWarnMsg("Missing mavros state info!");
+                return false;
+            } 
             //Land detector must be ready
             if (!LandDetector::getSharedInstancePtr()->isReady()) {
                 control::handleWarnMsg("Missing land detector stream!");
                 return false;
             }
-        } catch(const std::bad_alloc& e) {
-            control::handleErrorMsg("Exception: " + std::string(e.what()));
+        } catch(const std::exception& e) {
+            control::handleCriticalMsg(e.what());
             return false;
         }
     }
