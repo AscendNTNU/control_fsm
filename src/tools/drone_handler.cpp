@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/State.h>
+#include <control/tools/control_message.hpp>
 
 using control::DroneHandler;
 
@@ -39,27 +40,23 @@ mavros_msgs::State DroneHandler::getCurrentState() {
 }
 
 geometry_msgs::PoseStamped DroneHandler::getPose() {
-    using control::Config;
-    if(ros::Time::now() - last_pose_.header.stamp > ros::Duration(Config::valid_data_timeout)) {
+    if(control::message::hasTimedOut(last_pose_)) {
         control::handleErrorMsg("DroneHandler: Using old pose");
     }
     return last_pose_;
 }
 
 mavros_msgs::State DroneHandler::getState() {
-    using control::Config;
-    if(ros::Time::now() - last_state_.header.stamp > ros::Duration(Config::valid_data_timeout)) {
+    if(control::message::hasTimedOut(last_state_)) {
         control::handleErrorMsg("DroneHandler: Using old state"); 
     }
     return last_state_;
 }
 
 bool DroneHandler::isPoseValid() {
-    using control::Config;
-    return (ros::Time::now() - getCurrentPose().header.stamp < ros::Duration(Config::valid_data_timeout));
+    return !control::message::hasTimedOut(getCurrentPose());
 }
 
 bool DroneHandler::isStateValid() {
-    using control::Config;
-    return (ros::Time::now() - getCurrentState().header.stamp < ros::Duration(Config::valid_data_timeout));
+    return !control::message::hasTimedOut(getCurrentState());
 }
