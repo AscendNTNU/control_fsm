@@ -22,6 +22,7 @@
 #include "control/tools/land_detector.hpp"
 
 #include "control/tools/control_pose.hpp"
+#include "control/tools/drone_handler.hpp"
 
 ///Main FSM logic
 class ControlFSM {
@@ -110,9 +111,6 @@ private:
     private:
         ros::Subscriber mavros_state_changed_sub;
     } subscribers_;
-
-    ///Drones pose
-    std::shared_ptr<control::Pose> drone_pose_p = control::Pose::getSharedPosePtr();
 
     ///Callback for mavros state changed
     void mavrosStateChangedCB(const mavros_msgs::State& state);

@@ -72,16 +72,14 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
-
-    ///Get shared_ptr to drones pose
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-
+    auto pose_stamped = control::DroneHandler::getCurrentPose();
     // Set setpoint
     setpoint_.position.x = cmd_.position_goal.x;
     setpoint_.position.y = cmd_.position_goal.y;
     setpoint_.position.z = cmd_.position_goal.z;
-    setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
+    using control::pose::quat2yaw;
+    using control::getMavrosCorrectedTargetYaw;
+    setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation)));
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
@@ -91,12 +89,11 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 void GoToState::loopState(ControlFSM& fsm) {
 
     //Get position
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
-
+    auto pose_stamped = control::DroneHandler::getCurrentPose();
+    auto& current_position = pose_stamped.pose.position;
 
     //Check that position data is valid
-    if(!pose_p->isPoseValid()) {
+    if(control::DroneHandler::isPoseValid()) {
         EventData event;
         event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {
@@ -109,12 +106,14 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
 
     //Check if destination is reached!
+    using control::pose::quat2mavrosyaw;
+    auto& quat = pose_stamped.pose.orientation;
     double delta_x = current_position.x - cmd_.position_goal.x;
     double delta_y = current_position.y - cmd_.position_goal.y;
     double delta_z = current_position.z - cmd_.position_goal.z;
     bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
     bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
-    bool yaw_reached = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
+    bool yaw_reached = (std::fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
 
     if(xy_reached && z_reached && yaw_reached) {

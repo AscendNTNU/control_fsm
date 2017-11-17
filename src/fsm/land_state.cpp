@@ -39,22 +39,17 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Landing!");
     }
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
-    if(pose_p != nullptr) {
+    
+    if(control::DroneHandler::isPoseValid()) {
+        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto& position = pose_stamped.pose.position;
         //Position XY is ignored in typemask, but the values are set as a precaution.
-        setpoint_.position.x = current_position.x;
-        setpoint_.position.y = current_position.y;
+        setpoint_.position.x = position.x;
+        setpoint_.position.y = position.y;
         //Set yaw setpoint based on current rotation
-        setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
-    } else {
-        //Should never occur
-        RequestEvent abort_event(RequestType::ABORT);
-        if(cmd_.isValidCMD()) {
-            cmd_.eventError("No valid position");
-            cmd_ = EventData();
-        }
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        using control::getMavrosCorrectedTargetYaw;
+        using control::pose::quat2yaw;
+        setpoint_.yaw = getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation));
     }
 }
 
