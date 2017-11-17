@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
+#include "control/tools/drone_handler.hpp"
 
 
 //Constructor sets default setpoint type mask

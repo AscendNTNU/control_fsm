@@ -5,6 +5,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <mavros_msgs/State.h>
 #include <control/tools/control_message.hpp>
+#include <control/exceptions/ROSNotInitializedException.hpp>
 
 using control::DroneHandler;
 
@@ -17,10 +18,10 @@ DroneHandler::DroneHandler() {
 }
 
 std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
-    if(!ros::isInitialized()) {
-        //TODO Handle not initialized
-    }
     if(shared_instance_p_ == nullptr) {
+        if(!ros::isInitialized()) {
+            throw control::ROSNotInitializedException();
+        }
         try {
             shared_instance_p_ = std::shared_ptr<DroneHandler>(new DroneHandler);
         } catch(const std::bad_alloc& e) {

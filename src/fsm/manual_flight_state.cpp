@@ -3,6 +3,7 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <control/tools/logger.hpp>
+#include "control/tools/drone_handler.hpp"
 
 ManualFlightState::ManualFlightState() {
     setpoint_.type_mask = default_mask;

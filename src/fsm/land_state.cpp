@@ -4,6 +4,7 @@
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
 #include "control/fsm/control_fsm.hpp"
+#include "control/tools/drone_handler.hpp"
 
 LandState::LandState() {
     //Ignoring PX and PY - lands without XY feedback

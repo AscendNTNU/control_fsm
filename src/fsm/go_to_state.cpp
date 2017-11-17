@@ -2,12 +2,10 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include "control/fsm/control_fsm.hpp"
-#include <geometry_msgs/PoseStamped.h>
-#include <cmath>
-#include <geometry_msgs/Point32.h>
 #include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
+#include "control/tools/drone_handler.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;

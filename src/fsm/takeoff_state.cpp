@@ -7,6 +7,7 @@
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
+#include "control/tools/drone_handler.hpp"
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();

@@ -6,6 +6,7 @@
 #include "control/fsm/control_fsm.hpp"
 #include "control/fsm/event_data.hpp"
 #include "control/tools/config.hpp"
+#include "control/tools/drone_handler.hpp"
 
 #define DEFAULT_BLIND_HOVER_ALTITUDE 1.0f    
 
