@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
     //Wait for all systems to initalize and position to become valid
     control::handleInfoMsg("Waiting for necessary data streams!");
-    while(ros::ok() && !fsm_p->isReady() && !obstacle_avoidance_p->isReady()) {
+    while(ros::ok() && (!fsm_p->isReady() || !obstacle_avoidance_p->isReady())) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
