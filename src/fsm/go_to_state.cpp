@@ -93,7 +93,7 @@ void GoToState::loopState(ControlFSM& fsm) {
     auto& current_position = pose_stamped.pose.position;
 
     //Check that position data is valid
-    if(control::DroneHandler::isPoseValid()) {
+    if(!control::DroneHandler::isPoseValid()) {
         EventData event;
         event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {

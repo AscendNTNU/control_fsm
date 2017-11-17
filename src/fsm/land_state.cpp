@@ -50,6 +50,13 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         using control::getMavrosCorrectedTargetYaw;
         using control::pose::quat2yaw;
         setpoint_.yaw = getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation));
+    } else {
+        RequestEvent abort_event(RequestType::ABORT);
+        if(cmd_.isValidCMD()) {
+            cmd_.eventError("No valid position");
+            cmd_ = EventData();
+        }
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 }
 
