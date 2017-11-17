@@ -3,14 +3,13 @@
 
 #define FIELD_LENGTH 20
 
-
 class Node{
 private:
     float x;
     float y;
 
-    float g;
     // heuristic, use diagonal distance
+    float g;
     float h;
     // Sum of g and h
     float f;
@@ -32,8 +31,6 @@ public:
     void setParentX(float parent_x){this->parent_x = parent_x;}
     void setParentY(float parent_y){this->parent_y = parent_y;}
     void updateF(float new_g);
-
-    bool isValid();
 
     // Implemented only for the closed list priority queue
     friend bool operator< (const Node &lhs, const Node &rhs);
