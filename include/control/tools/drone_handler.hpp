@@ -8,6 +8,7 @@ namespace control {
 class DroneHandler;
 class DroneHandler {
 private:
+    ///Shared instance
     static std::shared_ptr<DroneHandler> shared_instance_p_;
 
     ///Nodehandler

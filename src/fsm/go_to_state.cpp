@@ -70,13 +70,15 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
-    auto pose_stamped = control::DroneHandler::getCurrentPose();
     // Set setpoint
     setpoint_.position.x = cmd_.position_goal.x;
     setpoint_.position.y = cmd_.position_goal.y;
     setpoint_.position.z = cmd_.position_goal.z;
+    ///Calculate yaw setpoint
     using control::pose::quat2yaw;
     using control::getMavrosCorrectedTargetYaw;
+    using control::DroneHandler;
+    auto pose_stamped = DroneHandler::getCurrentPose();
     setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation)));
 }
 
@@ -86,7 +88,7 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 
 void GoToState::loopState(ControlFSM& fsm) {
 
-    //Get position
+    //Get position - no exception can be thrown
     auto pose_stamped = control::DroneHandler::getCurrentPose();
     auto& current_position = pose_stamped.pose.position;
 
