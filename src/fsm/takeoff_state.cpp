@@ -7,6 +7,7 @@
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
+#include "control/tools/drone_handler.hpp"
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();
@@ -48,10 +49,8 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Takeoff!!");
     }
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
     //If no position is available - abort takeoff
-    if(!pose_p->isPoseValid()) {
+    if(!control::DroneHandler::isPoseValid()) {
         control::handleErrorMsg("No position available");
         if(cmd_.isValidCMD()) {
             cmd_.eventError("No position available");
@@ -61,13 +60,14 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::IDLE_STATE, this, abort_event);
         return;
     }
+    //Get orientation quaternion
+    auto q = control::DroneHandler::getCurrentPose().pose.orientation;
     //Set yaw setpoint based on current rotation
-    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
+    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(control::pose::quat2yaw(q));
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
+    auto current_position = control::DroneHandler::getCurrentPose().pose.position;
     if(current_position.z > (setpoint_.position.z - altitude_reached_margin_)) {
         if(cmd_.isValidCMD()) {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
