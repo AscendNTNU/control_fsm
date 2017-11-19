@@ -97,7 +97,7 @@ bool ControlFSM::isReady() {
     if(control::Config::require_all_data_streams) {
 
         //Check that we're recieving position
-        if(!control::DroneHandler::isPoseValid()) {
+        if(!drone_pose_p->isPoseValid()) {
             control::handleWarnMsg("Missing position data");
             return false;
         }

@@ -3,7 +3,6 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <geometry_msgs/PoseStamped.h>
 #include <control/tools/logger.hpp>
-#include "control/tools/drone_handler.hpp"
 
 ManualFlightState::ManualFlightState() {
     setpoint_.type_mask = default_mask;
@@ -32,8 +31,8 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
-    auto pose_stamped = control::DroneHandler::getCurrentPose();
-    auto& position = pose_stamped.pose.position;
+    auto pose_p = control::Pose::getSharedPosePtr();
+    control::Point position = pose_p->getPositionXYZ();
     auto land_detector = LandDetector::getSharedInstancePtr();
 
     if(land_detector->isOnGround()) {
@@ -43,7 +42,7 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
         setpoint_.position.z = position.z;
-        setpoint_.yaw = control::pose::quat2mavrosyaw(pose_stamped.pose.orientation);
+        setpoint_.yaw = pose_p->getMavrosCorrectedYaw();
     }
 }
 
