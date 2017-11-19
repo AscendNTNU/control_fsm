@@ -2,12 +2,10 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include "control/fsm/control_fsm.hpp"
-#include <geometry_msgs/PoseStamped.h>
-#include <cmath>
-#include <geometry_msgs/Point32.h>
 #include <control/tools/logger.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
+#include "control/tools/drone_handler.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
@@ -72,16 +70,16 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
-
-    ///Get shared_ptr to drones pose
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-
     // Set setpoint
     setpoint_.position.x = cmd_.position_goal.x;
     setpoint_.position.y = cmd_.position_goal.y;
     setpoint_.position.z = cmd_.position_goal.z;
-    setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
+    ///Calculate yaw setpoint
+    using control::pose::quat2yaw;
+    using control::getMavrosCorrectedTargetYaw;
+    using control::DroneHandler;
+    auto pose_stamped = DroneHandler::getCurrentPose();
+    setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation)));
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
@@ -90,13 +88,12 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 
 void GoToState::loopState(ControlFSM& fsm) {
 
-    //Get position
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point current_position = pose_p->getPositionXYZ();
-
+    //Get position - no exception can be thrown
+    auto pose_stamped = control::DroneHandler::getCurrentPose();
+    auto& current_position = pose_stamped.pose.position;
 
     //Check that position data is valid
-    if(!pose_p->isPoseValid()) {
+    if(!control::DroneHandler::isPoseValid()) {
         EventData event;
         event.event_type = EventType::POSLOST;
         if(cmd_.isValidCMD()) {
@@ -109,12 +106,14 @@ void GoToState::loopState(ControlFSM& fsm) {
     }
 
     //Check if destination is reached!
+    using control::pose::quat2mavrosyaw;
+    auto& quat = pose_stamped.pose.orientation;
     double delta_x = current_position.x - cmd_.position_goal.x;
     double delta_y = current_position.y - cmd_.position_goal.y;
     double delta_z = current_position.z - cmd_.position_goal.z;
     bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
     bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
-    bool yaw_reached = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
+    bool yaw_reached = (std::fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= yaw_reached_margin_);
     //If destination is reached, begin transition to another state
 
     if(xy_reached && z_reached && yaw_reached) {
