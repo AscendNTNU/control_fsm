@@ -29,15 +29,15 @@ std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_ = nullptr;
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
     //Only current running state is allowed to change state
     if(getState() == caller_p) {
-            //Run stateEnd on current running state before transitioning
-            getState()->stateEnd(*this, event);
-            //Set the current state pointer
-            state_vault_.current_state_p_ = &state;
-            control::handleInfoMsg("Current state: " + getState()->getStateName());
-            //Pass event to new current state
-            getState()->stateBegin(*this, event);
-            //Notify state has changed
-            on_state_changed_();
+        //Run stateEnd on current running state before transitioning
+        getState()->stateEnd(*this, event);
+        //Set the current state pointer
+        state_vault_.current_state_p_ = &state;
+        control::handleInfoMsg("Current state: " + getState()->getStateName());
+        //Pass event to new current state
+        getState()->stateBegin(*this, event);
+        //Notify state has changed
+        on_state_changed_();
     } else {
         control::handleErrorMsg("Transition request made by not active state");
     }
@@ -63,7 +63,8 @@ void ControlFSM::loopCurrentState(void) {
         assert(getState() != nullptr);
         getState()->loopState(*this);
     } catch(const std::exception& e) {
-        //If exceptions aren't handled by states - notify and go to blind hover
+        //If exceptions aren't handled by states - notify and try to go to blind hover
+        //Might lead to undefined behaviour!
         control::handleCriticalMsg(e.what());
         RequestEvent abort_event(RequestType::ABORT);
         transitionTo(BLIND_HOVER_STATE, getState(), abort_event);

@@ -99,16 +99,8 @@ void GoToState::loopState(ControlFSM& fsm) {
     try {
         //Check that position data is valid
         if (!control::DroneHandler::isPoseValid()) {
-            EventData event;
-            event.event_type = EventType::POSLOST;
-            if (cmd_.isValidCMD()) {
-                cmd_.eventError("No position");
-                cmd_ = EventData();
-            }
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
-            return;
-        } //Critical failures aren't possible!
-
+            throw control::PoseNotValidException();
+        }
 
         using control::pose::quat2mavrosyaw;
         //Get pose
@@ -136,6 +128,10 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Exceptions should never occur!
         control::handleCriticalMsg(e.what());
         //Go to PosHold
+        if (cmd_.isValidCMD()) {
+            cmd_.eventError("No position");
+            cmd_ = EventData();
+        }
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
