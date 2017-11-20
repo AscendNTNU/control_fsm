@@ -8,6 +8,7 @@
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
 #include "control/tools/config.hpp"
+#include "control/tools/drone_handler.hpp"
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();
@@ -49,52 +50,55 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Takeoff!!");
     }
-    std::shared_ptr<control::Pose> pose_p;
     try {
-        pose_p = control::Pose::getSharedPosePtr();
-        if(!pose_p->isPoseValid()) {
+        //If no position is available - abort takeoff
+        if (!control::DroneHandler::isPoseValid()) {
             throw control::PoseNotValidException();
         }
+        //Get orientation quaternion
+        auto q = control::DroneHandler::getCurrentPose().pose.orientation;
+        //Set yaw setpoint based on current rotation
+        setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(control::pose::quat2yaw(q)));
     } catch(const std::exception& e) {
-        //If no position is available - abort takeoff
-        control::handleErrorMsg(std::string("No position available: ") + e.what());
-        if(cmd_.isValidCMD()) {
+        //Exceptions shouldn't occur!
+        control::handleCriticalMsg(e.what());
+        if (cmd_.isValidCMD()) {
             cmd_.eventError("No position available");
             cmd_ = EventData();
         }
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::IDLE_STATE, this, abort_event);
         return;
+
     }
-    //Set yaw setpoint based on current rotation
-    setpoint_.yaw = control::getMavrosCorrectedTargetYaw(pose_p->getYaw());
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
-    ///No exception can be thrown, already tested in stateBegin.
-    auto pose_p = control::Pose::getSharedPosePtr();
-    if(!pose_p->isPoseValid()) {
-        //Abort takeoff - land!
-        control::handleErrorMsg("Position lost - landing!");
-        if(cmd_.isValidCMD()) {
-            cmd_.eventError("No position available, aborting");
+    try {
+        auto current_position = control::DroneHandler::getCurrentPose().pose.position;
+        if (current_position.z > (setpoint_.position.z - altitude_reached_margin_)) {
+            if (cmd_.isValidCMD()) {
+                fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
+                cmd_ = EventData();
+            } else {
+                RequestEvent event(RequestType::BLINDHOVER);
+                //Pass on altitude target
+                event.position_goal = PositionGoal(setpoint_.position.z);
+                fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event);
+            }
+        }
+    } catch(const std::exception& e) {
+        //Exceptions shouldn't occur!
+        control::handleCriticalMsg(e.what());
+        if (cmd_.isValidCMD()) {
+            cmd_.eventError("No position available");
             cmd_ = EventData();
         }
-        RequestEvent event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::LAND_STATE, this, event);
+        //Safest procedure is to land!
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::LAND_STATE, this, abort_event);
         return;
-    }
-    control::Point current_position = pose_p->getPositionXYZ();
-    if(current_position.z > (setpoint_.position.z - altitude_reached_margin_)) {
-        if(cmd_.isValidCMD()) {
-            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
-            cmd_ = EventData();
-        } else {
-            RequestEvent event(RequestType::BLINDHOVER);
-            //Pass on altitude target
-            event.position_goal = PositionGoal(setpoint_.position.z);
-            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event);
-        }
+
     }
 }
 

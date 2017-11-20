@@ -2,13 +2,11 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include "control/fsm/control_fsm.hpp"
-#include <geometry_msgs/PoseStamped.h>
-#include <cmath>
-#include <geometry_msgs/Point32.h>
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
+#include "control/tools/drone_handler.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
@@ -73,15 +71,17 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
-
-    ///Get shared_ptr to drones pose
+    // Set setpoint
+    setpoint_.position.x = cmd_.position_goal.x;
+    setpoint_.position.y = cmd_.position_goal.y;
+    setpoint_.position.z = cmd_.position_goal.z;
     try {
-        auto pose_p = control::Pose::getSharedPosePtr();
-        // Set setpoint
-        setpoint_.position.x = cmd_.position_goal.x;
-        setpoint_.position.y = cmd_.position_goal.y;
-        setpoint_.position.z = cmd_.position_goal.z;
-        setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
+        ///Calculate yaw setpoint
+        using control::pose::quat2yaw;
+        using control::getMavrosCorrectedTargetYaw;
+        using control::DroneHandler;
+        auto quat = DroneHandler::getCurrentPose().pose.orientation;
+        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -96,45 +96,48 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
-
-    //Get position
-    std::shared_ptr<control::Pose> pose_p;
     try {
-        pose_p = control::Pose::getSharedPosePtr();
-        if(!pose_p->isPoseValid()) {
-            //Throw exception if pose is invalid
-            throw control::PoseNotValidException();
+        //Check that position data is valid
+        if (!control::DroneHandler::isPoseValid()) {
+            EventData event;
+            event.event_type = EventType::POSLOST;
+            if (cmd_.isValidCMD()) {
+                cmd_.eventError("No position");
+                cmd_ = EventData();
+            }
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            return;
+        } //Critical failures aren't possible!
+
+
+        using control::pose::quat2mavrosyaw;
+        //Get pose
+        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        //Get reference to position in pose
+        auto &current_position = pose_stamped.pose.position;
+        //Get reference to orientation in pose
+        auto &quat = pose_stamped.pose.orientation;
+        //Calculate distance to target
+        double delta_x = current_position.x - cmd_.position_goal.x;
+        double delta_y = current_position.y - cmd_.position_goal.y;
+        double delta_z = current_position.z - cmd_.position_goal.z;
+        //Check if we're close enough
+        bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
+        bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
+        bool yaw_reached = (std::fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= yaw_reached_margin_);
+        //If destination is reached, begin transition to another state
+
+        if (xy_reached && z_reached && yaw_reached) {
+            destinationReached(fsm);
+        } else {
+            delay_transition_.enabled = false;
         }
-    } catch(const control::PoseNotValidException& e) {
-        //Transition back to poshold if exception is thrown
-        control::handleErrorMsg(std::string("No valid pose available: ") + std::string(e.what())); 
-        EventData event;
-        event.event_type = EventType::POSLOST;
-        if(cmd_.isValidCMD()) {
-            cmd_.eventError("No position");
-            cmd_ = EventData();
-        }
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
-        return;
-    } //Critical failures aren't possible!
-
-    //Get position
-    control::Point current_position = pose_p->getPositionXYZ();
-
-    //Check if destination is reached!
-    double delta_x = current_position.x - cmd_.position_goal.x;
-    double delta_y = current_position.y - cmd_.position_goal.y;
-    double delta_z = current_position.z - cmd_.position_goal.z;
-    bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
-    bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
-    bool yaw_reached = (std::fabs(pose_p->getMavrosCorrectedYaw() - setpoint_.yaw) <= yaw_reached_margin_);
-    //If destination is reached, begin transition to another state
-
-    if(xy_reached && z_reached && yaw_reached) {
-        destinationReached(fsm);
-    }
-    else{
-        delay_transition_.enabled = false;
+    } catch(const std::exception& e) {
+        //Exceptions should never occur!
+        control::handleCriticalMsg(e.what());
+        //Go to PosHold
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 }
 

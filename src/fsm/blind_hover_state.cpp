@@ -6,6 +6,7 @@
 #include "control/fsm/control_fsm.hpp"
 #include "control/fsm/event_data.hpp"
 #include "control/tools/config.hpp"
+#include "control/tools/drone_handler.hpp"
 
 #define DEFAULT_BLIND_HOVER_ALTITUDE 1.0f    
 
@@ -47,14 +48,13 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     //Set default blind hover altitude
     setpoint_.position.z = control::Config::blind_hover_alt;
     try {
-        //Get shared_ptr to pose
-        auto pose_p = control::Pose::getSharedPosePtr();
-        if(pose_p->isPoseValid()) {
+        //If full position is valid - no need to blind hover
+        if(control::DroneHandler::isPoseValid()) {
             if(event.isValidCMD()) {
-                //Pass command on to next state 
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
             } else {
                 RequestEvent req_event(RequestType::POSHOLD);
+                //Set target altitude if passed on from takeoff
                 if(event.position_goal.z_valid) {
                     req_event.position_goal = event.position_goal;
                 }
@@ -70,16 +70,13 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     if(event.isValidCMD()) {
         cmd_ = event;
     }
-
     control::handleWarnMsg("No valid pose available, blindhovering!");
 }
 
 void BlindHoverState::loopState(ControlFSM& fsm) {
     try {
-        ///Get shared_ptr to drones pose
-        auto pose_p = control::Pose::getSharedPosePtr();
         //Transition to position hold when position is valid.
-        if (pose_p->isPoseValid()) {
+        if(control::DroneHandler::isPoseValid()) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
                 cmd_ = EventData(); //Reset cmd_
@@ -88,7 +85,7 @@ void BlindHoverState::loopState(ControlFSM& fsm) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             }
         }
-    }catch(const std::exception& e) {
+    } catch(const std::exception& e) {
         control::handleCriticalMsg(e.what());
     }
 }

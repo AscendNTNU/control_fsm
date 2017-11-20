@@ -105,21 +105,22 @@ bool ControlFSM::isReady() {
     if(control::Config::require_all_data_streams) {
         try {
             //Check that we're recieving position
-            if(!drone_pose_p->isPoseValid()) {
-                control::handleWarnMsg("Missing position data");
+            if(!control::DroneHandler::isPoseValid()) {
+                control::handleWarnMsg("Preflight Check: No valid pose data");
                 return false;
             }
             //Mavros must publish state data
             if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
-                control::handleWarnMsg("Missing mavros state info!");
+                control::handleWarnMsg("Preflight Check: No valid mavros state data!");
                 return false;
             } 
             //Land detector must be ready
             if (!LandDetector::getSharedInstancePtr()->isReady()) {
-                control::handleWarnMsg("Missing land detector stream!");
+                control::handleWarnMsg("Preflight Check: No valid land detector data!");
                 return false;
             }
         } catch(const std::exception& e) {
+            ///Critical bug -
             control::handleCriticalMsg(e.what());
             return false;
         }
