@@ -5,6 +5,7 @@
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/config.hpp>
 #include <control/tools/logger.hpp>
+#include <control/tools/obstacle_state_handler.hpp>
 
 #ifndef PI_HALF
 #define PI_HALF 1.57079632679
@@ -113,9 +114,23 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Missing land detector stream!");
                 return false;
             }
-        } catch(const std::bad_alloc& e) {
+        } catch(const std::exception& e) {
             control::handleErrorMsg("Exception: " + std::string(e.what()));
             return false;
+        }
+
+        if(control::Config::require_obstacle_detection) {
+            try {
+                using control::ObstacleStateHandler;
+                //Land detector must be ready
+                if (!ObstacleStateHandler::isInstanceReady()) {
+                    control::handleWarnMsg("Missing obstacle state stream!");
+                    return false;
+                }
+            } catch(const std::exception& e) {
+                control::handleErrorMsg("Exception: " + std::string(e.what()));
+                return false;
+            }
         }
     }
 

@@ -55,9 +55,9 @@ mavros_msgs::State DroneHandler::getState() {
 }
 
 bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(getCurrentPose());
+    return !control::message::hasTimedOut(getSharedInstancePtr()->last_pose_);
 }
 
 bool DroneHandler::isStateValid() {
-    return !control::message::hasTimedOut(getCurrentState());
+    return !control::message::hasTimedOut(getSharedInstancePtr()->last_state_);
 }
