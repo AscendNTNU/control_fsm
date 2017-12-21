@@ -25,7 +25,8 @@ ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_ = nullptr;
 
 //Change the current running state - be carefull to only change into an allowed state
-//Due to poor design, transitionTo has no strong nothrow guarantees - not exception safe!! 
+//Due to poor design, transitionTo has no strong nothrow guarantees - not exception safe!!
+//Will lead to undefined behaviour if exception is thrown
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
     //Only current running state is allowed to change state
     if(getState() == caller_p) {
@@ -64,7 +65,7 @@ void ControlFSM::loopCurrentState(void) {
         getState()->loopState(*this);
     } catch(const std::exception& e) {
         //If exceptions aren't handled by states - notify and try to go to blind hover
-        //Might lead to undefined behaviour!
+        //Will lead to undefined behaviour!
         control::handleCriticalMsg(e.what());
         RequestEvent abort_event(RequestType::ABORT);
         transitionTo(BLIND_HOVER_STATE, getState(), abort_event);
