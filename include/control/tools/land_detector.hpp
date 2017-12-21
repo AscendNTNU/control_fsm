@@ -28,9 +28,9 @@ private:
 
 public:
     ///Is drone in the air or landed?
-    bool isOnGround();
+    bool isOnGround() const;
     ///Is data streams available and ready?
-    bool isReady();
+    bool isReady() const;
     /**Get shared_ptr to shared instance - singleton pattern
      * @throw control::ROSNotInitialized
      * @throw std::bad_alloc

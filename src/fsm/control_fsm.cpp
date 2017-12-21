@@ -6,10 +6,6 @@
 #include <control/tools/config.hpp>
 #include <control/tools/logger.hpp>
 
-#ifndef PI_HALF
-#define PI_HALF 1.57079632679
-#endif
-
 BeginState ControlFSM::BEGIN_STATE;
 PreFlightState ControlFSM::PREFLIGHT_STATE;
 IdleState ControlFSM::IDLE_STATE;
@@ -65,7 +61,7 @@ void ControlFSM::loopCurrentState(void) {
         getState()->loopState(*this);
     } catch(const std::exception& e) {
         //If exceptions aren't handled by states - notify and try to go to blind hover
-        //Will lead to undefined behaviour!
+        //Will lead to undefined behaviour- but still safer than nothing!
         control::handleCriticalMsg(e.what());
         RequestEvent abort_event(RequestType::ABORT);
         transitionTo(BLIND_HOVER_STATE, getState(), abort_event);
@@ -176,12 +172,7 @@ std::shared_ptr<ControlFSM> ControlFSM::getSharedInstancePtr() {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
         }
-        try {
-            shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
-        } catch(const std::bad_alloc& e) {
-            control::handleCriticalMsg(e.what());
-            throw;
-        }
+        shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
     }
     return shared_instance_p_;
 }

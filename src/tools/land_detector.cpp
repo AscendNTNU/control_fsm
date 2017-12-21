@@ -18,14 +18,14 @@ void LandDetector::landCB(const mavros_msgs::ExtendedState &msg) {
     last_msg_ = msg;
 }
 
-bool LandDetector::isOnGround() {
+bool LandDetector::isOnGround() const {
     if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(control::Config::valid_data_timeout)) {
         control::handleErrorMsg("Land detector using old data");
     }
     return last_msg_.landed_state == LANDED_STATE_ON_GROUND;
 }
 
-bool LandDetector::isReady() {
+bool LandDetector::isReady() const {
     //Make sure landing detector node is running.
     return sub_.getNumPublishers() > 0;
 }
@@ -35,12 +35,7 @@ std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
         }
-        try {
-            shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
-        } catch (const std::bad_alloc& e) {
-            control::handleCriticalMsg(e.what());
-            throw;
-        }
+        shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
     }
     return shared_instance_p_;
 }
