@@ -5,12 +5,15 @@
 #include <memory>
 #include <ros/ros.h>
 namespace control {
+/** Handles state information recieved from the drone
+ * Singleton pattern gurantees one, and only one instance
+ * will always exists. Returning references are therefore safe
+ **/
 class DroneHandler;
 class DroneHandler {
 private:
     ///Shared instance
     static std::shared_ptr<DroneHandler> shared_instance_p_;
-
     ///Nodehandler
     ros::NodeHandle n_;
     ///Subscriber recieving pose
@@ -31,13 +34,13 @@ public:
     ///Returns pointer to shared instance
     static std::shared_ptr<DroneHandler> getSharedInstancePtr();
     ///Returns last pose from shared instance
-    static geometry_msgs::PoseStamped getCurrentPose();
+    static const geometry_msgs::PoseStamped& getCurrentPose();
     ///Returns last state from shared instance
-    static mavros_msgs::State getCurrentState();
+    static const mavros_msgs::State& getCurrentState();
     ///Get latest pose
-    geometry_msgs::PoseStamped getPose();
+    const geometry_msgs::PoseStamped& getPose() const;
     ///Get latest state
-    mavros_msgs::State getState();
+    const mavros_msgs::State& getState() const;
     ///Is pose data valid?
     static bool isPoseValid();
     ///Is state data valid?

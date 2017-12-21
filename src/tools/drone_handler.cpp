@@ -32,22 +32,23 @@ std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
     return shared_instance_p_;
 }
 
-geometry_msgs::PoseStamped DroneHandler::getCurrentPose() {
+const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
     return getSharedInstancePtr()->getPose(); 
 }
 
-mavros_msgs::State DroneHandler::getCurrentState() {
+const mavros_msgs::State& DroneHandler::getCurrentState() {
     return getSharedInstancePtr()->getState();
 }
 
-geometry_msgs::PoseStamped DroneHandler::getPose() {
+
+const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
     if(control::message::hasTimedOut(last_pose_)) {
         control::handleErrorMsg("DroneHandler: Using old pose");
     }
     return last_pose_;
 }
 
-mavros_msgs::State DroneHandler::getState() {
+const mavros_msgs::State& DroneHandler::getState() const {
     if(control::message::hasTimedOut(last_state_)) {
         control::handleErrorMsg("DroneHandler: Using old state"); 
     }
