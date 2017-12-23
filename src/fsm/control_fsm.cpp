@@ -6,10 +6,6 @@
 #include <control/tools/config.hpp>
 #include <control/tools/logger.hpp>
 
-#ifndef PI_HALF
-#define PI_HALF 1.57079632679
-#endif
-
 BeginState ControlFSM::BEGIN_STATE;
 PreFlightState ControlFSM::PREFLIGHT_STATE;
 IdleState ControlFSM::IDLE_STATE;
@@ -22,9 +18,11 @@ GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 
-std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_;
+std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_ = nullptr;
 
 //Change the current running state - be carefull to only change into an allowed state
+//Due to poor design, transitionTo has no strong nothrow guarantees - not exception safe!!
+//Will lead to undefined behaviour if exception is thrown
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
     //Only current running state is allowed to change state
     if(getState() == caller_p) {
@@ -45,7 +43,7 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
 //Send external event to current state and to "next" state
 void ControlFSM::handleEvent(const EventData& event) {
     if(getState() == nullptr) {
-        control::handleErrorMsg("Bad implementation of FSM - FSM allways need a state");
+        control::handleCriticalMsg("Bad implementation of FSM - FSM allways need a state");
         return;
     }
     if(event.event_type == EventType::MANUAL) {
@@ -58,8 +56,16 @@ void ControlFSM::handleEvent(const EventData& event) {
 
 //Runs state specific code on current state
 void ControlFSM::loopCurrentState(void) {
-    assert(getState() != nullptr);
-    getState()->loopState(*this);
+    try {
+        assert(getState() != nullptr);
+        getState()->loopState(*this);
+    } catch(const std::exception& e) {
+        //If exceptions aren't handled by states - notify and try to go to blind hover
+        //Will lead to undefined behaviour- but still safer than nothing!
+        control::handleCriticalMsg(e.what());
+        RequestEvent abort_event(RequestType::ABORT);
+        transitionTo(BLIND_HOVER_STATE, getState(), abort_event);
+    }
 }
 
 ControlFSM::ControlFSM() {
@@ -95,26 +101,25 @@ bool ControlFSM::isReady() {
 
     //Some checks can be skipped for debugging purposes
     if(control::Config::require_all_data_streams) {
-
-        //Check that we're recieving position
-        if(!control::DroneHandler::isPoseValid()) {
-            control::handleWarnMsg("Missing position data");
-            return false;
-        }
-
-        //Mavros must publish state data
-        if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
-            control::handleWarnMsg("Missing mavros state info!");
-            return false;
-        }
         try {
-            //Land detector must be ready
-            if (!LandDetector::getSharedInstancePtr()->isReady()) {
-                control::handleWarnMsg("Missing land detector stream!");
+            //Check that we're recieving position
+            if(!control::DroneHandler::isPoseValid()) {
+                control::handleWarnMsg("Preflight Check: No valid pose data");
                 return false;
             }
-        } catch(const std::bad_alloc& e) {
-            control::handleErrorMsg("Exception: " + std::string(e.what()));
+            //Mavros must publish state data
+            if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
+                control::handleWarnMsg("Preflight Check: No valid mavros state data!");
+                return false;
+            } 
+            //Land detector must be ready
+            if (!LandDetector::getSharedInstancePtr()->isReady()) {
+                control::handleWarnMsg("Preflight Check: No valid land detector data!");
+                return false;
+            }
+        } catch(const std::exception& e) {
+            ///Critical bug -
+            control::handleCriticalMsg(e.what());
             return false;
         }
     }
@@ -163,20 +168,11 @@ void ControlFSM::handleManual() {
 }
 
 std::shared_ptr<ControlFSM> ControlFSM::getSharedInstancePtr() {
-
-    if(!ros::isInitialized()) {
-        throw control::ROSNotInitializedException();
-    }
-
     if(shared_instance_p_ == nullptr) {
-        try {
-            shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
-        } catch(const std::bad_alloc& e) {
-            std::string err_msg = "ControlFSM allocation failure: ";
-            err_msg += e.what();
-            control::handleErrorMsg(err_msg);
-            throw;
+        if(!ros::isInitialized()) {
+            throw control::ROSNotInitializedException();
         }
+        shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
     }
     return shared_instance_p_;
 }

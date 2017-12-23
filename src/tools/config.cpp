@@ -1,6 +1,6 @@
 #include "control/tools/config.hpp"
 #include <assert.h>
-#include <control/exceptions/ROSNotInitializedException.hpp>
+#include <control/exceptions/ros_not_initialized_exception.hpp>
 
 using control::Config;
 using control::ROSNotInitializedException;

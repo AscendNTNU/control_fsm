@@ -32,18 +32,23 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
-    auto pose_stamped = control::DroneHandler::getCurrentPose();
-    auto& position = pose_stamped.pose.position;
-    auto land_detector = LandDetector::getSharedInstancePtr();
+    try {
+        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto &position = pose_stamped.pose.position;
+        auto land_detector = LandDetector::getSharedInstancePtr();
 
-    if(land_detector->isOnGround()) {
-        setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
-    } else {
-        setpoint_.type_mask = default_mask;
-        setpoint_.position.x = position.x;
-        setpoint_.position.y = position.y;
-        setpoint_.position.z = position.z;
-        setpoint_.yaw = control::pose::quat2mavrosyaw(pose_stamped.pose.orientation);
+        if (land_detector->isOnGround()) {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
+        } else {
+            setpoint_.type_mask = default_mask;
+            setpoint_.position.x = position.x;
+            setpoint_.position.y = position.y;
+            setpoint_.position.z = position.z;
+            setpoint_.yaw = static_cast<float>(control::pose::quat2mavrosyaw(pose_stamped.pose.orientation));
+        }
+    } catch(const std::exception& e) {
+        //Exceptions shouldn't occur!
+        control::handleWarnMsg(e.what());
     }
 }
 
