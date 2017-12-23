@@ -62,10 +62,6 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     } catch(const std::exception& e) {
         //Exceptions shouldn't occur!
         control::handleCriticalMsg(e.what());
-        if (cmd_.isValidCMD()) {
-            cmd_.eventError("No position available");
-            cmd_ = EventData();
-        }
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::IDLE_STATE, this, abort_event);
         return;
@@ -90,11 +86,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     } catch(const std::exception& e) {
         //Exceptions shouldn't occur!
         control::handleCriticalMsg(e.what());
-        if (cmd_.isValidCMD()) {
-            cmd_.eventError("No position available");
-            cmd_ = EventData();
-        }
-        //Safest procedure is to land!
+        //Safest procedure is attempt land!
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::LAND_STATE, this, abort_event);
         return;

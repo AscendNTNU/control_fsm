@@ -46,24 +46,20 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
             throw control::PoseNotValidException();
         }
         auto pose_stamped = control::DroneHandler::getCurrentPose();
-        auto &position = pose_stamped.pose.position;
+        auto& position = pose_stamped.pose.position;
         //Position XY is ignored in typemask, but the values are set as a precaution.
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
         //Set yaw setpoint based on current rotation
         using control::getMavrosCorrectedTargetYaw;
         using control::pose::quat2yaw;
-        auto &quat = pose_stamped.pose.orientation;
+        auto& quat = pose_stamped.pose.orientation;
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
     } catch(const std::exception& e) {
         //Exceptions shouldn't occur!
         control::handleCriticalMsg(e.what());
         //Go back to poshold
         RequestEvent abort_event(RequestType::ABORT);
-        if (cmd_.isValidCMD()) {
-            cmd_.eventError("No valid position");
-            cmd_ = EventData();
-        }
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 }
