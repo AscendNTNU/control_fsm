@@ -1,7 +1,7 @@
 #include "control/tools/obstacle_avoidance.hpp"
 
 //Static instance
-std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance_p_;
+std::unique_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance_p_;
 
 
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
@@ -27,12 +27,12 @@ mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::Positio
     return setpoint;
 }
 
-std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::getSharedInstancePtr() {
+control::ObstacleAvoidance* control::ObstacleAvoidance::getSharedInstancePtr() {
     //Create new instance if there isn't one
     if(instance_p_ == nullptr) {
-        instance_p_ = std::shared_ptr<ObstacleAvoidance>(new ObstacleAvoidance);
+        instance_p_ = std::unique_ptr<ObstacleAvoidance>(new ObstacleAvoidance);
     }
-    return instance_p_;
+    return instance_p_.get();
 }
 
 void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {

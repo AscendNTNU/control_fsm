@@ -13,7 +13,7 @@ class ObstacleAvoidance {
 private:
 
     //Singleton pattern
-    static std::shared_ptr<ObstacleAvoidance> instance_p_;
+    static std::unique_ptr<ObstacleAvoidance> instance_p_;
 
     /**Set of callback method pointers registered by states
      * Pointers are used to allow comparison as std::function can't be compared
@@ -38,7 +38,7 @@ public:
     ///Modifies setpoint if obstacle is too close
     mavros_msgs::PositionTarget run(mavros_msgs::PositionTarget setpoint);
     ///Returns shared_ptr to one instance
-    static std::shared_ptr<ObstacleAvoidance> getSharedInstancePtr();
+    static ObstacleAvoidance* getSharedInstancePtr();
     ///Returns true when obstacle avoidance is running
     bool isReady() { return true; }
 
