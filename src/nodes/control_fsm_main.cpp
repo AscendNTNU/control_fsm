@@ -29,9 +29,9 @@ int main(int argc, char** argv) {
         control::handleWarnMsg("One or more debug param features is activated!");
     }
 
-    //FSM pointer
-    auto fsm_p = ControlFSM::getSharedInstancePtr();
-
+    //FSM
+    ControlFSM fsm;
+    
     //Obstacle avoidance instance
     auto obstacle_avoidance_p = control::ObstacleAvoidance::getSharedInstancePtr();
 
@@ -46,9 +46,9 @@ int main(int argc, char** argv) {
     ros::spinOnce();
 
     //Set FSM callbacks
-    fsm_p->setOnStateChangedCB([&](){
+    fsm.setOnStateChangedCB([&](){
         std_msgs::String msg;
-        msg.data = fsm_p->getState()->getStateName();
+        msg.data = fsm.getState()->getStateName();
         fsm_on_state_changed_pub.publish(msg);
     });
 
@@ -56,19 +56,19 @@ int main(int argc, char** argv) {
 
     //Wait for all systems to initalize and position to become valid
     control::handleInfoMsg("Waiting for necessary data streams!");
-    while(ros::ok() && (!fsm_p->isReady() || !obstacle_avoidance_p->isReady())) {
+    while(ros::ok() && (!fsm.isReady() || !obstacle_avoidance_p->isReady())) {
         ros::Duration(0.5).sleep();
         ros::spinOnce();
     }
     control::handleInfoMsg("Necessary data streams are ready!");
 
     //Actionserver is started when the system is ready
-    ActionServer cmdServer(fsm_p.get());
+    ActionServer cmdServer(&fsm);
 
     //Preflight is finished and system is ready for use!
     /**************************************************/
     control::handleInfoMsg("FSM is ready!");
-    fsm_p->startPreflight(); //Transition to preflight!
+    fsm.startPreflight(); //Transition to preflight!
     //Used to maintain a fixed loop rate
     ros::Rate loopRate(SETPOINT_PUB_RATE);
     //Main loop
@@ -78,15 +78,15 @@ int main(int argc, char** argv) {
         if(!debugServer.isQueueEmpty()) {
             auto event_queue = debugServer.getAndClearQueue();
             while(!event_queue.empty()) {
-                fsm_p->handleEvent(event_queue.front());
+                fsm.handleEvent(event_queue.front());
                 event_queue.pop();
             }
         }
         //Run current FSM state loop
-        fsm_p->loopCurrentState(); 
+        fsm.loopCurrentState(); 
 
         //Publish setpoints at gived rate
-        const mavros_msgs::PositionTarget* state_setpoint_p = fsm_p->getSetpointPtr();
+        const mavros_msgs::PositionTarget* state_setpoint_p = fsm.getSetpointPtr();
         //Run obstacle avoidance on setpoint and get modified (if neccesary)
         mavros_msgs::PositionTarget drone_setpoint = obstacle_avoidance_p->run(*state_setpoint_p);
         //Publish completed setpoint

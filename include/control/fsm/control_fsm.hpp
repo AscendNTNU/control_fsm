@@ -27,9 +27,6 @@
 ///Main FSM logic
 class ControlFSM {
 private:
-    ///Shared instance pointer
-    static std::shared_ptr<ControlFSM> shared_instance_p_;
-
     //Add state classes as friend classes here - allowing them to use transitionTo.
     friend class BeginState;
     friend class PreFlightState;
@@ -95,8 +92,6 @@ private:
     ///Callback when a transition is made
     std::function<void()> on_state_changed_ = [](){};
 
-    ///Constructor sets default/starting state
-    ControlFSM();
 
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
@@ -130,14 +125,8 @@ protected:
     void transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event);
     
 public:
-
-    /**Get shared instance pointer - singleton patter
-     * @throw control::ROSNotInitialized
-     * @throw std::bad_alloc
-     * @return shared_ptr to shared instance - singleton
-     */
-    static std::shared_ptr<ControlFSM> getSharedInstancePtr();
-
+    ///Constructor sets default/starting state
+    ControlFSM();
     ///Destructor not used to anything specific.
     ~ControlFSM() {}
 

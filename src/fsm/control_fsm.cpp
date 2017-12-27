@@ -18,8 +18,6 @@ GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 
-std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_ = nullptr;
-
 //Change the current running state - be carefull to only change into an allowed state
 //Due to poor design, transitionTo has no strong nothrow guarantees - not exception safe!!
 //Will lead to undefined behaviour if exception is thrown
@@ -166,20 +164,4 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
 void ControlFSM::handleManual() {
     getState()->handleManual(*this);
 }
-
-std::shared_ptr<ControlFSM> ControlFSM::getSharedInstancePtr() {
-    if(shared_instance_p_ == nullptr) {
-        if(!ros::isInitialized()) {
-            throw control::ROSNotInitializedException();
-        }
-        shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
-    }
-    return shared_instance_p_;
-}
-
-
-
-
-
-
 

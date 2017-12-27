@@ -1,7 +1,5 @@
 #include <control/fsm/action_server.hpp>
-#include <control/fsm/event_data.hpp>
-#include <control/fsm/control_fsm.hpp>
-#include <iostream>
+
 ActionServer::ActionServer(ControlFSM* fsm_p) : as_(nh_, "controlNodeActionServer", false) {
     this->fsm_p_ = fsm_p;
     as_.registerGoalCallback(boost::bind(&ActionServer::goalCB, this));

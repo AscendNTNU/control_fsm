@@ -9,21 +9,23 @@
 
 using control::DroneHandler;
 
-std::shared_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
+std::unique_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 
 DroneHandler::DroneHandler() {
     using control::Config;
-    pose_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &DroneHandler::onPoseRecievedCB, this);
+    auto callback = &DroneHandler::onPoseRecievedCB;
+    auto& topic = Config::mavros_local_pos_topic;
+    pose_sub_ = n_.subscribe(topic, 1, callback, this);
 }
 
-std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
+const DroneHandler* DroneHandler::getSharedInstancePtr() {
     if(shared_instance_p_ == nullptr) {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
         }
-        shared_instance_p_ = std::shared_ptr<DroneHandler>(new DroneHandler);
+        shared_instance_p_ = std::unique_ptr<DroneHandler>(new DroneHandler);
     }
-    return shared_instance_p_;
+    return shared_instance_p_.get();
 }
 
 const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {

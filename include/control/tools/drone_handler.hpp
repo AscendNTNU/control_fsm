@@ -13,7 +13,7 @@ class DroneHandler;
 class DroneHandler {
 private:
     ///Shared instance - will always exist after created!
-    static std::shared_ptr<DroneHandler> shared_instance_p_;
+    static std::unique_ptr<DroneHandler> shared_instance_p_;
     ///Nodehandler
     ros::NodeHandle n_;
     ///Subscriber recieving pose
@@ -26,7 +26,7 @@ private:
     void onPoseRecievedCB(const geometry_msgs::PoseStamped& msg) { last_pose_ = msg; }
 public:
     ///Returns pointer to shared instance
-    static std::shared_ptr<DroneHandler> getSharedInstancePtr();
+    static const DroneHandler* getSharedInstancePtr();
     ///Returns last pose from shared instance
     static const geometry_msgs::PoseStamped& getCurrentPose();
     ///Get latest pose
