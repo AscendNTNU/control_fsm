@@ -4,15 +4,15 @@
 #include <control/fsm/control_fsm.hpp>
 #include <ascend_msgs/ControlFSMAction.h>
 #include <ros/ros.h>
+#include <queue>
 
 class ActionServer {
 private:
-
     ros::NodeHandle nh_;
     ///Is an action already running?
     bool action_is_running_ = false;
-    ///Pointer to fsm - used to send events directly to fsm
-    ControlFSM* fsm_p_ = nullptr;
+    ///Event queue
+    std::queue<EventData> event_queue_;
     ///Actionserver
     actionlib::SimpleActionServer<ascend_msgs::ControlFSMAction> as_;
     ///Callback for when new action is recieved
@@ -26,7 +26,14 @@ private:
     ///Start landgb - NB not in use!!
     void startLandGB(const ascend_msgs::ControlFSMGoal& goal);
 public:
-    ActionServer(ControlFSM* fsm_p);
+    ///Constructor
+    ActionServer();
+    ///Request event queue
+    std::queue<EventData>&& getAndClearQueue();
+    ///Is queue empty
+    bool isQueueEmpty() { return event_queue_.empty(); }
+    
+    
 };
 
 #endif
