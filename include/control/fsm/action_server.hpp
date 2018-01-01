@@ -11,8 +11,8 @@ private:
     ros::NodeHandle nh_;
     ///Is an action already running?
     bool action_is_running_ = false;
-    ///Event queue
-    std::queue<EventData> event_queue_;
+    ///FSM pointer - tight coupling, sorry
+    ControlFSM* fsm_p_;
     ///Actionserver
     actionlib::SimpleActionServer<ascend_msgs::ControlFSMAction> as_;
     ///Callback for when new action is recieved
@@ -25,14 +25,11 @@ private:
     void startLandXY(const ascend_msgs::ControlFSMGoal& goal);
     ///Start landgb - NB not in use!!
     void startLandGB(const ascend_msgs::ControlFSMGoal& goal);
+    ///Start search - go to search alt
+    void startSearch(const ascend_msgs::ControlFSMGoal& goal);
 public:
     ///Constructor
-    ActionServer();
-    ///Request event queue
-    std::queue<EventData>&& getAndClearQueue();
-    ///Is queue empty
-    bool isQueueEmpty() { return event_queue_.empty(); }
-    
+    ActionServer(ControlFSM* fsm_p);
     
 };
 

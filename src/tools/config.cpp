@@ -11,6 +11,7 @@ double Config::takeoff_altitude = 1.0;
 double Config::altitude_reached_margin = 0.1;
 double Config::setpoint_reached_margin = 0.3;
 double Config::yaw_reached_margin = 0.02;
+double Config::gb_search_altitude = 2.5;
 double Config::no_yaw_correct_dist = 0.2;
 double Config::valid_data_timeout = 2.0; //2 seconds
 std::string Config::fsm_error_topic = "control/fsm/on_error";
@@ -65,6 +66,7 @@ void Config::loadParams() {
     getDoubleParam("yaw_reached_margin", yaw_reached_margin);
     getDoubleParam("safe_hover_alt", safe_hover_altitude);
     getDoubleParam("obstacle_too_close_dist", obstacle_too_close_dist);
+    getDoubleParam("gb_search_altitude", gb_search_altitude);
     getDoubleParam("message_timeout", valid_data_timeout);
     getBoolParam("require_all_streams", require_all_data_streams);
     getBoolParam("require_obs_detection", require_obstacle_detection);

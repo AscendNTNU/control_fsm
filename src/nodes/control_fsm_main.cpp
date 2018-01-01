@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     control::handleInfoMsg("Necessary data streams are ready!");
 
     //Actionserver is started when the system is ready
-    ActionServer cmdServer();
+    ActionServer action_server(fsm_p.get());
 
     //Preflight is finished and system is ready for use!
     /**************************************************/
@@ -74,13 +74,6 @@ int main(int argc, char** argv) {
     //Main loop
     while(ros::ok()) {
         ros::spinOnce(); //Handle all incoming messages - generates fsm events
-        if(!cmdServer.isQueueEmpty()) {
-            auto event_queue = cmdServer.getAndClearQueue();
-            while(!event_queue.empty()) {
-                fsm_p->handleEvent(event_queue.front());
-                event_queue.pop();
-            }
-        }
         //Handle debugevents
         if(!debugServer.isQueueEmpty()) {
             auto event_queue = debugServer.getAndClearQueue();

@@ -12,6 +12,7 @@
     <arg name="blind_hover_altitude" default="1.0"/>
     <arg name="takeoff_altitude" default="1.0"/>
     <arg name="altitude_reached_margin" default="0.1"/>
+    <arg name="gb_search_alt" default="2.5"/>
     <arg name="setp_reached_margin" default="0.3"/>
     <arg name="goto_hold_dest_time" default="0.5"/>
     <arg name="safe_hover_alt" default="2.5"/>
