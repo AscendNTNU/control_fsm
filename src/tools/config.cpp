@@ -4,7 +4,7 @@
 
 using control::Config;
 using control::ROSNotInitializedException;
-
+std::set<std::string> Config::not_found_set;
 double Config::dest_reached_margin = 0.3;
 double Config::blind_hover_alt = 1.0;
 double Config::takeoff_altitude = 1.0;
@@ -36,25 +36,37 @@ void Config::loadParams() {
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var) {
         if(!n.getParam(name, var)) {
-            ROS_WARN("[Control FSM] Load param failed: %s, using %f", name.c_str(), var);
+            ROS_WARN("[Control FSM Param] Load param failed: %s, using %f", name.c_str(), var);
+            onParamLoadFailed(name);
+        } else {
+            onParamLoadSucess(name);
         }
     };
 
     auto getStringParam = [&](const std::string& name, std::string& var) {
         if(!n.getParam(name, var)) {
-            ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var.c_str());
+            ROS_WARN("[Control FSM Param] Load param failed: %s, using %s", name.c_str(), var.c_str());
+            onParamLoadFailed(name);
+        } else {
+            onParamLoadSucess(name);
         }
     };
 
     auto getIntParam = [&](const std::string& name, int& var) {
         if(!n.getParam(name, var)) {
-            ROS_WARN("[Control FSM] Load param failed: %s, using %d", name.c_str(), var);
+            ROS_WARN("[Control FSM Param] Load param failed: %s, using %d", name.c_str(), var);
+            onParamLoadFailed(name); 
+        } else {
+            onParamLoadSucess(name);
         }
     };
 
     auto getBoolParam = [&](const std::string& name, bool& var) {
         if(!n.getParam(name, var)) {
-            ROS_WARN("[Control FSM] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
+            ROS_WARN("[Control FSM Param] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
+            onParamLoadFailed(name);
+        } else {
+            onParamLoadSucess(name);
         }
     };
 
@@ -87,4 +99,12 @@ void Config::loadParams() {
     //LandDetector
     getStringParam("land_detector_topic", land_detector_topic);
 
+}
+
+void Config::onParamLoadFailed(const std::string& name) {
+    not_found_set.emplace(name);
+}
+
+void Config::onParamLoadSucess(const std::string& name) {
+    not_found_set.erase(name);
 }

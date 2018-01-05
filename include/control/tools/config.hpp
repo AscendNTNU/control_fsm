@@ -2,9 +2,12 @@
 #define FSM_CONFIG_HPP
 #include <iostream>
 #include <ros/ros.h>
+#include <set>
 namespace control {
 class Config {
 public:
+    ///Set containing all not found params
+    static std::set<std::string> not_found_set;
     ///Are we close enough to the target?
     static double dest_reached_margin;
     ///Default hover altitude in case of blind hover
@@ -43,16 +46,20 @@ public:
     static double obstacle_too_close_dist;
     ///Topic to listen for info about obstacles
     static std::string lidar_topic;
-    /**Load paramaters
-     * @throw control::ROSNotInitializedException
-     */
-    static void loadParams();
     ///Finished drone will require all datastreams to be available
     static bool require_all_data_streams;
     ///Makes it possible to disable the use of obstacle detection features
     static bool require_obstacle_detection;
     ///When is data considered old?
     static double valid_data_timeout;
+    /**Load paramaters
+     * @throw control::ROSNotInitializedException
+     */
+    static void loadParams();
+    ///Adds param to set of unloaded params
+    static void onParamLoadFailed(const std::string& name);
+    ///Removes param from set of unloaded params
+    static void onParamLoadSucess(const std::string& name);
 };
 }
 
