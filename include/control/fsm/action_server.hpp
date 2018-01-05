@@ -40,6 +40,13 @@ private:
     void startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p);
     ///Start search - go to search alt
     void startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p);
+    //Callback to run on action complete
+    void onActionComplete();
+    ///Callback to run on action feedback
+    void onActionFeedback(const std::string& msg);
+    ///Callback to run on action error
+    void onActionError(const std::string& msg);
+    
 public:
     ///Constructor
     ActionServer();

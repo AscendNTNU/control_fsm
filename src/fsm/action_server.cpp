@@ -41,6 +41,7 @@ void ActionServer::handleNewGoal(ControlFSM *fsm_p) {
             control::handleErrorMsg("Action not terminated, error!");
         }
     }
+    //Select find correct command
     using GOALTYPE = ascend_msgs::ControlFSMActionGoal::_goal_type;
     switch(current_goal->cmd) {
         case GOALTYPE::GO_TO_XYZ:
@@ -81,50 +82,33 @@ void ActionServer::preemptCB() {
 //If goal is goto, send valid goto cmd to fsm
 void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->y);
+    //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
-        ascend_msgs::ControlFSMResult result;
-        result.finished = true;
-        action_is_running_ = false;
-        as_.setSucceeded(result);
+        onActionComplete();
     });
-
-    go_to_event.setOnFeedbackCallback([this](std::string msg) {
-        ascend_msgs::ControlFSMFeedback fb;
-        fb.progression = msg;
-        as_.publishFeedback(fb);
+    //Set callback to run on feedback
+    go_to_event.setOnFeedbackCallback([this](const std::string& msg) {
+        onActionFeedback(msg);
     });
-
-    go_to_event.setOnErrorCallback([this](std::string msg) {
-        ROS_WARN("[Control ActionServer] CMD error: %s", msg.c_str());
-        ascend_msgs::ControlFSMResult result;
-        result.finished = false;
-        action_is_running_ = false;
-        as_.setAborted(result);
+    //Set callback to run on error
+    go_to_event.setOnErrorCallback([this](const std::string& msg) {
+        onActionError(msg);
     });
     fsm_p->handleEvent(go_to_event);
 }
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     LandXYCMDEvent land_xy_event(goal_p->x, goal_p->y);
+    //Set callback to run on complete
     land_xy_event.setOnCompleteCallback([this]() {
-        ascend_msgs::ControlFSMResult result;
-        result.finished = true;
-        action_is_running_ = false;
-        as_.setSucceeded(result);
+        onActionComplete();
     });
-
-    land_xy_event.setOnFeedbackCallback([this](std::string msg) {
-        ascend_msgs::ControlFSMFeedback fb;
-        fb.progression = msg;
-        as_.publishFeedback(fb);
+    //Set callback to run on complete
+    land_xy_event.setOnFeedbackCallback([this](const std::string& msg) {
+        onActionFeedback(msg);
     });
-
-    land_xy_event.setOnErrorCallback([this](std::string msg) {
-        control::handleWarnMsg(std::string("CMD error: ") + msg);
-        ascend_msgs::ControlFSMResult result;
-        result.finished = false;
-        action_is_running_ = false;
-        as_.setAborted(result);
+    land_xy_event.setOnErrorCallback([this](const std::string& msg) {
+        onActionError(msg);
     });
     fsm_p->handleEvent(land_xy_event);
 }
@@ -140,24 +124,19 @@ void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     GoToXYZCMDEvent search_event(goal_p->x, goal_p->y, control::Config::gb_search_altitude);
+    //Set callback to run on complete
     search_event.setOnCompleteCallback([this](){
-        ascend_msgs::ControlFSMResult result;
-        result.finished = true;
-        action_is_running_ = false;
-        as_.setSucceeded(result);
+        onActionComplete();
     });
-    search_event.setOnFeedbackCallback([this](std::string msg) {
-        ascend_msgs::ControlFSMFeedback fb;
-        fb.progression = msg;
-        as_.publishFeedback(fb);
+    //Set callback to run on feedback
+    search_event.setOnFeedbackCallback([this](const std::string& msg) {
+        onActionFeedback(msg);
     });
-    search_event.setOnErrorCallback([this](std::string msg) {
-        control::handleWarnMsg(std::string("CMD error: ") + msg);
-        ascend_msgs::ControlFSMResult result;
-        result.finished = false;
-        action_is_running_ = false;
-        as_.setAborted(result);
+    //Set callback to run on error
+    search_event.setOnErrorCallback([this](const std::string& msg) {
+        onActionError(msg);
     });
+    //Run event in fsm
     fsm_p->handleEvent(search_event);
 
 
@@ -176,4 +155,25 @@ void ActionServer::run(ControlFSM *fsm_p) {
         run_event(fsm_p);
         event_queue.pop();
     }
+}
+
+void ActionServer::onActionComplete() {
+        ascend_msgs::ControlFSMResult result;
+        result.finished = true;
+        action_is_running_ = false;
+        as_.setSucceeded(result);
+}
+
+void ActionServer::onActionFeedback(const std::string& msg) {
+        ascend_msgs::ControlFSMFeedback fb;
+        fb.progression = msg;
+        as_.publishFeedback(fb);
+}
+
+void ActionServer::onActionError(const std::string& msg) {
+        control::handleWarnMsg(std::string("CMD error: ") + msg);
+        ascend_msgs::ControlFSMResult result;
+        result.finished = false;
+        action_is_running_ = false;
+        as_.setAborted(result);
 }
