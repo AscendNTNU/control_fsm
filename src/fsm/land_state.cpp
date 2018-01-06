@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
+#include <control/exceptions/pose_not_valid_exception.hpp>
 #include "control/fsm/control_fsm.hpp"
 #include "control/tools/drone_handler.hpp"
 
@@ -40,8 +41,10 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_ = event;
         cmd_.sendFeedback("Landing!");
     }
-    
-    if(control::DroneHandler::isPoseValid()) {
+    try {
+        if(!control::DroneHandler::isPoseValid()) {
+            throw control::PoseNotValidException();
+        }
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
         //Position XY is ignored in typemask, but the values are set as a precaution.
@@ -50,32 +53,36 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //Set yaw setpoint based on current rotation
         using control::getMavrosCorrectedTargetYaw;
         using control::pose::quat2yaw;
-        setpoint_.yaw = getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation));
-    } else {
+        auto& quat = pose_stamped.pose.orientation;
+        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+    } catch(const std::exception& e) {
+        //Exceptions shouldn't occur!
+        control::handleCriticalMsg(e.what());
+        //Go back to poshold
         RequestEvent abort_event(RequestType::ABORT);
-        if(cmd_.isValidCMD()) {
-            cmd_.eventError("No valid position");
-            cmd_ = EventData();
-        }
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 }
 
 void LandState::loopState(ControlFSM& fsm) {
-    auto land_detector = LandDetector::getSharedInstancePtr();
-    if(land_detector->isOnGround()) {
-        if(cmd_.isValidCMD()) {
-            //Only landxy should occur!
-            if(cmd_.command_type == CommandType::LANDXY) {
-                cmd_.finishCMD();
-            } else {
-                cmd_.eventError("Wrong CMD type!");
-                control::handleErrorMsg("Invalid CMD type in land state!");
+    try {
+        auto land_detector_p = LandDetector::getSharedInstancePtr();
+        if(land_detector_p->isOnGround()) {
+            if(cmd_.isValidCMD()) {
+                //Only landxy should occur!
+                if(cmd_.command_type == CommandType::LANDXY) {
+                    cmd_.finishCMD();
+                } else {
+                    cmd_.eventError("Wrong CMD type!");
+                    control::handleErrorMsg("Invalid CMD type in land state!");
+                }
+                cmd_ = EventData();
             }
-            cmd_ = EventData();
+            RequestEvent idle_request(RequestType::IDLE);
+            fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
         }
-        RequestEvent idle_request(RequestType::IDLE);
-        fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
+    } catch (const std::exception& e) {
+        control::handleCriticalMsg(e.what());
     }
 }
 
