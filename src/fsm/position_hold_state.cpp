@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
+#include "control/tools/drone_handler.hpp"
 
 
 //Constructor sets default setpoint type mask
@@ -47,10 +48,10 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
+    auto pose_stamped = control::DroneHandler::getCurrentPose();
+    auto& position = pose_stamped.pose.position;
     //GoTo blind hover if position not valid, should never occur
-    if(!pose_p->isPoseValid()) {
+    if(!control::DroneHandler::isPoseValid()) {
         if(event.isValidCMD()) {
             event.eventError("No valid position!");
         }
@@ -85,7 +86,9 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
     }
-    setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
+    using control::pose::quat2yaw;
+    using control::getMavrosCorrectedTargetYaw;
+    setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(pose_stamped.pose.orientation)));
 }
 
 //Returns setpoint
