@@ -8,6 +8,7 @@ using control::ROSNotInitializedException;
 double Config::dest_reached_margin = 0.3;
 double Config::blind_hover_alt = 1.0;
 double Config::takeoff_altitude = 1.0;
+double Config::land_xy_goto_alt = 1.0;
 double Config::altitude_reached_margin = 0.1;
 double Config::setpoint_reached_margin = 0.3;
 double Config::yaw_reached_margin = 0.02;
@@ -62,6 +63,7 @@ void Config::loadParams() {
     getDoubleParam("blind_hover_altitude", blind_hover_alt);
     getDoubleParam("takeoff_altitude", takeoff_altitude);
     getDoubleParam("altitude_reached_margin", altitude_reached_margin);
+    getDoubleParam("land_xy_goto_alt", land_xy_goto_alt);
     getDoubleParam("yaw_reached_margin", yaw_reached_margin);
     getDoubleParam("safe_hover_alt", safe_hover_altitude);
     getDoubleParam("obstacle_too_close_dist", obstacle_too_close_dist);

@@ -17,6 +17,8 @@ public:
     static double setpoint_reached_margin;
     ///Is yaw close enough?
     static double yaw_reached_margin;
+    ///What is our cruising altitude when landing at point xy?
+    static double land_xy_goto_alt;
     ///Topic to publish FSM error msg
     static std::string fsm_error_topic;
     ///Topic to publish FSM warn msg
