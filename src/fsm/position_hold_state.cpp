@@ -4,10 +4,11 @@
 #include "control/fsm/control_fsm.hpp"
 #include "control/fsm/event_data.hpp"
 #include "control/tools/config.hpp"
-#include <ascend_msgs/PointArray.h>
 #include <ros/ros.h>
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
+#include <control/exceptions/pose_not_valid_exception.hpp>
+#include "control/tools/drone_handler.hpp"
 
 
 //Constructor sets default setpoint type mask
@@ -46,46 +47,52 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
         return;
     }
-
-    auto pose_p = control::Pose::getSharedPosePtr();
-    control::Point position = pose_p->getPositionXYZ();
-    //GoTo blind hover if position not valid, should never occur
-    if(!pose_p->isPoseValid()) {
-        if(event.isValidCMD()) {
-            event.eventError("No valid position!");
+    try {
+        if(!control::DroneHandler::isPoseValid()) {
+            //Error if pose is not valid
+            throw control::PoseNotValidException();
         }
+        //Get pose - and position
+        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto& position = pose_stamped.pose.position;
+        //Set setpoint to current position
+        setpoint_.position.x = position.x;
+        setpoint_.position.y = position.y;
+        //If positiongoal is valid, but it's not a command
+        if(event.position_goal.xyz_valid) {
+            //Set xy setpoint to positionGoal if we're close enough for it to be safe
+            double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
+            if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
+                setpoint_.position.x = event.position_goal.x;
+                setpoint_.position.y = event.position_goal.y;
+            }
+        }
+
+        //Keep old altitude if abort
+        if(!event.isValidRequest() || event.request != RequestType::ABORT) {
+            setpoint_.position.z = position.z;
+            //Set setpoint altitude to position_goal if valid
+            if(event.position_goal.z_valid) {
+                //Set z setpoint to position_goal if we're close enough for it to be safe
+                if(std::fabs(position.z - event.position_goal.z) <= control::Config::altitude_reached_margin) {
+                    setpoint_.position.z = event.position_goal.z;
+                }
+            }
+        }
+        using control::pose::quat2yaw;
+        using control::getMavrosCorrectedTargetYaw;
+        auto& quat = pose_stamped.pose.orientation;
+        //Set yaw target
+        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+    } catch (const std::exception& e){
+        //Transition to blindhover if pose not valid
+        control::handleCriticalMsg(e.what());
+        //No need to handle commands - not recoverable
         EventData n_event;
         n_event.event_type = EventType::POSLOST;
         fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, n_event);
         return;
     }
-    //Set setpoint to current position
-    setpoint_.position.x = position.x;
-    setpoint_.position.y = position.y;
-
-    //If positiongoal is valid, but it's not a command
-    if(event.position_goal.xyz_valid) {
-        //Set xy setpoint to positionGoal if we're close enough for it to be safe
-        double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
-        if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
-            setpoint_.position.x = event.position_goal.x;
-            setpoint_.position.y = event.position_goal.y;
-        }
-    }
-
-    //Keep old altitude if abort
-    //TODO Should we use an default hover altitude in case of ABORT?
-    if(!event.isValidRequest() || event.request != RequestType::ABORT) {
-        setpoint_.position.z = position.z;
-        //Set setpoint altitude to position_goal if valid
-        if(event.position_goal.z_valid) {
-            //Set z setpoint to position_goal if we're close enough for it to be safe
-            if(std::fabs(position.z - event.position_goal.z) <= control::Config::altitude_reached_margin) {
-                setpoint_.position.z = event.position_goal.z;
-            }
-        }
-    }
-    setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(pose_p->getYaw()));
 }
 
 //Returns setpoint
