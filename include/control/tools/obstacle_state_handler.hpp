@@ -11,7 +11,7 @@ namespace control {
 class ObstacleStateHandler {
 private:
     ///Shared instance
-    static std::shared_ptr<ObstacleStateHandler> shared_instance_p_;
+    static std::unique_ptr<ObstacleStateHandler> shared_instance_p_;
     ///ROS nodehanlder
     ros::NodeHandle n_;
     ///Subscriber to obstacle stream
@@ -25,15 +25,15 @@ private:
 
 public:
     ///Get shared pointer to shared instance
-    static std::shared_ptr<ObstacleStateHandler> getSharedObstacleHandlerPtr();
+    static const ObstacleStateHandler* getSharedObstacleHandlerPtr();
     ///Get last obstacles from shared instance
     static std::vector<ascend_msgs::GRState> getCurrentObstacles();
     ///Returns obstacles from instance
-    std::vector<ascend_msgs::GRState> getObstacles();
+    std::vector<ascend_msgs::GRState> getObstacles() const;
     ///Is shared instance ready?
     static bool isInstanceReady();
     ///is current instance ready
-    bool isReady();
+    bool isReady() const;
     
 };
 }

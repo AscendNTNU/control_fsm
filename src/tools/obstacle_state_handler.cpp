@@ -3,7 +3,7 @@
 
 using control::ObstacleStateHandler;
 
-std::shared_ptr<ObstacleStateHandler> ObstacleStateHandler::shared_instance_p_ = nullptr;
+std::unique_ptr<ObstacleStateHandler> ObstacleStateHandler::shared_instance_p_ = nullptr;
 
 ObstacleStateHandler::ObstacleStateHandler() {
     using control::Config;
@@ -15,28 +15,22 @@ void ObstacleStateHandler::onMsgRecievedCB(const ascend_msgs::GRStateArray& msg)
     last_msg_ = msg;
 }
 
-std::shared_ptr<ObstacleStateHandler> ObstacleStateHandler::getSharedObstacleHandlerPtr() {
+const ObstacleStateHandler* ObstacleStateHandler::getSharedObstacleHandlerPtr() {
     if(shared_instance_p_ == nullptr) {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
         }
-        try {
-            auto&& temp = std::shared_ptr<ObstacleStateHandler>(new ObstacleStateHandler);
-            shared_instance_p_ = temp;
-        } catch(const std::bad_alloc& e) {
-            control::handleErrorMsg(e.what());
-            throw;
-        }
+        shared_instance_p_ = std::unique_ptr<ObstacleStateHandler>(new ObstacleStateHandler);
         
     }
-    return shared_instance_p_;
+    return shared_instance_p_.get();
 }
 
-std::vector<ascend_msgs::GRState> ObstacleStateHandler::getCurrentObstacles(){
+std::vector<ascend_msgs::GRState> ObstacleStateHandler::getCurrentObstacles() {
     return getSharedObstacleHandlerPtr()->last_msg_.states;
 }
 
-std::vector<ascend_msgs::GRState> ObstacleStateHandler::getObstacles() {
+std::vector<ascend_msgs::GRState> ObstacleStateHandler::getObstacles() const {
     if(last_msg_.states.empty()) {
         control::handleErrorMsg("Obstacle handler: No data recieved");
     } else if(control::message::hasTimedOut(last_msg_.states[0])) {
@@ -49,7 +43,7 @@ bool ObstacleStateHandler::isInstanceReady() {
     return getSharedObstacleHandlerPtr()->isReady();
 }
 
-bool ObstacleStateHandler::isReady() {
+bool ObstacleStateHandler::isReady() const {
     if(last_msg_.states.empty()) {
         control::handleWarnMsg("Obstacle handler: No data available");
         return false;
