@@ -5,7 +5,6 @@
 #include <ros/ros.h>
 #include <actionlib/client/simple_action_client.h>
 #include <ascend_msgs/ControlFSMAction.h>
-#include <ascend_msgs/AIInterfaceAction.h>
 
 int main(int argc, char** argv) {
 
