@@ -17,6 +17,8 @@ public:
     static double setpoint_reached_margin;
     ///Is yaw close enough?
     static double yaw_reached_margin;
+    ///Search altitude
+    static double gb_search_altitude;
     ///Topic to publish FSM error msg
     static std::string fsm_error_topic;
     ///Topic to publish FSM warn msg
