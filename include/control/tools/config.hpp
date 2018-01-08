@@ -33,6 +33,8 @@ public:
     static std::string mavros_state_changed_topic;
     ///Topic for recieving current state from land detector
     static std::string land_detector_topic;
+    ///Topic for recieving obstacle positions
+    static std::string obstacle_state_topic;
     ///Buffer size used for FSMError, FSMWarn etc
     static int fsm_status_buffer_size;
     ///Time gotostate waits before transitioning

@@ -21,6 +21,7 @@ std::string Config::fsm_state_changed_topic = "control/fsm/state_changed";
 std::string Config::mavros_local_pos_topic = "mavros/local_position/pose";
 std::string Config::mavros_state_changed_topic = "mavros/state";
 std::string Config::land_detector_topic = "/landdetector";
+std::string Config::obstacle_state_topic = "/perception_obstacle_states";
 int Config::fsm_status_buffer_size = 10;
 double Config::go_to_hold_dest_time = 0.5;
 double Config::safe_hover_altitude = 2.0;
@@ -88,5 +89,7 @@ void Config::loadParams() {
     getStringParam("mavros_state_topic", mavros_state_changed_topic);
     //LandDetector
     getStringParam("land_detector_topic", land_detector_topic);
+    //Obstacles
+    getStringParam("obstacle_state_topic", obstacle_state_topic);
 
 }
