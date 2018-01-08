@@ -4,7 +4,7 @@
 
 constexpr int MAX_ITERATIONS = 100;
 
-ActionServer::ActionServer() : as_(nh_, "controlNodeActionServer", false) {
+ActionServer::ActionServer() : as_(nh_, "control_fsm_action_server", false) {
     if(!ros::isInitialized()) {
         throw control::ROSNotInitializedException();
     }
@@ -25,7 +25,6 @@ void ActionServer::handleNewGoal(ControlFSM *fsm_p) {
     if(!as_.isNewGoalAvailable()) {
         return;
     }
-
     //Get new goal
     current_goal = as_.acceptNewGoal();
     //Check that the client hasn't requested a preempt
@@ -72,10 +71,7 @@ void ActionServer::preemptCB() {
             if(action_is_running_) {
                 control::handleErrorMsg("Action not terminated, error!");
             }
-            as_.setPreempted();
         });
-    } else {
-        as_.setPreempted();
     }
 }
 
@@ -95,6 +91,7 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
         onActionError(msg);
     });
     fsm_p->handleEvent(go_to_event);
+    action_is_running_ = true;
 }
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
@@ -111,6 +108,7 @@ void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
         onActionError(msg);
     });
     fsm_p->handleEvent(land_xy_event);
+    action_is_running_ = true;
 }
 
 void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
@@ -138,7 +136,7 @@ void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     });
     //Run event in fsm
     fsm_p->handleEvent(search_event);
-
+    action_is_running_ = true;
 
 }
 
