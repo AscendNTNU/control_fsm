@@ -1,5 +1,5 @@
 #include "control/tools/obstacle_state_handler.hpp"
-#include "control/exceptions/ROSNotInitializedException.hpp"
+#include "control/exceptions/ros_not_initialized_exception.hpp"
 
 using control::ObstacleStateHandler;
 
