@@ -7,14 +7,13 @@
 #include <queue>
 
 namespace {
-using boost::shared_ptr;
-using ascend_msgs::ControlFSMGoal_;
-using GoalSharedPtr = shared_ptr<const ControlFSMGoal_<std::allocator<void>>>;
 }
 
 
 class ActionServer {
 private:
+    using FSMGoal = ascend_msgs::ControlFSMGoal_<std::allocator<void>>;
+    using GoalSharedPtr = boost::shared_ptr<const FSMGoal>;
 
     ///Stores what the actionserver wants to do - since last run.
     std::queue<std::function<void(ControlFSM*)>> event_queue;
