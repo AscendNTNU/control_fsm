@@ -70,8 +70,9 @@ int main(int argc, char** argv) {
         ROS_ERROR("Server connection timed out!");
         return -1;
     }
+    goal.caller_id = goal.CALLER_DEBUGGER;
     client.sendGoal(goal);
-    timeout = !client.waitForResult(ros::Duration(2.0));
+    timeout = !client.waitForResult(ros::Duration(20.0));
     if (timeout) {
         client.cancelGoal();
         ROS_ERROR("Action took to long!");

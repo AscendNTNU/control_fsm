@@ -3,17 +3,22 @@
 #include <actionlib/server/simple_action_server.h>
 #include <control/fsm/control_fsm.hpp>
 #include <ascend_msgs/ControlFSMAction.h>
+#include <ascend_msgs/ControlFSMSetActionState.h>
 #include <ros/ros.h>
 #include <queue>
-
-namespace {
-}
-
 
 class ActionServer {
 private:
     using FSMGoal = ascend_msgs::ControlFSMGoal_<std::allocator<void>>;
     using GoalSharedPtr = boost::shared_ptr<const FSMGoal>;
+    using StateService = ascend_msgs::ControlFSMSetActionState;
+    using StateRequest = StateService::Request;
+    using StateResponse = StateService::Response;
+
+    struct {
+        bool ai_enabled = false;
+        bool debug_enabled = false;
+    } state_s_;
 
     ///Stores what the actionserver wants to do - since last run.
     std::queue<std::function<void(ControlFSM*)>> event_queue;
@@ -25,6 +30,10 @@ private:
     bool action_is_running_ = false;
     ///Actionserver
     actionlib::SimpleActionServer<ascend_msgs::ControlFSMAction> as_;
+    ///ROS Service to enable/disable action server
+    ros::ServiceServer action_state_service_;
+
+    bool actionStateServiceCB(StateRequest&, StateResponse&);
     ///Callback for when new action is recieved
     void goalCB();
     ///Callback for when to preempt action
