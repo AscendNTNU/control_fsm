@@ -8,6 +8,7 @@ ActionServer::ActionServer() : as_(nh_, "control_fsm_action_server", false) {
     if(!ros::isInitialized()) {
         throw control::ROSNotInitializedException();
     }
+    action_state_service_ = nh_.advertiseService("control_fsm_action_state", &ActionServer::actionStateServiceCB, this);
     as_.registerGoalCallback(boost::bind(&ActionServer::goalCB, this));
     as_.registerPreemptCallback(boost::bind(&ActionServer::preemptCB, this));
     as_.start();
@@ -32,6 +33,13 @@ void ActionServer::handleNewGoal(ControlFSM *fsm_p) {
         as_.setPreempted();
         return;
     }
+
+    if(!state_s_.debug_enabled && !state_s_.ai_enabled) {
+        control::handleWarnMsg("Action server not active");
+        as_.setAborted();
+        return;
+    }
+
     //Check if an action is already running
     if(action_is_running_) {
         RequestEvent abort_event(RequestType::ABORT);
@@ -40,6 +48,26 @@ void ActionServer::handleNewGoal(ControlFSM *fsm_p) {
             control::handleErrorMsg("Action not terminated, error!");
         }
     }
+
+    if(current_goal->caller_id != current_goal->CALLER_AI
+       && current_goal->caller_id != current_goal->CALLER_DEBUGGER) {
+        as_.setAborted();
+        control::handleErrorMsg("Invalid action caller");
+        return;
+    }
+
+    if(current_goal->caller_id == current_goal->CALLER_AI && !state_s_.ai_enabled) {
+        as_.setAborted();
+        control::handleWarnMsg("Action server not enabled for AI");
+        return;
+    }
+
+    if(current_goal->caller_id == current_goal->CALLER_DEBUGGER && !state_s_.debug_enabled) {
+        as_.setAborted();
+        control::handleWarnMsg("Action server not enabled for DEBUGGER");
+        return;
+    }
+
     //Select find correct command
     using GOALTYPE = ascend_msgs::ControlFSMActionGoal::_goal_type;
     switch(current_goal->cmd) {
@@ -77,7 +105,7 @@ void ActionServer::preemptCB() {
 
 //If goal is goto, send valid goto cmd to fsm
 void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
-    GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->y);
+    GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
         onActionComplete();
@@ -157,7 +185,7 @@ void ActionServer::run(ControlFSM *fsm_p) {
 
 void ActionServer::onActionComplete() {
         ascend_msgs::ControlFSMResult result;
-        result.finished = true;
+        result.finished = static_cast<unsigned char>(true);
         action_is_running_ = false;
         as_.setSucceeded(result);
 }
@@ -171,7 +199,19 @@ void ActionServer::onActionFeedback(const std::string& msg) {
 void ActionServer::onActionError(const std::string& msg) {
         control::handleWarnMsg(std::string("CMD error: ") + msg);
         ascend_msgs::ControlFSMResult result;
-        result.finished = false;
+        result.finished = static_cast<unsigned char>(false);
         action_is_running_ = false;
         as_.setAborted(result);
+}
+
+bool ActionServer::actionStateServiceCB(ActionServer::StateRequest& req, ActionServer::StateResponse& resp) {
+
+
+    state_s_.ai_enabled = req.ai_enabled;
+    state_s_.debug_enabled = req.debug_enabled;
+
+    control::handleInfoMsg(std::string("AI Actions: ") + (state_s_.ai_enabled ? "Enabled" : "Disabled"));
+    control::handleInfoMsg(std::string("DEBUGGER Actions: ") + (state_s_.debug_enabled ? "Enabled" : "Disabled"));
+    resp.result = static_cast<unsigned char>(true);
+    return true;
 }
