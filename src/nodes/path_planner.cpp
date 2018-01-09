@@ -188,39 +188,89 @@ void PathPlanner::makePlan() {
     /*for (std::list<Node>::iterator it = plan.begin(); it!= plan.end(); ++it){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
     }*/
+
+    // Delete unnecessary points
+    simplifyPlan();
 }
 
-
 void PathPlanner::simplifyPlan() {
-    std::list<Node>::iterator current = plan.begin();
+    /*std::list<Node>::iterator current = plan.begin();
     std::list<Node>::iterator next = plan.begin();
     next++;
     simple_plan.push_back(*current);
     while(next != plan.end()){
         if(coordToIndex(current->getX()) == coordToIndex(next->getX())){
-            std::cout << "VERTICAL" << std::endl;
+            //std::cout << "VERTICAL" << std::endl;
             while(coordToIndex(current->getX()) == coordToIndex(next->getX()) && next != plan.end()){
                 current++;
                 next++;
             }
         }
         else if(coordToIndex(current->getY()) == coordToIndex(next->getY())){
-            std::cout << "HORISONTAL" << std::endl;
+            //std::cout << "HORISONTAL" << std::endl;
             while(coordToIndex(current->getY()) == coordToIndex(next->getY()) && next != plan.end()){
                 current++;
                 next++;
             }
         }
         else{
-            std::cout << "DIAGONAL" << std::endl;
+            //std::cout << "DIAGONAL" << std::endl;
             while(coordToIndex(current->getX()) != coordToIndex(next->getX()) && coordToIndex(current->getY()) != coordToIndex(next->getY()) && next != plan.end()){
                 current++;
                 next++;
             }
         }
         simple_plan.push_back(*current);
+    }*/
+    simple_plan = plan;
+    // Pointing at the three first elements
+    std::list<Node>::iterator first = simple_plan.begin();
+    std::list<Node>::iterator second = simple_plan.begin();
+    std::list<Node>::iterator third = simple_plan.begin();
+    second++;
+    third++;
+    third++;
+
+    float x1, x2, y1, y2, delta_x, delta_y, num_points;
+    bool hit_obstacle = false;
+
+    while(third != simple_plan.end()){
+        // Parameters for finding the straight line between the first and third point
+        x1 = first->getX();
+        x2 = third->getX();
+        y1 = first->getY();
+        y2 = third->getY();
+        delta_x = x2-x1;
+        delta_y = y2-y1;
+        num_points = 20*std::max(abs(delta_x),abs(delta_y));
+        for(int i = 0; i < num_points; i++){
+            x1 += delta_x/num_points;
+            y1 += delta_y/num_points;
+            // checking if the line goes through an obstacle at this point
+            if(graph[coordToIndex(x1)][coordToIndex(y1)].obstacle){
+                hit_obstacle = true;
+            }
+        }
+        // If an obstacle is hit, the points are necessary and the search will start
+        // at the end of the current search.
+        if(hit_obstacle){
+            second = first;
+            second++;
+            third = second;
+            third++;
+        }
+        // If the straight line does not go through an obstacle, delete the second point
+        // (no use in going through it when we can go in a straight line)
+        // The search continues with same starting point, but the second and third point is changed
+        else{
+            simple_plan.erase(second);
+            second = third;
+            third++;
+        }
+        hit_obstacle = false;
     }
 
+    // Print the remaining points
     for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
     }
