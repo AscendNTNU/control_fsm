@@ -209,6 +209,9 @@ bool ActionServer::actionStateServiceCB(ActionServer::StateRequest& req, ActionS
 
     state_s_.ai_enabled = req.ai_enabled;
     state_s_.debug_enabled = req.debug_enabled;
+
+    control::handleInfoMsg(std::string("AI Actions: ") + (state_s_.ai_enabled ? "Enabled" : "Disabled"));
+    control::handleInfoMsg(std::string("DEBUGGER Actions: ") + (state_s_.debug_enabled ? "Enabled" : "Disabled"));
     resp.result = static_cast<unsigned char>(true);
     return true;
 }
