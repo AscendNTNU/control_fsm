@@ -60,6 +60,8 @@ public:
 
     // Use A* to calculate the path
     void makePlan();
+    // Same plan but with fewer points
+    void simplifyPlan();
 
     // These functions are mainly for the visualization
     std::array<std::array<Node, FIELD_LENGTH*10>, FIELD_LENGTH*10> getGraph(){return graph;}

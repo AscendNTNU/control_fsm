@@ -189,3 +189,39 @@ void PathPlanner::makePlan() {
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
     }*/
 }
+
+
+void PathPlanner::simplifyPlan() {
+    std::list<Node>::iterator current = plan.begin();
+    std::list<Node>::iterator next = plan.begin();
+    next++;
+    simple_plan.push_back(*current);
+    while(next != plan.end()){
+        if(coordToIndex(current->getX()) == coordToIndex(next->getX())){
+            std::cout << "VERTICAL" << std::endl;
+            while(coordToIndex(current->getX()) == coordToIndex(next->getX()) && next != plan.end()){
+                current++;
+                next++;
+            }
+        }
+        else if(coordToIndex(current->getY()) == coordToIndex(next->getY())){
+            std::cout << "HORISONTAL" << std::endl;
+            while(coordToIndex(current->getY()) == coordToIndex(next->getY()) && next != plan.end()){
+                current++;
+                next++;
+            }
+        }
+        else{
+            std::cout << "DIAGONAL" << std::endl;
+            while(coordToIndex(current->getX()) != coordToIndex(next->getX()) && coordToIndex(current->getY()) != coordToIndex(next->getY()) && next != plan.end()){
+                current++;
+                next++;
+            }
+        }
+        simple_plan.push_back(*current);
+    }
+
+    for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
+        std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
+    }
+}
