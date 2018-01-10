@@ -22,16 +22,6 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance
 constexpr float PI{3.14159265359f};
 
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
-    //TODO move to class and also rosparams?
-    constexpr float clearance_side{0.7f};
-    constexpr float clearance_back{0.5f};
-    constexpr float clearance_front{1.6f};
-#if (__cplusplus >=  201402L)
-    constexpr float clearance_max = std::max({clearance_side, clearance_back, clearance_front}); 
-#else
-    const float clearance_max = std::max({clearance_side, clearance_back, clearance_front}); 
-#endif
-
     bool setpoint_modified = false;
     
     const std::vector<ascend_msgs::GRState> obstacles = control::ObstacleStateHandler::getCurrentObstacles();
@@ -117,5 +107,24 @@ void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std
             return;
         }
     }
+}
+
+control::ObstacleAvoidance::ObstacleAvoidance(){
+    ros::NodeHandle n("~");
+    auto getFloatParam = [&](const std::string& name, float& var) {
+        if(!n.getParam(name, var)) {
+            ROS_WARN("[Obstacle avoidance] Load param failed: %s, using %f", name.c_str(), var);
+        }
+    };
+
+
+    getFloatParam("obstacle_clearance_side", clearance_side);
+    getFloatParam("obstacle_clearance_front", clearance_front);
+    getFloatParam("obstacle_clearance_back", clearance_back);
+    if(!n.getParam("obstacle_clearance_max", clearance_max)) {
+        ROS_INFO("[Obstacle avoidance] Load param \"obstacle_clearance_max\" not supplied, computing from others");
+        clearance_max = std::max({clearance_side, clearance_back, clearance_front});
+    }
+
 }
 
