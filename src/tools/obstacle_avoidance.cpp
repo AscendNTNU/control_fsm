@@ -22,11 +22,15 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance
 constexpr float PI{3.14159265359f};
 
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
-    //TODO move to class
-    constexpr float clearence_side{0.7f};
-    constexpr float clearence_back{0.5f};
-    constexpr float clearence_front{1.6f};
-    const float clearence_max = std::max({clearence_side, clearence_back, clearence_front}); 
+    //TODO move to class and also rosparams?
+    constexpr float clearance_side{0.7f};
+    constexpr float clearance_back{0.5f};
+    constexpr float clearance_front{1.6f};
+#if (__cplusplus >=  201402L)
+    constexpr float clearance_max = std::max({clearance_side, clearance_back, clearance_front}); 
+#else
+    const float clearance_max = std::max({clearance_side, clearance_back, clearance_front}); 
+#endif
 
     bool setpoint_modified = false;
     
@@ -40,7 +44,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         delta_drone_obstacle.y = obstacle.y - drone_pose.pose.position.y; 
         delta_drone_obstacle.z = drone_pose.pose.position.z; 
         const float distance_to_obstacle = std::sqrt(std::pow(delta_drone_obstacle.x, 2) + std::pow(delta_drone_obstacle.y, 2));
-        if (distance_to_obstacle < clearence_max){
+        if (distance_to_obstacle < clearance_max){
             // perform obstacle avoidance
             const float angle = std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta;
             ROS_DEBUG("[control]: angle to obstacle: %.3f", angle);
@@ -54,14 +58,14 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             if (drone_in_front_of_obstacle){
                 ROS_DEBUG_THROTTLE(1, "[control]: drone in front of obstacle");
 
-                minimum_delta.x = clearence_side * std::cos(angle);
-                minimum_delta.y = clearence_front/clearence_side * (clearence_side - std::abs(minimum_delta.x));
+                minimum_delta.x = clearance_side * std::cos(angle);
+                minimum_delta.y = clearance_front/clearance_side * (clearance_side - std::abs(minimum_delta.x));
             }
             else {
                 ROS_DEBUG_THROTTLE(1,"[control]: drone behind obstacle");
 
-                minimum_delta.x = clearence_side * std::cos(angle);
-                minimum_delta.y = clearence_back * std::sin(angle);
+                minimum_delta.x = clearance_side * std::cos(angle);
+                minimum_delta.y = clearance_back * std::sin(angle);
             } 
 
             const float minimum_distance = std::sqrt(std::pow(minimum_delta.x, 2) + std::pow(minimum_delta.y, 2));
