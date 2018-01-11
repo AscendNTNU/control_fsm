@@ -12,11 +12,6 @@ class ObstacleAvoidance;
 class ObstacleAvoidance {
 private:
 
-    float clearance_side;
-    float clearance_back;
-    float clearance_front;
-    float clearance_max;
-
     //Singleton pattern
     static std::shared_ptr<ObstacleAvoidance> instance_p_;
 
@@ -32,7 +27,7 @@ private:
     bool doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint);
 
     ///Private constructor
-    ObstacleAvoidance();
+    ObstacleAvoidance() = default;
 public:
     ///Deleted copy constructor
     ObstacleAvoidance(const ObstacleAvoidance&) = delete;

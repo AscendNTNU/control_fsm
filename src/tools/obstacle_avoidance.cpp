@@ -1,6 +1,7 @@
 #include "control/tools/obstacle_avoidance.hpp"
 #include "control/tools/obstacle_state_handler.hpp"
 #include "control/tools/drone_handler.hpp"
+#include "control/tools/config.hpp"
 
 #include <ascend_msgs/GRStateArray.h>
 #include <ascend_msgs/GRState.h>
@@ -22,6 +23,11 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance
 constexpr float PI{3.14159265359f};
 
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
+    using control::Config; //::obstacle_clearance_side;
+//    using control::Config::obstacle_clearance_front;
+//    using control::Config::obstacle_clearance_back;
+//    using control::Config::obstacle_clearance_checkradius;
+
     bool setpoint_modified = false;
     
     const std::vector<ascend_msgs::GRState> obstacles = control::ObstacleStateHandler::getCurrentObstacles();
@@ -34,7 +40,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         delta_drone_obstacle.y = obstacle.y - drone_pose.pose.position.y; 
         delta_drone_obstacle.z = drone_pose.pose.position.z; 
         const float distance_to_obstacle = std::sqrt(std::pow(delta_drone_obstacle.x, 2) + std::pow(delta_drone_obstacle.y, 2));
-        if (distance_to_obstacle < clearance_max){
+        if (distance_to_obstacle < Config::obstacle_clearance_checkradius){
             // perform obstacle avoidance
             const float angle = std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta;
             ROS_DEBUG("[control]: angle to obstacle: %.3f", angle);
@@ -48,14 +54,14 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             if (drone_in_front_of_obstacle){
                 ROS_DEBUG_THROTTLE(1, "[control]: drone in front of obstacle");
 
-                minimum_delta.x = clearance_side * std::cos(angle);
-                minimum_delta.y = clearance_front/clearance_side * (clearance_side - std::abs(minimum_delta.x));
+                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle);
+                minimum_delta.y = Config::obstacle_clearance_front/Config::obstacle_clearance_side * (Config::obstacle_clearance_side - std::abs(minimum_delta.x));
             }
             else {
                 ROS_DEBUG_THROTTLE(1,"[control]: drone behind obstacle");
 
-                minimum_delta.x = clearance_side * std::cos(angle);
-                minimum_delta.y = clearance_back * std::sin(angle);
+                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle);
+                minimum_delta.y = Config::obstacle_clearance_back * std::sin(angle);
             } 
 
             const float minimum_distance = std::sqrt(std::pow(minimum_delta.x, 2) + std::pow(minimum_delta.y, 2));
@@ -69,6 +75,10 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
                         setpoint->position.x, setpoint->position.y, setpoint->position.z);
             }
         }
+    }
+
+    if (!setpoint_modified){
+        ROS_INFO_THROTTLE(2, "Obstacles ignored");
     }
 
     //Return true if setpoint has been modified.
@@ -107,24 +117,5 @@ void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std
             return;
         }
     }
-}
-
-control::ObstacleAvoidance::ObstacleAvoidance(){
-    ros::NodeHandle n("~");
-    auto getFloatParam = [&](const std::string& name, float& var) {
-        if(!n.getParam(name, var)) {
-            ROS_WARN("[Obstacle avoidance] Load param failed: %s, using %f", name.c_str(), var);
-        }
-    };
-
-
-    getFloatParam("obstacle_clearance_side", clearance_side);
-    getFloatParam("obstacle_clearance_front", clearance_front);
-    getFloatParam("obstacle_clearance_back", clearance_back);
-    if(!n.getParam("obstacle_clearance_max", clearance_max)) {
-        ROS_INFO("[Obstacle avoidance] Load param \"obstacle_clearance_max\" not supplied, computing from others");
-        clearance_max = std::max({clearance_side, clearance_back, clearance_front});
-    }
-
 }
 

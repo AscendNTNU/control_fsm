@@ -29,6 +29,10 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
+float Config::obstacle_clearance_side = 2.0f;
+float Config::obstacle_clearance_front = 2.0f;
+float Config::obstacle_clearance_back = 2.0f;
+float Config::obstacle_clearance_checkradius = 2.0f;
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -36,6 +40,13 @@ void Config::loadParams() {
     }
 
     ros::NodeHandle n("~");
+
+    auto getFloatParam = [&](const std::string& name, float& var) {
+        if(!n.getParam(name, var)) {
+            ROS_WARN("[Control FSM] Load param failed: %s, using %f", name.c_str(), var);
+        }
+    };
+
     auto getDoubleParam = [&](const std::string& name, double& var) {
         if(!n.getParam(name, var)) {
             ROS_WARN("[Control FSM] Load param failed: %s, using %f", name.c_str(), var);
@@ -91,5 +102,10 @@ void Config::loadParams() {
     getStringParam("land_detector_topic", land_detector_topic);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
-
+    getFloatParam("obstacle_clearance_side", obstacle_clearance_side);
+    getFloatParam("obstacle_clearance_front", obstacle_clearance_front);
+    getFloatParam("obstacle_clearance_back", obstacle_clearance_back);
+    getFloatParam("obstacle_clearance_checkradius", obstacle_clearance_checkradius);
+    
 }
+

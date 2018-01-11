@@ -45,6 +45,14 @@ public:
     static double safe_hover_altitude;
     ///Drone safezone
     static double obstacle_too_close_dist;
+    ///Clearance osbtacle avoidance to right and left of obstacle
+    static float obstacle_clearance_side;
+    ///Clearance osbtacle avoidance in front of obstacle 
+    static float obstacle_clearance_front;
+    ///Clearance osbtacle avoidance behind obstacle 
+    static float obstacle_clearance_back;
+    ///Radius in which obstacle collisions will be checked for 
+    static float obstacle_clearance_checkradius;
     ///Topic to listen for info about obstacles
     static std::string lidar_topic;
     /**Load paramaters
