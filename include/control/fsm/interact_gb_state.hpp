@@ -10,7 +10,7 @@ public:
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     void loopState(ControlFSM& fsm) override;
     std::string getStateName() const override { return "InteractWithGroundRobot"; }
-    const mavros_msgs::PositionTarget* getSetpoint() override;
+    const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
 };
 

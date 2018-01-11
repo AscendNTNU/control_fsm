@@ -16,6 +16,9 @@ FSM is not async so do not run any blocking code
 in any of these methods.
 EventData is passed by reference and is NOT guaranteed to remain in scope.
 DO NOT store event data by reference
+States should handle all exceptions
+Unhandled exceptions will be catched by try-catch in fsm loop, but it can lead to
+undefined behaviour. All state methods should gurantee nothrow!
 */
 class StateInterface;
 class StateInterface {
@@ -74,7 +77,7 @@ public:
     
     ///Returning a valid setpoint from state 
     /**Be aware - it's return by const pointer - only return address of _setpoint.*/
-    virtual const mavros_msgs::PositionTarget* getSetpoint() = 0;
+    virtual const mavros_msgs::PositionTarget* getSetpointPtr() = 0;
 
     ///Static interface returning iterator to first state
     static std::vector<StateInterface*>::const_iterator cbegin() { return getAllStatesVector()->cbegin(); }

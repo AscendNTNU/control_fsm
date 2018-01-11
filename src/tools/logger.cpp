@@ -2,7 +2,7 @@
 // Created by haavard on 03.11.17.
 //
 
-#include <control/exceptions/RosNotInitializedException.hpp>
+#include <control/exceptions/ros_not_initialized_exception.hpp>
 #include <utility>
 #include <std_msgs/String.h>
 #include <control/tools/config.hpp>
@@ -37,14 +37,14 @@ ROSTopicLogger::ROSTopicLogger() {
 
 ///Returns shared_ptr to shared instance IF ros is initialized.
 std::shared_ptr<ROSTopicLogger> ROSTopicLogger::getSharedInstancePtr() {
-    if(!ros::isInitialized()) {
-        return nullptr;
-    }
     if(shared_instance_p_ == nullptr) {
+        if(!ros::isInitialized()) {
+            return nullptr;
+        }
         try {
             shared_instance_p_ = std::shared_ptr<ROSTopicLogger>(new ROSTopicLogger);
         } catch(const std::bad_alloc& e) {
-            control::handleErrorMsg("Exception in ROSTopicLogger: " + std::string(e.what()));
+            control::handleCriticalMsg(e.what());
             return nullptr;
         }
     }
@@ -92,4 +92,8 @@ void control::handleInfoMsg(std::string message) {
         ROSTopicLogger::getSharedInstancePtr()->publishInfoMessage(message);
     }
     ROS_INFO("[Control]: %s", message.c_str());
+}
+
+void control::handleCriticalMsg(const char* message) {
+    ROS_ERROR("[Control] CRITICAL: %s - TAKE MANUAL CONTROL NOW!", message);
 }

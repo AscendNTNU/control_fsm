@@ -17,6 +17,8 @@ public:
     static double setpoint_reached_margin;
     ///Is yaw close enough?
     static double yaw_reached_margin;
+    ///Search altitude
+    static double gb_search_altitude;
     ///Topic to publish FSM error msg
     static std::string fsm_error_topic;
     ///Topic to publish FSM warn msg
@@ -31,6 +33,8 @@ public:
     static std::string mavros_state_changed_topic;
     ///Topic for recieving current state from land detector
     static std::string land_detector_topic;
+    ///Topic for recieving obstacle positions
+    static std::string obstacle_state_topic;
     ///Buffer size used for FSMError, FSMWarn etc
     static int fsm_status_buffer_size;
     ///Time gotostate waits before transitioning
@@ -43,10 +47,10 @@ public:
     static double obstacle_too_close_dist;
     ///Topic to listen for info about obstacles
     static std::string lidar_topic;
-
-    ///Load paramaters
+    /**Load paramaters
+     * @throw control::ROSNotInitializedException
+     */
     static void loadParams();
-
     ///Finished drone will require all datastreams to be available
     static bool require_all_data_streams;
     ///Makes it possible to disable the use of obstacle detection features

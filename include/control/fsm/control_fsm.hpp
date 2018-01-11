@@ -22,10 +22,14 @@
 #include "control/tools/land_detector.hpp"
 
 #include "control/tools/control_pose.hpp"
+#include "control/tools/drone_handler.hpp"
 
 ///Main FSM logic
 class ControlFSM {
 private:
+    ///Shared instance pointer
+    static std::shared_ptr<ControlFSM> shared_instance_p_;
+
     //Add state classes as friend classes here - allowing them to use transitionTo.
     friend class BeginState;
     friend class PreFlightState;
@@ -52,9 +56,6 @@ private:
     static GoToState GO_TO_STATE;
     static LandState LAND_STATE;
     static ManualFlightState MANUAL_FLIGHT_STATE;
-
-    ///Only one instance of ControlFSM is allowed - used to check
-    static bool is_used;
 
     /**
      * @brief Holds a pointer to current running state
@@ -94,6 +95,9 @@ private:
     ///Callback when a transition is made
     std::function<void()> on_state_changed_ = [](){};
 
+    ///Constructor sets default/starting state
+    ControlFSM();
+
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
     ///Assignment operator deleted
@@ -107,9 +111,6 @@ private:
     private:
         ros::Subscriber mavros_state_changed_sub;
     } subscribers_;
-
-    ///Drones pose
-    std::shared_ptr<control::Pose> drone_pose_p = control::Pose::getSharedPosePtr();
 
     ///Callback for mavros state changed
     void mavrosStateChangedCB(const mavros_msgs::State& state);
@@ -129,10 +130,14 @@ protected:
     void transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event);
     
 public:
-     
-    ///Constructor sets default/starting state
-    ControlFSM();
-    
+
+    /**Get shared instance pointer - singleton patter
+     * @throw control::ROSNotInitialized
+     * @throw std::bad_alloc
+     * @return shared_ptr to shared instance - singleton
+     */
+    static std::shared_ptr<ControlFSM> getSharedInstancePtr();
+
     ///Destructor not used to anything specific.
     ~ControlFSM() {}
 
@@ -151,7 +156,7 @@ public:
 
     
     ///Returns setpoint from current state
-    const mavros_msgs::PositionTarget* getSetpoint() { return getState()->getSetpoint(); }
+    const mavros_msgs::PositionTarget* getSetpointPtr() { return getState()->getSetpointPtr(); }
 
     ///Sets new callback function for onStateChanged
     void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }

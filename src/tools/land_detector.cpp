@@ -7,7 +7,7 @@
 #include "control/fsm/control_fsm.hpp"
 
 constexpr uint8_t LANDED_STATE_ON_GROUND = mavros_msgs::ExtendedState::LANDED_STATE_ON_GROUND;
-std::shared_ptr<LandDetector> LandDetector::shared_instance_p_;
+std::shared_ptr<LandDetector> LandDetector::shared_instance_p_ = nullptr;
 
 LandDetector::LandDetector() {
     assert(ros::isInitialized());
@@ -18,26 +18,24 @@ void LandDetector::landCB(const mavros_msgs::ExtendedState &msg) {
     last_msg_ = msg;
 }
 
-bool LandDetector::isOnGround() {
+bool LandDetector::isOnGround() const {
     if(ros::Time::now() - last_msg_.header.stamp > ros::Duration(control::Config::valid_data_timeout)) {
         control::handleErrorMsg("Land detector using old data");
     }
     return last_msg_.landed_state == LANDED_STATE_ON_GROUND;
 }
 
-bool LandDetector::isReady() {
+bool LandDetector::isReady() const {
     //Make sure landing detector node is running.
     return sub_.getNumPublishers() > 0;
 }
 
-std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() throw(std::bad_alloc) {
+std::shared_ptr<LandDetector> LandDetector::getSharedInstancePtr() {
     if(shared_instance_p_ == nullptr) {
-        try {
-            shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
-        } catch (const std::bad_alloc& e) {
-            control::handleErrorMsg("Couldn't allocate memory for land detector!");
-            throw;
+        if(!ros::isInitialized()) {
+            throw control::ROSNotInitializedException();
         }
+        shared_instance_p_ = std::shared_ptr<LandDetector>(new LandDetector);
     }
     return shared_instance_p_;
 }

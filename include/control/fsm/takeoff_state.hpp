@@ -6,6 +6,9 @@
 #define DEFAULT_TAKEOFF_ALTITUDE 1.0f 
 #define DEFAULT_TAKEOFF_ALTITUDE_REACHED_MARGIN 0.1
 
+///Forward decleration
+class ControlFSM;
+
 ///Takeoff state
 class TakeoffState : public StateInterface {
 private:
@@ -17,9 +20,8 @@ public:
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     void loopState(ControlFSM& fsm) override;
     std::string getStateName() const override { return "Takeoff";}
-    const mavros_msgs::PositionTarget* getSetpoint() override;
+    const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
 };
-
 
 #endif

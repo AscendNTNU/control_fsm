@@ -6,13 +6,12 @@
 #define CONTROL_FSM_ROSNOTINITIALIZEDEXCEPTION_HPP
 
 #include <ros/exception.h>
-
-class RosNotInitializedException : std::exception {
+namespace control {
+///Thrown if ros::init hasn't been called
+class ROSNotInitializedException : std::runtime_error {
 public:
-
-    virtual const char* what() const throw() override {
-        return "ROS is not initialized!";
-    }
+    ROSNotInitializedException() : std::runtime_error("ROS is not initialized!") {}
 };
+}
 
 #endif //CONTROL_FSM_ROSNOTINITIALIZEDEXCEPTION_HPP
