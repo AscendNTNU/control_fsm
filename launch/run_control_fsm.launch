@@ -7,10 +7,4 @@
         <arg name="topic_land_detector" value="$(arg topic_land_detector)"/>
         <arg name="require_obs_detection" value="false" />
     </include>
-
-    <include file="$(find control_fsm)/launch/land_detector.launch">
-        <arg name="pub_topic" value="$(arg topic_land_detector)"/>
-        <arg name="landed_threshold" value="0.1"/>
-    </include>
-
 </launch>
