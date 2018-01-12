@@ -7,7 +7,7 @@ namespace control {
 class Config {
 public:
     ///Set containing all not found params
-    static std::set<std::string> not_found_set;
+    static std::map<std::string, std::string> params;
     ///Are we close enough to the target?
     static double dest_reached_margin;
     ///Default hover altitude in case of blind hover
@@ -60,10 +60,6 @@ public:
      * @throw control::ROSNotInitializedException
      */
     static void loadParams();
-    ///Adds param to set of unloaded params
-    static void onParamLoadFailed(const std::string& name);
-    ///Removes param from set of unloaded params
-    static void onParamLoadSucess(const std::string& name);
 };
 }
 
