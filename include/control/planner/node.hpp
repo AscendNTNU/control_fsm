@@ -32,6 +32,8 @@ public:
     void setParentY(float parent_y){this->parent_y = parent_y;}
     void updateF(float new_g);
 
+    bool obstacle = false;
+
     // Implemented only for the closed list priority queue
     friend bool operator< (const Node &lhs, const Node &rhs);
 };

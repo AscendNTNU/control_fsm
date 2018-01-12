@@ -26,6 +26,7 @@ private:
     std::array<std::array<bool, GRAPH_SIZE>, GRAPH_SIZE> closed_list;
 
     std::list<Node> plan;
+    std::list<Node> simple_plan;
 
     Node end_node;
     Node start_node;
