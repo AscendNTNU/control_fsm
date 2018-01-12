@@ -1,5 +1,4 @@
 #include "control/tools/config.hpp"
-#include <assert.h>
 #include <control/exceptions/ros_not_initialized_exception.hpp>
 #include <ascend_msgs/ReloadConfig.h>
 
