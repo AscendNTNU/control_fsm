@@ -78,9 +78,9 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
         //If altitude is too low - set it to minimum altitude
-        if(setpoint_.position.z < control::Config::min_poshold_alt) {
+        if(setpoint_.position.z < control::Config::min_in_air_alt) {
             control::handleWarnMsg("Poshold target altitude too low, using min altitude");
-            setpoint_.position.z = control::Config::min_poshold_alt;
+            setpoint_.position.z = control::Config::min_in_air_alt;
         }
 
         using control::pose::quat2yaw;
