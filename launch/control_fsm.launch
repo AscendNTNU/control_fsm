@@ -24,6 +24,13 @@
     <arg name="require_all_streams" default="true"/>
     <arg name="require_obs_detection" default="true"/>
 
+    <!--Obstacle avoidance config-->
+
+    <arg name="obstacle_clearance_side" default="2.0"/>
+    <arg name="obstacle_clearance_front" default="5.0"/>
+    <arg name="obstacle_clearance_back" default="2.0"/>
+    <arg name="obstacle_clearance_checkradius" default="10.0"/>
+
     <!--Start main control node with params-->
     <node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">
         <param name="dest_reached_margin" value="$(arg dest_reached_margin)"/>
@@ -49,5 +56,9 @@
         <param name="mavros_state_topic" value="$(arg topic_mavros_state)"/>
         <param name="land_detector_topic" value="$(arg topic_land_detector)"/>
         <param name="require_obs_detection" value="$(arg require_obs_detection)"/>
+        <param name="obstacle_clearance_side" value="$(arg obstacle_clearance_side)"/>
+        <param name="obstacle_clearance_front" value="$(arg obstacle_clearance_front)"/>
+        <param name="obstacle_clearance_back" value="$(arg obstacle_clearance_back)"/>
+        <param name="obstacle_clearance_checkradius" value="$(arg obstacle_clearance_checkradius)"/>
     </node>
 </launch>

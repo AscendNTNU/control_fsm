@@ -8,11 +8,5 @@
         <arg name="require_all_streams" value="true"/>
         <arg name="require_obs_detection" value="false"/>
 
-        <param name="obstacle_clearance_side" value="1.0"/>
-        <param name="obstacle_clearance_front" value="1.0"/>
-        <param name="obstacle_clearance_back" value="1.0"/>
-        <param name="obstacle_clearance_checkradius" value="1.0"/>
     </include>
-
-
 </launch>

@@ -42,7 +42,7 @@ void Config::loadParams() {
     ros::NodeHandle n("~");
 
     auto getFloatParam = [&](const std::string& name, float& var) {
-        if(!n.getParam(name, var)) {
+        if(n.getParam(name, var)) {
             ROS_WARN("[Control FSM] Load param failed: %s, using %f", name.c_str(), var);
         }
     };
@@ -102,6 +102,7 @@ void Config::loadParams() {
     getStringParam("land_detector_topic", land_detector_topic);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
+    //Obstacle avoidance
     getFloatParam("obstacle_clearance_side", obstacle_clearance_side);
     getFloatParam("obstacle_clearance_front", obstacle_clearance_front);
     getFloatParam("obstacle_clearance_back", obstacle_clearance_back);
