@@ -4,10 +4,18 @@
 #include <ros/ros.h>
 #include <set>
 namespace control {
+class Config;
 class Config {
+private:
+    ///Node handler
+    ros::NodeHandle nh_;
+    ///Reload service
+    ros::ServiceServer reload_config_service;
+    ///Shared instance ptr
+    static std::unique_ptr<Config> shared_instance_p_;
+    ///Constructor
+    Config();
 public:
-    ///Set containing all not found params
-    static std::map<std::string, std::string> params;
     ///Are we close enough to the target?
     static double dest_reached_margin;
     ///Default hover altitude in case of blind hover
@@ -60,6 +68,8 @@ public:
      * @throw control::ROSNotInitializedException
      */
     static void loadParams();
+
+
 };
 }
 

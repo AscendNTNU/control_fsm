@@ -1,10 +1,10 @@
 #include "control/tools/config.hpp"
 #include <assert.h>
 #include <control/exceptions/ros_not_initialized_exception.hpp>
+#include <ascend_msgs/ReloadConfig.h>
 
 using control::Config;
 using control::ROSNotInitializedException;
-std::map<std::string, std::string> Config::params;
 double Config::dest_reached_margin = 0.3;
 double Config::blind_hover_alt = 1.0;
 double Config::takeoff_altitude = 1.0;
@@ -34,7 +34,9 @@ void Config::loadParams() {
     if(!ros::isInitialized()) {
         throw ROSNotInitializedException();
     }
-
+    if(shared_instance_p_ == nullptr) {
+        shared_instance_p_ = std::unique_ptr<Config>();
+    }
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var, double min, double max) {
         double temp;
@@ -42,15 +44,12 @@ void Config::loadParams() {
             ROS_WARN("[Control FSM Param] Load param failed: %s, using %f", name.c_str(), var);
         } else {
             var = temp;
-            params[name] = std::to_string(var);
         }
     };
 
     auto getStringParam = [&](const std::string& name, std::string& var) {
         if(!n.getParam(name, var)) {
             ROS_WARN("[Control FSM Param] Load param failed: %s, using %s", name.c_str(), var.c_str());
-        } else {
-            params[name] = var;
         }
     };
 
@@ -60,15 +59,12 @@ void Config::loadParams() {
             ROS_WARN("[Control FSM Param] Load param failed: %s, using %d", name.c_str(), var);
         } else {
             var = temp;
-            params[name] = std::to_string(var);
         }
     };
 
     auto getBoolParam = [&](const std::string& name, bool& var) {
         if(!n.getParam(name, var)) {
             ROS_WARN("[Control FSM Param] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
-        } else {
-            params[name] = std::to_string(var);
         }
     };
 
@@ -104,4 +100,17 @@ void Config::loadParams() {
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
 
+}
+
+
+bool reloadConfigCB(ascend_msgs::ReloadConfig::Request&, ascend_msgs::ReloadConfig::Response&) {
+    control::Config::loadParams();
+    return true;
+}
+
+control::Config::Config() {
+    if(!ros::isInitialized()) {
+        throw control::ROSNotInitializedException();
+    }
+    reload_config_service = nh_.advertiseService("/control_fsm_reload_config", reloadConfigCB);
 }
