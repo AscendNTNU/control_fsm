@@ -32,7 +32,7 @@
         <param name="takeoff_altitude" value="$(arg takeoff_altitude)"/>
         <param name="altitude_reached_margin" value="$(arg altitude_reached_margin)"/>
         <param name="setp_reached_margin" value="$(arg setp_reached_margin)"/>
-	    <param name="gb_search_altitude" value="$(arg gb_search_alt)"/>
+	<param name="gb_search_altitude" value="$(arg gb_search_alt)"/>
         <param name="fsm_error_topic" value="control/fsm/on_error"/>
         <param name="fsm_info_topic" value="control/fsm/on_info"/>
         <param name="fsm_warn_topic" value="control/fsm/on_warn"/>
