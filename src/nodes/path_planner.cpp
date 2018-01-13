@@ -8,14 +8,7 @@ int coordToIndex(float k) {
 
 
 
-PathPlanner::PathPlanner(float current_x, float current_y, float target_x, float target_y){
-    start_node = Node(current_x, current_y, 0, 0);
-    start_node.setParentX(0);
-    start_node.setParentY(0);
-    end_node = Node(target_x,target_y, std::numeric_limits<float>::infinity(), 0);
-    initializeGraph();
-    initializeClosedList();
-}
+PathPlanner::PathPlanner(){}
 
 void PathPlanner::initializeGraph(){
     for (float x = 0; x < FIELD_LENGTH; x += 0.1){
@@ -131,21 +124,21 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
     // LOVER Å LØSE DETTE PÅ EN BEDRE MÅTE
-    handleSuccessor(x+0.1,y, x, y, 0.1);
+    handleSuccessor(x+NODE_DISTANCE,y, x, y, NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x+0.1, y+0.1, x, y, sqrt(0.02));
+    handleSuccessor(x+NODE_DISTANCE, y+NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x+0.1, y-0.1, x, y, sqrt(0.02));
+    handleSuccessor(x+NODE_DISTANCE, y-NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x, y+0.1, x, y, 0.1);
+    handleSuccessor(x, y+NODE_DISTANCE, x, y, NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x, y-0.1, x, y, 0.1);
+    handleSuccessor(x, y-NODE_DISTANCE, x, y, NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x-0.1, y, x, y, 0.1);
+    handleSuccessor(x-NODE_DISTANCE, y, x, y, NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x-0.1, y+0.1, x, y, sqrt(0.02));
+    handleSuccessor(x-NODE_DISTANCE, y+NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
     if(destination_reached){return;}
-    handleSuccessor(x-0.1, y-0.1, x, y, sqrt(0.02));
+    handleSuccessor(x-NODE_DISTANCE, y-NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
 }
 
 bool PathPlanner::isDestination(float x, float y) {
@@ -162,7 +155,15 @@ bool PathPlanner::isValidCoordinate(float x, float y) {
     return(x>=0 && x<FIELD_LENGTH && y>=0 && y<FIELD_LENGTH);
 }
 
-void PathPlanner::makePlan() {
+void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
+    
+    start_node = Node(current_x, current_y, 0, 0);
+    start_node.setParentX(0);
+    start_node.setParentY(0);
+    end_node = Node(target_x,target_y, std::numeric_limits<float>::infinity(), 0);
+    initializeGraph();
+    initializeClosedList();
+
     // Calculate all f values and set the parents
     relaxGraph();
 
@@ -274,4 +275,41 @@ void PathPlanner::simplifyPlan() {
     for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
     }
+}
+
+
+
+bool PathPlanner::isPlanSafe(float current_x, float current_y) {
+    if(simple_plan.empty()){
+        return false;
+    }
+
+    std::list<Node>::iterator current = simple_plan.begin();
+    std::list<Node>::iterator next = current;
+    next++;
+    while(next != simple_plan.end()){
+        if(((current_x < current->getX() && current_x > next->getX())
+           || (current_x > current->getX() && current_x < next->getX()))
+            && ((current_y < current->getY() && current_y > next->getY())
+               || (current_y > current->getY() && current_y < next->getY()))){
+            std::cout << "between " << current->getX() << " and " << next->getX() << std::endl;
+            break;
+        } else{
+            simple_plan.erase(current);
+            current = next;
+            next++;
+        }
+    }
+
+    current = simple_plan.begin();
+    next = current;
+    next++;
+    while(next != simple_plan.end()){
+        if(!isSafeLine(current->getX(), current->getY(), next->getX(), next->getY())){
+            return false;
+        }
+        current++;
+        next++;
+    }
+    return true;
 }

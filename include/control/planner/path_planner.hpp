@@ -17,6 +17,8 @@
 
 #define GRAPH_SIZE 200 // number of nodes in one direction
 #define OBSTACLE_RADIUS 0.8 // meters
+#define NODE_DISTANCE 0.1 //0.2 // meters
+#define DIAGONAL_NODE_DISTANCE 0.1414 //0.283 // meters
 
 class PathPlanner{
 private:
@@ -34,7 +36,7 @@ private:
     bool destination_reached = false;
 
 public:
-    PathPlanner(float current_x, float current_y, float target_x, float target_y);
+    PathPlanner();
 
     void initializeGraph();
     void initializeClosedList();
@@ -60,13 +62,15 @@ public:
     bool isValidCoordinate(float x, float y);
 
     // Use A* to calculate the path
-    void makePlan();
+    void makePlan(float current_x, float current_y, float target_x, float target_y);
     // Same plan but with fewer points
     void simplifyPlan();
+    bool isPlanSafe(float current_x, float current_y);
 
     // These functions are mainly for the visualization
-    std::array<std::array<Node, FIELD_LENGTH*10>, FIELD_LENGTH*10> getGraph(){return graph;}
+    std::array<std::array<Node, GRAPH_SIZE>, GRAPH_SIZE> getGraph(){return graph;}
     std::list<Node> getPlan(){return plan;}
+    std::list<Node> getSimplePlan(){return simple_plan;}
     // For the colors in the visualization
     float max_f = 0;
 };

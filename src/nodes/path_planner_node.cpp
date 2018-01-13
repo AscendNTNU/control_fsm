@@ -69,7 +69,8 @@ int main(int argc, char** argv){
     	ros::spinOnce();
     	if(planner_state.make_plan){
 		    PathPlanner plan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
-		    std::list<Node> points = plan.getPlan();
+		    plan.makePlan();
+		    std::list<Node> points = plan.getSimplePlan();
 		    geometry_msgs::Point32 point;
 		    int index = 0;
 		    for(std::list<Node>::iterator it = points.begin(); it != points.end(); it++){
