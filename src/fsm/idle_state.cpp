@@ -8,7 +8,11 @@
 //Sets setpoint type to IDLE
 IdleState::IdleState() {
     setpoint_ = mavros_msgs::PositionTarget();
-    setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE;
+    setpoint_.type_mask = default_mask       | 
+                          SETPOINT_TYPE_IDLE | 
+                          IGNORE_PX          | 
+                          IGNORE_PY          | 
+                          IGNORE_PZ;
 }
 
 void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
