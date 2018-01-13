@@ -22,6 +22,10 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance
 
 constexpr float PI{3.14159265359f};
 
+inline float angleWrapper(float angle){
+    return angle - 2*PI*floor(angle/(2*PI));
+}
+
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
     using control::Config; 
 
@@ -38,50 +42,45 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         delta_drone_obstacle.z = drone_pose.pose.position.z; 
         const float distance_to_obstacle = std::sqrt(std::pow(delta_drone_obstacle.x, 2) + std::pow(delta_drone_obstacle.y, 2));
 
-//        if (distance_to_obstacle < Config::obstacle_clearance_checkradius){
+        if (distance_to_obstacle < Config::obstacle_clearance_checkradius){
             // perform obstacle avoidance
-            const float angle = std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta;
-//            ROS_INFO_THROTTLE(1, "[control] angles: %.3f, %.3f, %.3f", 
-//                    obstacle.theta, std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x), angle);
+            const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta);
+//            ROS_INFO_THROTTLE(1, "[control] angle: %.3f", 
+//                    /*obstacle.theta, std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x),*/ angle);
             
             // obstacle.theta + pi/2 is straight ahead of obstacle.
 
-            const bool drone_in_front_of_obstacle = angle >= 0; 
+            const bool drone_in_front_of_obstacle = angle_to_obstacle <= PI; 
             
             geometry_msgs::Vector3 minimum_delta;
             minimum_delta.z = 0.0; // not used
             if (drone_in_front_of_obstacle){
-               ROS_INFO("[control]: drone in front of obstacle");
+                //ROS_INFO_THROTTLE(0.2, "[control]: %.2f -> drone in front of obstacle", angle_to_obstacle);
 
-                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle);
+                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle_to_obstacle);
                 minimum_delta.y = Config::obstacle_clearance_front/Config::obstacle_clearance_side * (Config::obstacle_clearance_side - std::abs(minimum_delta.x));
             }
             else {
-                ROS_INFO("[control]: drone behind obstacle");
+                //ROS_INFO_THROTTLE(0.2, "[control]: %.2f -> drone behind obstacle", angle_to_obstacle);
 
-                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle);
-                minimum_delta.y = Config::obstacle_clearance_back * std::sin(angle);
+                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle_to_obstacle);
+                minimum_delta.y = Config::obstacle_clearance_back * std::sin(angle_to_obstacle);
             } 
 
             const float minimum_distance = std::sqrt(std::pow(minimum_delta.x, 2) + std::pow(minimum_delta.y, 2));
+            ROS_INFO_THROTTLE(1, "distances: %.2f\t[%.2f]", distance_to_obstacle, minimum_distance);
             if (distance_to_obstacle < minimum_distance) {
                 // need to avoid obstacle
                 setpoint_modified = true;
-                //setpoint->position.x = obstacle.x + minimum_delta.x;
-                //setpoint->position.y = obstacle.y + minimum_delta.y;
-
-//                ROS_INFO("[control]: obstacle avoidance setpoint: %.2f, %.2f, %.2f", 
-//                        setpoint->position.x, setpoint->position.y, setpoint->position.z);
+                setpoint->position.x = obstacle.x + minimum_delta.x;
+                setpoint->position.y = obstacle.y + minimum_delta.y;
             }
-        //}
+        }
     }
     
     // debug helpers
-    if (!setpoint_modified && obstacles.size() > 0){
-        ROS_INFO_THROTTLE(2, "Obstacles ignored");
-    }
-    if (obstacles.size() == 0){
-        ROS_INFO_THROTTLE(2, "No obstacles");
+    if (setpoint_modified){
+        ROS_INFO_THROTTLE(1 , "setpoint changed");
     }
 
     //Return true if setpoint has been modified.

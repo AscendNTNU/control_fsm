@@ -28,7 +28,7 @@
 
     <arg name="obstacle_clearance_side" default="2.0"/>
     <arg name="obstacle_clearance_front" default="5.0"/>
-    <arg name="obstacle_clearance_back" default="2.0"/>
+    <arg name="obstacle_clearance_back" default="1.0"/>
     <arg name="obstacle_clearance_checkradius" default="10.0"/>
 
     <!--Start main control node with params-->
