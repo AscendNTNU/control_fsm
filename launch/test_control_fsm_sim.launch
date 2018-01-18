@@ -7,6 +7,8 @@
         <arg name="topic_land_detector" value="/mavros/extended_state"/>
         <arg name="require_all_streams" value="true"/>
         <arg name="require_obs_detection" value="false"/>
+        <arg name="land_xy_goto_altitude" value="2.0"/>
+        <arg name="takeoff_altitude" value="2.0"/>
     </include>
 
 
