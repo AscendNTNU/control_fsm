@@ -64,9 +64,9 @@ private:
     ///Callback function when a CMD is completed
     std::function<void()> on_complete_ = []() {}; //Does nothing by default
     ///Callback function when a CMD fails.
-    std::function<void(std::string)> on_error_ = [](std::string) {}; //Does nothing by default
+    std::function<void(const std::string&)> on_error_ = [](const std::string&) {}; //Does nothing by default
     //Callback function for sendig feedback during cmd execution
-    std::function<void(std::string)> on_feedback_ = [](std::string){};
+    std::function<void(const std::string&)> on_feedback_ = [](const std::string&){};
 public:
 
     ///If event is a request - what type?
@@ -81,15 +81,15 @@ public:
     ///Setter function for complete callback
     void setOnCompleteCallback(std::function<void()> callback) { on_complete_ = callback; }
     ///Setter function for error callback
-    void setOnErrorCallback(std::function<void(std::string)> callback) { on_error_ = callback; }
+    void setOnErrorCallback(std::function<void(const std::string&)> callback) { on_error_ = callback; }
     ///Setter function for feedback callback
-    void setOnFeedbackCallback(std::function<void(std::string)> callback) {on_feedback_ = callback; }
+    void setOnFeedbackCallback(std::function<void(const std::string&)> callback) {on_feedback_ = callback; }
     ///Finishes a CMD (calls the _onComplete callback)
     void finishCMD() const { on_complete_(); }
     ///CMD error (calls _onError callback)
-    void eventError(std::string error_msg) const { on_error_(error_msg); }
+    void eventError(const std::string& error_msg) const { on_error_(error_msg); }
     ///Sends CMD feedback via _onFeedback callback
-    void sendFeedback(std::string msg) const { on_feedback_(msg); }
+    void sendFeedback(const std::string& msg) const { on_feedback_(msg); }
     ///Checks if this event is a valid cmd type
     bool isValidCMD() const { return (event_type == EventType::COMMAND && command_type != CommandType::NONE); }
     ///Checks if this event is a valid request type
