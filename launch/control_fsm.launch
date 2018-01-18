@@ -12,6 +12,7 @@
     <arg name="blind_hover_altitude" default="1.0"/>
     <arg name="takeoff_altitude" default="1.0"/>
     <arg name="altitude_reached_margin" default="0.1"/>
+    <arg name="gb_search_alt" default="2.5"/>
     <arg name="setp_reached_margin" default="0.3"/>
     <arg name="goto_hold_dest_time" default="0.5"/>
     <arg name="safe_hover_alt" default="2.5"/>
@@ -30,6 +31,7 @@
         <param name="takeoff_altitude" value="$(arg takeoff_altitude)"/>
         <param name="altitude_reached_margin" value="$(arg altitude_reached_margin)"/>
         <param name="setp_reached_margin" value="$(arg setp_reached_margin)"/>
+	<param name="gb_search_altitude" value="$(arg gb_search_alt)"/>
         <param name="fsm_error_topic" value="control/fsm/on_error"/>
         <param name="fsm_info_topic" value="control/fsm/on_info"/>
         <param name="fsm_warn_topic" value="control/fsm/on_warn"/>
