@@ -33,6 +33,8 @@ public:
     static std::string fsm_state_changed_topic;
     ///Topic for recieving local position from FC
     static std::string mavros_local_pos_topic;
+    ///Topic for recieving local velocity from FC
+    static std::string mavros_local_vel_topic;
     ///Topic for recieving current state from FC
     static std::string mavros_state_changed_topic;
     ///Topic for recieving current state from land detector

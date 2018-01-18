@@ -16,6 +16,7 @@ double Config::gb_search_altitude = 2.5;
 double Config::min_in_air_alt = 0.5;
 double Config::no_yaw_correct_dist = 0.2;
 double Config::valid_data_timeout = 2.0; //2 seconds
+std::string Config::mavros_local_vel_topic = "mavros/local_position/velocity";
 std::string Config::fsm_error_topic = "control/fsm/on_error";
 std::string Config::fsm_warn_topic = "control/fsm/on_warn";
 std::string Config::fsm_info_topic = "control/fsm/on_info";
@@ -91,6 +92,7 @@ void Config::loadParams() {
     //FSM topics
     getStringParam("local_position_topic", mavros_local_pos_topic);
     getStringParam("mavros_state_topic", mavros_state_changed_topic);
+    getStringParam("local_velocity_topic", mavros_local_vel_topic);
     //LandDetector
     getStringParam("land_detector_topic", land_detector_topic);
     //Obstacles

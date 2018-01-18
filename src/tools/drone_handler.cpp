@@ -14,6 +14,7 @@ std::shared_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 DroneHandler::DroneHandler() {
     using control::Config;
     pose_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &DroneHandler::onPoseRecievedCB, this);
+    twist_sub_ = n_.subscribe(Config::mavros_local_vel_topic, 1, &DroneHandler::onTwistRecievedCB, this);
 }
 
 std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
@@ -32,12 +33,23 @@ const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
 
 
 const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
-    if(control::message::hasTimedOut(last_pose_)) {
+    if(control::message::hasTimedOut(*last_pose_)) {
         control::handleErrorMsg("DroneHandler: Using old pose");
     }
-    return last_pose_;
+    return *last_pose_;
+}
+
+const geometry_msgs::TwistStamped& DroneHandler::getTwist() const {
+    if(control::message::hasTimedOut(*last_twist_)) {
+        control::handleErrorMsg("DroneHandler: Using old pose");
+    }
+    return *last_twist_;
 }
 
 bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(getSharedInstancePtr()->last_pose_);
+    return !control::message::hasTimedOut(*(getSharedInstancePtr()->last_pose_));
+}
+
+const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
+    return getSharedInstancePtr()->getTwist();
 }
