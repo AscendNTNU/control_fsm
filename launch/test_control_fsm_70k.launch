@@ -1,0 +1,11 @@
+<launch>
+	
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="/dev/ttyUSB0:921600"/>
+    </include>
+    <include file="$(find control_fsm)/launch/control_fsm.launch">
+        <arg name="topic_land_detector" value="/mavros/extended_state"/>
+        <arg name="require_all_streams" value="true"/>
+        <arg name="require_obs_detection" value="false"/>
+    </include>
+</launch>
