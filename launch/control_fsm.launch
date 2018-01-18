@@ -19,6 +19,7 @@
     <arg name="obstacle_too_close_dist" default="2.0"/>
     <arg name="yaw_reached_margin" default="0.02"/> <!--In radians-->
     <arg name="no_yaw_correct_dist" default="0.2"/>
+    <arg name="min_in_air_altitude" default="0.5"/>
 
     <!--FSM debug features-->
     <arg name="require_all_streams" default="true"/>
@@ -49,5 +50,6 @@
         <param name="mavros_state_topic" value="$(arg topic_mavros_state)"/>
         <param name="land_detector_topic" value="$(arg topic_land_detector)"/>
         <param name="require_obs_detection" value="$(arg require_obs_detection)"/>
+        <param name="min_in_air_alt" value="$(arg min_in_air_altitude)"/>
     </node>
 </launch>
