@@ -105,6 +105,13 @@ void ActionServer::preemptCB() {
 
 //If goal is goto, send valid goto cmd to fsm
 void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
+
+    if(goal_p->z < control::Config::min_in_air_alt) {
+        control::handleWarnMsg("Action goal target altitude is too low, aborting!");
+        as_.setAborted();
+        return;
+    }
+
     GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
