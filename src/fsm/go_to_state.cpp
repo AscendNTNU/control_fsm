@@ -62,7 +62,12 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Has not arrived yet
     delay_transition_.enabled = false;
 
-    if(!event.position_goal.xyz_valid) {
+    //Is target altitude too low?
+    bool target_alt_too_low = cmd_.position_goal.z < control::Config::min_in_air_alt;
+    if(target_alt_too_low) {
+        control::handleWarnMsg("Target altitude is too low");
+    }
+    if(!event.position_goal.xyz_valid || target_alt_too_low) {
         if(cmd_.isValidCMD()) {
             event.eventError("No valid position target");
             cmd_ = EventData();
