@@ -19,6 +19,7 @@
     <arg name="obstacle_too_close_dist" default="2.0"/>
     <arg name="yaw_reached_margin" default="0.02"/> <!--In radians-->
     <arg name="no_yaw_correct_dist" default="0.2"/>
+    <arg name="land_xy_goto_altitude" default="1.0"/>
 
     <!--FSM debug features-->
     <arg name="require_all_streams" default="true"/>
@@ -29,6 +30,7 @@
         <param name="dest_reached_margin" value="$(arg dest_reached_margin)"/>
         <param name="blind_hover_altitude" value="$(arg blind_hover_altitude)"/>
         <param name="takeoff_altitude" value="$(arg takeoff_altitude)"/>
+	<param name="land_xy_goto_alt" value="$(arg land_xy_goto_altitude)"/>
         <param name="altitude_reached_margin" value="$(arg altitude_reached_margin)"/>
         <param name="setp_reached_margin" value="$(arg setp_reached_margin)"/>
 	<param name="gb_search_altitude" value="$(arg gb_search_alt)"/>
