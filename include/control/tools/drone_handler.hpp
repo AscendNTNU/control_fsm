@@ -44,6 +44,8 @@ public:
     const geometry_msgs::TwistStamped& getTwist() const;
     ///Is pose data valid?
     static bool isPoseValid();
+    ///Is twist data valid?
+    static bool isTwistValid();
 };
 }
 #endif

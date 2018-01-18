@@ -4,6 +4,7 @@
 #include "control/fsm/control_fsm.hpp"
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
+#include <control/fsm/go_to_state.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
 #include "control/tools/drone_handler.hpp"
@@ -123,7 +124,6 @@ void GoToState::loopState(ControlFSM& fsm) {
         bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
         bool yaw_reached = (std::fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= yaw_reached_margin_);
         //If destination is reached, begin transition to another state
-
         if (xy_reached && z_reached && yaw_reached) {
             destinationReached(fsm);
         } else {
@@ -206,39 +206,55 @@ void GoToState::handleManual(ControlFSM &fsm) {
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
 
-
+//Check if velocity is close enough to zero
 bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
     using control::Config;
     using std::pow;
     auto& t_l = target.twist.linear;
-    double dx_sq = std::pow(t_l.x, 2);
-    double dy_sq = std::pow(t_l.y, 2);
-    double dz_sq = std::pow(t_l.z, 2);
-
-    return dx_sq + dy_sq + dz_sq < pow(Config::velocity_reached_margin, 2);
+    //Calculate square velocity
+    double dx_sq = pow(t_l.x, 2);
+    double dy_sq = pow(t_l.y, 2);
+    double dz_sq = pow(t_l.z, 2);
+    return (dx_sq + dy_sq + dz_sq) < pow(Config::velocity_reached_margin, 2);
 }
 
 void GoToState::destinationReached(ControlFSM &fsm){
     //Transition to correct state
     if(cmd_.isValidCMD()) {
         switch(cmd_.command_type) {
-            case CommandType::LANDXY:
-                //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-                if(!delay_transition_.enabled) {
-                    delay_transition_.started = ros::Time::now();
-                    delay_transition_.enabled = true;
-
-                    if(cmd_.isValidCMD()) {
-                        cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-                    }
-                }
-                //Delay transition
-                if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+            case CommandType::LANDXY: {
+                //If no valid twist data it's unsafe to land
+                if (!control::DroneHandler::isTwistValid()) {
+                    control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
+                    cmd_.eventError("Unsafe to land!");
+                    cmd_ = EventData();
+                    RequestEvent abort_event(RequestType::ABORT);
+                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
                     return;
-                } 
-                
-                fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+                }
+                //Check if drone is moving
+                if (droneNotMoving(control::DroneHandler::getCurrentTwist())) {
+                    //Hold current position for a duration - avoiding unwanted velocity before doing anything else
+                    if (!delay_transition_.enabled) {
+                        delay_transition_.started = ros::Time::now();
+                        delay_transition_.enabled = true;
+
+                        if (cmd_.isValidCMD()) {
+                            cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
+                        }
+                    }
+                    //Delay transition
+                    if (ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+                        return;
+                    }
+                    //If all checks passed - land!
+                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+                } else {
+                    //If drone is moving, reset delayed transition
+                    delay_transition_.enabled = false;
+                }
                 break;
+            }
             //TODO(rendellc): why is this commented out?
             /*
             case CommandType::LANDGB:

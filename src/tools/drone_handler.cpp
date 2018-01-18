@@ -13,8 +13,13 @@ std::shared_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 
 DroneHandler::DroneHandler() {
     using control::Config;
+    using geometry_msgs::PoseStamped;
+    using geometry_msgs::TwistStamped;
     pose_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &DroneHandler::onPoseRecievedCB, this);
     twist_sub_ = n_.subscribe(Config::mavros_local_vel_topic, 1, &DroneHandler::onTwistRecievedCB, this);
+    //Init default, empty value
+    last_pose_ = boost::make_shared<const PoseStamped>();
+    last_twist_ = boost::make_shared<const TwistStamped>();
 }
 
 std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
@@ -48,6 +53,10 @@ const geometry_msgs::TwistStamped& DroneHandler::getTwist() const {
 
 bool DroneHandler::isPoseValid() {
     return !control::message::hasTimedOut(*(getSharedInstancePtr()->last_pose_));
+}
+
+bool DroneHandler::isTwistValid() {
+    return !control::message::hasTimedOut(*(getSharedInstancePtr()->last_twist_));
 }
 
 const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
