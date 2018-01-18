@@ -207,6 +207,17 @@ void GoToState::handleManual(ControlFSM &fsm) {
 }
 
 
+bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
+    using control::Config;
+    using std::pow;
+    auto& t_l = target.twist.linear;
+    double dx_sq = std::pow(t_l.x, 2);
+    double dy_sq = std::pow(t_l.y, 2);
+    double dz_sq = std::pow(t_l.z, 2);
+
+    return dx_sq + dy_sq + dz_sq < pow(Config::velocity_reached_margin, 2);
+}
+
 void GoToState::destinationReached(ControlFSM &fsm){
     //Transition to correct state
     if(cmd_.isValidCMD()) {

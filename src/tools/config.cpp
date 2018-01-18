@@ -16,6 +16,7 @@ double Config::gb_search_altitude = 2.5;
 double Config::min_in_air_alt = 0.5;
 double Config::no_yaw_correct_dist = 0.2;
 double Config::valid_data_timeout = 2.0; //2 seconds
+double Config::velocity_reached_margin = 0.2;
 std::string Config::mavros_local_vel_topic = "mavros/local_position/velocity";
 std::string Config::fsm_error_topic = "control/fsm/on_error";
 std::string Config::fsm_warn_topic = "control/fsm/on_warn";
@@ -74,6 +75,7 @@ void Config::loadParams() {
     getDoubleParam("gb_search_altitude", gb_search_altitude);
     getDoubleParam("message_timeout", valid_data_timeout);
     getDoubleParam("min_in_air_alt", min_in_air_alt);
+    getDoubleParam("velocity_reached_margin", velocity_reached_margin);
     getBoolParam("require_all_streams", require_all_data_streams);
     getBoolParam("require_obs_detection", require_obstacle_detection);
     //GoTo params

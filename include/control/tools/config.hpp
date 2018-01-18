@@ -63,6 +63,8 @@ public:
     static bool require_obstacle_detection;
     ///When is data considered old?
     static double valid_data_timeout;
+    ///Velocity target is close enough margin
+    static double velocity_reached_margin;
 };
 }
 
