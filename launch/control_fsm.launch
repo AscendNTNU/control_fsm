@@ -28,8 +28,8 @@
 
     <arg name="obstacle_clearance_side" default="2.0"/>
     <arg name="obstacle_clearance_front" default="5.0"/>
-    <arg name="obstacle_clearance_back" default="1.0"/>
-    <arg name="obstacle_clearance_checkradius" default="10.0"/>
+    <arg name="obstacle_clearance_back" default="1.5"/>
+    <arg name="obstacle_clearance_checkradius" default="40.0"/>
 
     <!--Start main control node with params-->
     <node name="control_fsm_node" pkg="control_fsm" type="control_fsm_main" output="screen">

@@ -7,6 +7,7 @@
 #include <ascend_msgs/GRState.h>
 
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 
@@ -26,6 +27,26 @@ inline float angleWrapper(float angle){
     return angle - 2*PI*floor(angle/(2*PI));
 }
 
+inline float getDistanceToObstacle(const geometry_msgs::Pose& pose, const ascend_msgs::GRState& obstacle){
+    geometry_msgs::Vector3 delta_drone_obstacle;
+    delta_drone_obstacle.x = pose.position.x - obstacle.x; 
+    delta_drone_obstacle.y = pose.position.y - obstacle.y;
+    delta_drone_obstacle.z = pose.position.z; 
+    const float distance_to_obstacle = std::sqrt(std::pow(delta_drone_obstacle.x, 2) + std::pow(delta_drone_obstacle.y, 2));
+    return distance_to_obstacle;
+}
+
+inline float getAngleToObstacle(const geometry_msgs::Pose& pose, const ascend_msgs::GRState obstacle){
+    
+    geometry_msgs::Vector3 delta_drone_obstacle;
+    delta_drone_obstacle.x = pose.position.x - obstacle.x; 
+    delta_drone_obstacle.y = pose.position.y - obstacle.y;
+    delta_drone_obstacle.z = pose.position.z; 
+
+    const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta);
+    return angle_to_obstacle;
+}
+
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
     using control::Config; 
 
@@ -36,20 +57,12 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
 
     for (const auto& obstacle : obstacles){
 
-        geometry_msgs::Vector3 delta_drone_obstacle;
-        delta_drone_obstacle.x = drone_pose.pose.position.x - obstacle.x; 
-        delta_drone_obstacle.y = drone_pose.pose.position.y - obstacle.y;
-        delta_drone_obstacle.z = drone_pose.pose.position.z; 
-        const float distance_to_obstacle = std::sqrt(std::pow(delta_drone_obstacle.x, 2) + std::pow(delta_drone_obstacle.y, 2));
+        const float distance_to_obstacle = getDistanceToObstacle(drone_pose.pose, obstacle);
 
         if (distance_to_obstacle < Config::obstacle_clearance_checkradius){
             // perform obstacle avoidance
-            const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta);
-//            ROS_INFO_THROTTLE(1, "[control] angle: %.3f", 
-//                    /*obstacle.theta, std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x),*/ angle);
+            const float angle_to_obstacle = getAngleToObstacle(drone_pose.pose, obstacle);
             
-            // obstacle.theta + pi/2 is straight ahead of obstacle.
-
             const bool drone_in_front_of_obstacle = angle_to_obstacle <= PI; 
             
             geometry_msgs::Vector3 minimum_delta;
