@@ -54,9 +54,9 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
         //Only land blind when the drone is below a certain altitude
         if(position.z >= control::Config::min_in_air_alt) {
-            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
-        } else {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
+        } else {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
 
         //Set yaw setpoint based on current rotation
@@ -77,11 +77,11 @@ void LandState::loopState(ControlFSM& fsm) {
     try {
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
-        //Switch to blind land when altitude is below certian limit.
+        //Switch to blind land when altitude is below certain limit.
         if(position.z >= control::Config::min_in_air_alt) {
-            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
-        } else {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
+        } else {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
         //Check landing
         auto land_detector_p = LandDetector::getSharedInstancePtr();
