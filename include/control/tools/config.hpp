@@ -11,6 +11,8 @@ public:
     static double blind_hover_alt;
     ///Takeoff altitude
     static double takeoff_altitude;
+    ///Minmum allowed position hold altitude
+    static double min_in_air_alt;
     ///Are we close enough to target altitude
     static double altitude_reached_margin;
     ///Are we close enough to setpoint

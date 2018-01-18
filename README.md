@@ -7,8 +7,6 @@ Main control node
 It's a ros package, build as usual with catkin_make. It requires that you have ascend_msgs in your catking workspace
 
 **FSM depends on:**
-- Land detector node for knowing when drone is on the ground (ascend_msgs/BoolStamped)
-- Path planner node to be able to fly (ascend_msgs/PathPlannerPlan)
 - Obstacle detection node for avoiding obstacles (ascend_msgs/PointArray)
 - Mavros for position and drone state
 
@@ -21,7 +19,8 @@ It's a ros package, build as usual with catkin_make. It requires that you have a
 can therefore "ripple" through the fsm to reach the target state.
 - Do not send manual debug requests to fsm in normal operation.
     - The only purpose of a manual request is debugging! Be careful!
-- Tracking and interacting with groundrobots is not implemented 
+- Tracking and interacting with groundrobots is not implemented
+- Altitude restrictions is implemented. Drone will not attempt to fly below min_in_air_altitude!
 
 **Startup procedure**
 1. Launch FSM from launchfile
@@ -127,6 +126,9 @@ Name: "land_detector_topic", Description: Topic for knowing if drone is on groun
 ```
 ```
 Name: "land_xy_goto_altitude", Description: Decides what altitude to use before landing on landxy cmd
+```
+```
+Name: "min_in_air_altitude", Description: Minimul altitude drone is allowed to fly (except when landing) 
 ```
 
 *Drone have to wait to allow the drone to slow down before doing a transition
