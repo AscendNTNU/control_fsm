@@ -125,6 +125,9 @@ Name: "mavros_state_topic", Description: Mavros state topic (info about OFFBOARD
 Name: "land_detector_topic", Description: Topic for knowing if drone is on ground, MsgType: ascend_msgs/BoolStamped 
 ```
 ```
+Name: "land_xy_goto_altitude", Description: Decides what altitude to use before landing on landxy cmd
+```
+```
 Name: "min_in_air_altitude", Description: Minimul altitude drone is allowed to fly (except when landing) 
 ```
 
