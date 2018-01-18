@@ -15,10 +15,12 @@
 #include <algorithm>
 #include <limits>
 
-#define GRAPH_SIZE 200 // number of nodes in one direction
-#define OBSTACLE_RADIUS 0.8 // meters
-#define NODE_DISTANCE 0.1 //0.2 // meters
-#define DIAGONAL_NODE_DISTANCE 0.1414 //0.283 // meters
+#define OBSTACLE_RADIUS 1 //meters
+#define NODE_DISTANCE 0.4 // meters
+constexpr float DIAGONAL_NODE_DISTANCE = sqrt(2*NODE_DISTANCE*NODE_DISTANCE); // meters
+
+constexpr int GRAPH_SIZE = FIELD_LENGTH/NODE_DISTANCE+1.5; // number of nodes in one direction
+
 
 class PathPlanner{
 private:
@@ -46,6 +48,8 @@ public:
 
     // Diagonal heuristic - can move in 8 directions from current point
     float calculateDiagonalHeuristic(float x, float y);
+    float calculateManhattanHeuristic(float x, float y);
+    float calculateEuclidianHeuristic(float x, float y);
 
     // Print the f-value of each node
     void printGraph();
@@ -60,11 +64,13 @@ public:
     bool isDestination(float x, float y);
     bool isStart(float x, float y);
     bool isValidCoordinate(float x, float y);
+    bool isSafeLine(float x1, float y1, float x2, float y2);
 
     // Use A* to calculate the path
     void makePlan(float current_x, float current_y, float target_x, float target_y);
     // Same plan but with fewer points
     void simplifyPlan();
+    // Verify the plan from where the drone is to the end point
     bool isPlanSafe(float current_x, float current_y);
 
     // These functions are mainly for the visualization

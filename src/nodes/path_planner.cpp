@@ -2,7 +2,8 @@
 
 
 int coordToIndex(float k) {
-    int index = static_cast<int>(k*10.0+0.5);
+    int index = static_cast<int>(k/NODE_DISTANCE+0.5);
+    //std::cout << k << " ---> " << index << std::endl;
     return (index);
 }
 
@@ -11,16 +12,16 @@ int coordToIndex(float k) {
 PathPlanner::PathPlanner(){}
 
 void PathPlanner::initializeGraph(){
-    for (float x = 0; x < FIELD_LENGTH; x += 0.1){
-        for (float y = 0; y < FIELD_LENGTH; y += 0.1){
+    for (float x = 0; x < FIELD_LENGTH; x += NODE_DISTANCE){
+        for (float y = 0; y < FIELD_LENGTH; y += NODE_DISTANCE){
             if(isStart(x,y)){
                 graph[coordToIndex(x)][coordToIndex(y)] = start_node;
                 // Push the start node to the open list so that the search starts from the start
                 open_list.push(graph[coordToIndex(x)][coordToIndex(y)]);
             }
             else {
-                graph[coordToIndex(x)][coordToIndex(y)] = Node(x,y, std::numeric_limits<float>::infinity()
-                    , calculateDiagonalHeuristic(x,y));
+                graph[coordToIndex(x)][coordToIndex(y)] =
+                        Node(x,y, std::numeric_limits<float>::infinity(), calculateDiagonalHeuristic(x,y));
             }
         }
     }
@@ -36,22 +37,24 @@ void PathPlanner::initializeClosedList(){
 
 void PathPlanner::addObstacle(float center_x, float center_y) {
     // Find the y value for each x in the circle
-    for (float x = center_x-OBSTACLE_RADIUS; x < center_x+OBSTACLE_RADIUS; x+=0.1) {
+    for (float x = center_x-OBSTACLE_RADIUS; x <= center_x+OBSTACLE_RADIUS; x+=NODE_DISTANCE) {
         float y = sqrt(OBSTACLE_RADIUS*OBSTACLE_RADIUS-(x-center_x)*(x-center_x));
         // Do this to fill the circle
-        for(float i = center_y-y; i<=center_y+y; i+= 0.1) {
+        for(float i = center_y-y; i<=center_y+y; i+= NODE_DISTANCE) {
             if (isValidCoordinate(x, i)) {
                 closed_list[coordToIndex(x)][coordToIndex(i)] = true;
+                graph[coordToIndex(x)][coordToIndex(i)].obstacle = true;
             }
         }
 
     }
     // Do the same as over, just switch x and y
-    for (float y = center_y-OBSTACLE_RADIUS; y < center_y+OBSTACLE_RADIUS; y+=0.1) {
+    for (float y = center_y-OBSTACLE_RADIUS; y <= center_y+OBSTACLE_RADIUS; y+=NODE_DISTANCE) {
         float x = sqrt(OBSTACLE_RADIUS*OBSTACLE_RADIUS-(y-center_y)*(y-center_y));
-        for(float i = center_x-x; i<=center_x+x; i+= 0.1) {
+        for(float i = center_x-x; i<=center_x+x; i+= NODE_DISTANCE) {
             if (isValidCoordinate(i, y)) {
                 closed_list[coordToIndex(i)][coordToIndex(y)] = true;
+                graph[coordToIndex(i)][coordToIndex(y)].obstacle = true;
             }
         }
     }
@@ -59,7 +62,16 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
 
 
 float PathPlanner::calculateDiagonalHeuristic(float x, float y) {
+    return (calculateEuclidianHeuristic(x,y));
     return (std::max(abs(x-end_node.getX()), abs(y-end_node.getY())));
+}
+
+float PathPlanner::calculateManhattanHeuristic(float x, float y){
+    return (abs(x-end_node.getX()) + abs(y-end_node.getY()));
+}
+
+float PathPlanner::calculateEuclidianHeuristic(float x, float y) {
+    return(sqrt((x-end_node.getX())*(x-end_node.getX())+(y-end_node.getY())*(y-end_node.getY())));
 }
 
 void PathPlanner::printGraph(){
@@ -76,6 +88,7 @@ void PathPlanner::printGraph(){
 void PathPlanner::relaxGraph(){
     Node current_node;
     while(!open_list.empty()){
+        //std::cout << "open list open" << std::endl;
         // Always search from the node with lowest f value
         current_node = open_list.top();
         open_list.pop();
@@ -91,6 +104,8 @@ void PathPlanner::relaxGraph(){
 }
 
 void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent_y, float distance_to_parent) {
+    //std::cout << "Point: " << x << ", " << y << " Parent: " << parent_x
+    //                        << ", " << parent_y << std::endl;
     if(isValidCoordinate(x,y)){
         // Making sure the zero is actually zero and not something like 1.4895e-9
         if(x > 0.0 && x < 0.01){x = 0.0;}
@@ -100,8 +115,7 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             graph[coordToIndex(x)][coordToIndex(y)].setParentY(parent_y);
             destination_reached = true;
             std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
-            std::cout << "Destination parent: x=" << graph[coordToIndex(x)][coordToIndex(y)].getParentX()
-                 << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
+            std::cout << "Destination parent: x=" << graph[coordToIndex(x)][coordToIndex(y)].getParentX() << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
         }
         // If node is not destination and hasn't been searched yet
         else if(closed_list[coordToIndex(x)][coordToIndex(y)] == false){
@@ -142,21 +156,38 @@ void PathPlanner::handleAllSuccessors(float x, float y) {
 }
 
 bool PathPlanner::isDestination(float x, float y) {
-    return ((x < end_node.getX()+0.05 && x>end_node.getX()-0.05)
-            && (y < end_node.getY()+0.05 && y > end_node.getY()-0.05));
+    float margin = NODE_DISTANCE/2;
+    return ((x < end_node.getX()+margin && x>end_node.getX()-margin)
+            && (y < end_node.getY()+margin && y > end_node.getY()-margin));
 }
 
 bool PathPlanner::isStart(float x, float y) {
-    return ((x < start_node.getX()+0.05 && x>start_node.getX()-0.05)
-            && (y < start_node.getY()+0.05 && y > start_node.getY()-0.05));
+    float margin = NODE_DISTANCE/2;
+    return ((x < start_node.getX()+margin && x>start_node.getX()-margin)
+            && (y < start_node.getY()+margin && y > start_node.getY()-margin));
 }
 
 bool PathPlanner::isValidCoordinate(float x, float y) {
     return(x>=0 && x<FIELD_LENGTH && y>=0 && y<FIELD_LENGTH);
 }
 
+bool PathPlanner::isSafeLine(float x1, float y1, float x2, float y2) {
+    float delta_x = x2-x1;
+    float delta_y = y2-y1;
+    float num_points = 20*std::max(abs(delta_x),abs(delta_y));
+    for(int i = 0; i < num_points; i++){
+        x1 += delta_x/num_points;
+        y1 += delta_y/num_points;
+        // checking if the line goes through an obstacle at this point
+        if(graph[coordToIndex(x1)][coordToIndex(y1)].obstacle){
+            return false;
+        }
+    }
+    return true;
+}
+
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
-    
+
     start_node = Node(current_x, current_y, 0, 0);
     start_node.setParentX(0);
     start_node.setParentY(0);
@@ -164,16 +195,31 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     initializeGraph();
     initializeClosedList();
 
-    // Calculate all f values and set the parents
-    relaxGraph();
+    //addObstacle(8.8,13);
+    addObstacle(7.2,13);
+    addObstacle(9,15);
+    addObstacle(10.4,13);
+    addObstacle(15.5,8);
+
 
     float x = end_node.getX();
     float y = end_node.getY();
+
+    if(graph[coordToIndex(x)][coordToIndex(y)].obstacle){
+        plan.push_front(start_node);
+        return;
+    }
+
+    // Calculate all f values and set the parents
+    relaxGraph();
+
     // Dummy safety for avoiding infinite loop, will remove later
     int counter = 0;
     // Go through the graph from end to start through the parents of each node
     // Add nodes to the plan
+
     while(!isStart(x, y)){
+        std::cout << "Iterate backwards through plan" << std::endl;
         plan.push_front(graph[coordToIndex(x)][coordToIndex(y)]);
         float x_temp = graph[coordToIndex(x)][coordToIndex(y)].getParentX();
         float y_temp = graph[coordToIndex(x)][coordToIndex(y)].getParentY();
@@ -186,9 +232,10 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     // Add start node to the plan (might not be necessary)
     plan.push_front(graph[coordToIndex(x)][coordToIndex(y)]);
     // Print the plan - can be removed
-    /*for (std::list<Node>::iterator it = plan.begin(); it!= plan.end(); ++it){
+    std::cout << std::endl << "Whole plan:" << std::endl;
+    for (std::list<Node>::iterator it = plan.begin(); it!= plan.end(); ++it){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
-    }*/
+    }
 
     // Delete unnecessary points
     simplifyPlan();
@@ -241,20 +288,13 @@ void PathPlanner::simplifyPlan() {
         x2 = third->getX();
         y1 = first->getY();
         y2 = third->getY();
-        delta_x = x2-x1;
-        delta_y = y2-y1;
-        num_points = 20*std::max(abs(delta_x),abs(delta_y));
-        for(int i = 0; i < num_points; i++){
-            x1 += delta_x/num_points;
-            y1 += delta_y/num_points;
-            // checking if the line goes through an obstacle at this point
-            if(graph[coordToIndex(x1)][coordToIndex(y1)].obstacle){
-                hit_obstacle = true;
-            }
-        }
+
         // If an obstacle is hit, the points are necessary and the search will start
         // at the end of the current search.
-        if(hit_obstacle){
+        if(!isSafeLine(x1,y1,x2,y2)){
+            //std::cout << "Hit: first = (" << x1 << ", " << y1 << ") Third = ("
+            //                  << x2 << ", " << y2 << ")" << std::endl;
+            first = second;
             second = first;
             second++;
             third = second;
@@ -272,12 +312,11 @@ void PathPlanner::simplifyPlan() {
     }
 
     // Print the remaining points
+    std::cout << "Simple plan: " << std::endl;
     for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
     }
 }
-
-
 
 bool PathPlanner::isPlanSafe(float current_x, float current_y) {
     if(simple_plan.empty()){

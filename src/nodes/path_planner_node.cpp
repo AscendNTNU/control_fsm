@@ -68,8 +68,8 @@ int main(int argc, char** argv){
     while(ros::ok()){
     	ros::spinOnce();
     	if(planner_state.make_plan){
-		    PathPlanner plan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
-		    plan.makePlan();
+		    PathPlanner plan;
+		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
 		    std::list<Node> points = plan.getSimplePlan();
 		    geometry_msgs::Point32 point;
 		    int index = 0;

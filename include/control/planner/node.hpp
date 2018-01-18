@@ -1,7 +1,7 @@
 #ifndef NODE_HPP
 #define NODE_HPP
 
-#define FIELD_LENGTH 20
+#define FIELD_LENGTH 20.0
 
 class Node{
 private:
