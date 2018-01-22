@@ -188,6 +188,16 @@ bool PathPlanner::isSafeLine(float x1, float y1, float x2, float y2) {
 
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
 
+    // If start or end point is not valid, a plan is not created
+    if(!isValidCoordinate(current_x,current_y)){
+        // send error to fsm
+        return;
+    }
+    if(!isValidCoordinate(target_x,target_y)){
+        // send error to fsm
+        return;
+    }
+
     start_node = Node(current_x, current_y, 0, 0);
     start_node.setParentX(0);
     start_node.setParentY(0);
