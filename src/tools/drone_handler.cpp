@@ -18,7 +18,6 @@ DroneHandler::DroneHandler() {
     pose_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &DroneHandler::onPoseRecievedCB, this);
     twist_sub_ = n_.subscribe(Config::mavros_local_vel_topic, 1, &DroneHandler::onTwistRecievedCB, this);
     //Init default, empty value
-    last_pose_ = boost::make_shared<const PoseStamped>();
     last_pose_ = PoseStamped::ConstPtr(new PoseStamped);
     last_twist_ = TwistStamped::ConstPtr(new TwistStamped);
 }
