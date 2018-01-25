@@ -5,6 +5,7 @@
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/config.hpp>
 #include <control/tools/logger.hpp>
+#include <control/tools/obstacle_state_handler.hpp>
 
 BeginState ControlFSM::BEGIN_STATE;
 PreFlightState ControlFSM::PREFLIGHT_STATE;
@@ -119,6 +120,20 @@ bool ControlFSM::isReady() {
             ///Critical bug -
             control::handleCriticalMsg(e.what());
             return false;
+        }
+
+        if(control::Config::require_obstacle_detection) {
+            try {
+                using control::ObstacleStateHandler;
+                //Land detector must be ready
+                if (!ObstacleStateHandler::isInstanceReady()) {
+                    control::handleWarnMsg("Missing obstacle state stream!");
+                    return false;
+                }
+            } catch(const std::exception& e) {
+                control::handleErrorMsg("Exception: " + std::string(e.what()));
+                return false;
+            }
         }
     }
 

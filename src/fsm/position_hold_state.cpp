@@ -69,16 +69,20 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         }
 
         //Keep old altitude if abort
-        if(!event.isValidRequest() || event.request != RequestType::ABORT) {
-            setpoint_.position.z = position.z;
-            //Set setpoint altitude to position_goal if valid
-            if(event.position_goal.z_valid) {
-                //Set z setpoint to position_goal if we're close enough for it to be safe
-                if(std::fabs(position.z - event.position_goal.z) <= control::Config::altitude_reached_margin) {
-                    setpoint_.position.z = event.position_goal.z;
-                }
+        setpoint_.position.z = position.z;
+        //Set setpoint altitude to position_goal if valid
+        if(event.position_goal.z_valid) {
+            //Set z setpoint to position_goal if we're close enough for it to be safe
+            if(std::fabs(position.z - event.position_goal.z) <= control::Config::altitude_reached_margin) {
+                setpoint_.position.z = event.position_goal.z;
             }
         }
+        //If altitude is too low - set it to minimum altitude
+        if(setpoint_.position.z < control::Config::min_in_air_alt) {
+            control::handleWarnMsg("Poshold target altitude too low, using min altitude");
+            setpoint_.position.z = control::Config::min_in_air_alt;
+        }
+
         using control::pose::quat2yaw;
         using control::getMavrosCorrectedTargetYaw;
         auto& quat = pose_stamped.pose.orientation;

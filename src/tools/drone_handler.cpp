@@ -41,6 +41,5 @@ const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
 }
 
 bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(getCurrentPose());
+    return !control::message::hasTimedOut(getSharedInstancePtr()->last_pose_);
 }
-

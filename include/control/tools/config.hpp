@@ -11,12 +11,18 @@ public:
     static double blind_hover_alt;
     ///Takeoff altitude
     static double takeoff_altitude;
+    ///Minmum allowed position hold altitude
+    static double min_in_air_alt;
     ///Are we close enough to target altitude
     static double altitude_reached_margin;
     ///Are we close enough to setpoint
     static double setpoint_reached_margin;
     ///Is yaw close enough?
     static double yaw_reached_margin;
+    ///What is our cruising altitude when landing at point xy?
+    static double land_xy_goto_alt;
+    ///Search altitude
+    static double gb_search_altitude;
     ///Topic to publish FSM error msg
     static std::string fsm_error_topic;
     ///Topic to publish FSM warn msg
@@ -31,6 +37,8 @@ public:
     static std::string mavros_state_changed_topic;
     ///Topic for recieving current state from land detector
     static std::string land_detector_topic;
+    ///Topic for recieving obstacle positions
+    static std::string obstacle_state_topic;
     ///Buffer size used for FSMError, FSMWarn etc
     static int fsm_status_buffer_size;
     ///Time gotostate waits before transitioning
