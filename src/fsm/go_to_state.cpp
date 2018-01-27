@@ -12,46 +12,37 @@
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 
-
-
 GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if(event.isValidRequest()) {
-        if(event.request == RequestType::ABORT) {
-            if(cmd_.isValidCMD()) {
+    if (event.isValidRequest()) {
+        if (event.request == RequestType::ABORT) {
+            if (cmd_.isValidCMD()) {
                 cmd_.eventError("ABORT");
                 cmd_ = EventData();
             }
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
-        } 
-        else if(event.request == RequestType::POSHOLD) {
-            if(cmd_.isValidCMD()) {
+        } else if (event.request == RequestType::POSHOLD) {
+            if (cmd_.isValidCMD()) {
                 control::handleWarnMsg("ABORT CMD before sending manual request!");
-            }
-            else {
+            } else {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             }
-        } 
-        else if(event.request == RequestType::GOTO) {
-            if(cmd_.isValidCMD()) {
+        } else if (event.request == RequestType::GOTO) {
+            if (cmd_.isValidCMD()) {
                 control::handleWarnMsg("ABORT CMD before sending manual request!");
-            } 
-            else {
+            } else {
                 fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
             }
-        } 
-        else {
+        } else {
             control::handleWarnMsg("Illegal transiton request");
         }
-    } 
-    else if(event.isValidCMD()) {
-        if(cmd_.isValidCMD()) {
+    } else if (event.isValidCMD()) {
+        if (cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
-        } 
-        else {
+        } else {
             fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event); //Transition to itself
         }
     }
@@ -65,11 +56,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     //Is target altitude too low?
     bool target_alt_too_low = cmd_.position_goal.z < control::Config::min_in_air_alt;
-    if(target_alt_too_low) {
+    if (target_alt_too_low) {
         control::handleWarnMsg("Target altitude is too low");
     }
-    if(!event.position_goal.xyz_valid || target_alt_too_low) {
-        if(cmd_.isValidCMD()) {
+    if (!event.position_goal.xyz_valid || target_alt_too_low) {
+        if (cmd_.isValidCMD()) {
             event.eventError("No valid position target");
             cmd_ = EventData();
         }
@@ -88,7 +79,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         using control::DroneHandler;
         auto quat = DroneHandler::getCurrentPose().pose.orientation;
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
         control::handleCriticalMsg(e.what());
@@ -112,9 +103,9 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Get pose
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         //Get reference to position in pose
-        auto &current_position = pose_stamped.pose.position;
+        auto& current_position = pose_stamped.pose.position;
         //Get reference to orientation in pose
-        auto &quat = pose_stamped.pose.orientation;
+        auto& quat = pose_stamped.pose.orientation;
         //Calculate distance to target
         double delta_x = current_position.x - cmd_.position_goal.x;
         double delta_y = current_position.y - cmd_.position_goal.y;
@@ -129,7 +120,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         } else {
             delay_transition_.enabled = false;
         }
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         //Exceptions should never occur!
         control::handleCriticalMsg(e.what());
         //Go to PosHold
@@ -148,8 +139,6 @@ const mavros_msgs::PositionTarget* GoToState::getSetpointPtr() {
     return &setpoint_;
 }
 
-
-
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
     using control::Config;
@@ -163,13 +152,19 @@ void GoToState::stateInit(ControlFSM& fsm) {
     control::handleInfoMsg("GoTo init completed!");
 }
 
-//Calculates a yaw setpoints that is a multiple of 90 degrees
-//and is as close to the path direction as possible 
-//NOTE - method assumes dx and dy is not equal to zero
-double GoToState::calculatePathYaw(double dx, double dy) {
+/**
+ * @brief Returns a yaw that is a multiple of 90 degrees
+ * @details Drone should fly as straight forward as possible
+ * , but yaw should be a multiple of 90 degrees.
+ * This method assumes dx and dy != 0 at the same time
+ * @param dx difference in x
+ * @param dy difference in y
+ * @return Yaw angle in radians - not mavros corrected
+ */
+double calculatePathYaw(double dx, double dy) {
     //Avoid fatal error if dx and dy is too small
     //If method is used correctly this should NEVER be a problem
-    if(std::fabs(dx * dx + dy * dy) < 0.001) {
+    if (std::fabs(dx * dx + dy * dy) < 0.001) {
         return 0;
     }
     /*
@@ -178,28 +173,26 @@ double GoToState::calculatePathYaw(double dx, double dy) {
     double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
 
     //Select closest multiple of 90 degrees
-    if(angle > 3 * PI / 4) {
+    if (angle > 3 * PI / 4) {
         angle = PI;
-    } 
-    else if(angle > PI/4) {
-        angle = PI/2.0;
-    } 
-    else {
+    } else if (angle > PI / 4) {
+        angle = PI / 2.0;
+    } else {
         angle = 0;
     }
     //Invert if dy is negative
-    if(dy < 0) {
+    if (dy < 0) {
         angle = -angle;
     }
 
     return angle;
 }
 
-bool GoToState::stateIsReady(ControlFSM &fsm) {
+bool GoToState::stateIsReady(ControlFSM& fsm) {
     return true;
 }
 
-void GoToState::handleManual(ControlFSM &fsm) {
+void GoToState::handleManual(ControlFSM& fsm) {
     cmd_.eventError("Lost OFFBOARD");
     cmd_ = EventData();
     RequestEvent manual_event(RequestType::MANUALFLIGHT);
@@ -218,10 +211,10 @@ bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
     return (dx_sq + dy_sq + dz_sq) < pow(Config::velocity_reached_margin, 2);
 }
 
-void GoToState::destinationReached(ControlFSM &fsm){
+void GoToState::destinationReached(ControlFSM& fsm) {
     //Transition to correct state
-    if(cmd_.isValidCMD()) {
-        switch(cmd_.command_type) {
+    if (cmd_.isValidCMD()) {
+        switch (cmd_.command_type) {
             case CommandType::LANDXY: {
                 //If no valid twist data it's unsafe to land
                 if (!control::DroneHandler::isTwistValid()) {
@@ -255,26 +248,25 @@ void GoToState::destinationReached(ControlFSM &fsm){
                 }
                 break;
             }
-            //TODO(rendellc): why is this commented out?
-            /*
-            case CommandType::LANDGB:
-                fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
-                break;
-            */
+                //TODO(rendellc): why is this commented out?
+                /*
+                case CommandType::LANDGB:
+                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
+                    break;
+                */
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);
                 //Attempt to hold position target
                 done_event.position_goal = cmd_.position_goal;
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
-                }
+            }
                 break;
             default:
                 control::handleWarnMsg("Unrecognized command type");
                 break;
         }
-    } 
-    else {
+    } else {
         RequestEvent pos_hold_event(RequestType::POSHOLD);
         pos_hold_event.position_goal = cmd_.position_goal;
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);

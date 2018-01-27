@@ -2,12 +2,36 @@
 // Created by haavard on 15.10.17.
 //
 
+//Include all unit testing definitions
+#ifndef CONTROL_FSM_UNIT_TEST
+#define CONTROL_FSM_UNIT_TEST
+#endif
+
 #include <control/tools/target_tools.hpp>
 #include <control/fsm/control_fsm.hpp>
 #include "gtest/gtest.h"
+#include <ros/topic_manager.h>
+
 
 constexpr double PI_HALF = 1.57079632679;
 constexpr double PI = 3.14159265359;
+
+TEST(ControlTest, goToStateHelpers) {
+    geometry_msgs::TwistStamped test_vel;
+    test_vel.twist.linear.x = 0.0;
+    test_vel.twist.linear.y = 0.0;
+    test_vel.twist.linear.z = 0.0;
+    EXPECT_EQ(droneNotMoving(test_vel), true);
+    test_vel.twist.linear.x = 3.0;
+    EXPECT_EQ(droneNotMoving(test_vel), false);
+
+    EXPECT_NEAR(calculatePathYaw(2.0, 1.0), 0.0, 0.0001);
+    EXPECT_NEAR(calculatePathYaw(1.0, 2.0), PI_HALF, 0.0001);
+    EXPECT_NEAR(calculatePathYaw(-1.0, 2.0), PI_HALF, 0.0001);
+    EXPECT_NEAR(calculatePathYaw(-2.0, 1.0), PI, 0.0001);
+    EXPECT_NEAR(calculatePathYaw(-1.0, -2.0), -PI_HALF, 0.0001);
+    EXPECT_NEAR(calculatePathYaw(2.0, -1.0), 0.0, 0.0001);
+}
 
 TEST(ControlTest, stateHandlerTest) {
     ///There should be multiple states in the state vector
@@ -27,7 +51,7 @@ TEST(ControlTest, quatConversionTest) {
         double y;
         double z;
         double w;
-    }; 
+    };
     Quaternion zero { 0.0, 0.0, 0.0, 1.0 };
     Quaternion pi6 { 0.0, 0.0, 0.259, 0.966 };
     Quaternion pi { 0.0, 0.0, 1.0, 0.0 };
@@ -44,6 +68,7 @@ TEST(ControlTest, quatConversionTest) {
 }
 
 int main(int argc, char** argv) {
+    ros::init(argc, argv, "control_fsm_unit_test");
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

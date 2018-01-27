@@ -46,17 +46,17 @@ const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
 
 const geometry_msgs::TwistStamped& DroneHandler::getTwist() const {
     if(control::message::hasTimedOut(*last_twist_)) {
-        control::handleErrorMsg("DroneHandler: Using old pose");
+        control::handleErrorMsg("DroneHandler: Using old twist");
     }
     return *last_twist_;
 }
 
 bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(*(getSharedInstancePtr()->last_pose_));
+    return !control::message::hasTimedOut(getCurrentPose());
 }
 
 bool DroneHandler::isTwistValid() {
-    return !control::message::hasTimedOut(*(getSharedInstancePtr()->last_twist_));
+    return !control::message::hasTimedOut(getCurrentTwist());
 }
 
 const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
