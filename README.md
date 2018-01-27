@@ -116,6 +116,9 @@ Name: "require_all_streams", Description: Require that all datastreams (from oth
 Name: "message_timeout", Description: When is data from other nodes considered old 
 ```
 ```
+Name: "local_velocity_topic", Description: Mavros velocity topic, MsgType: geometry_msgs/TwistStamped
+```
+```
 Name: "local_position_topic", Description: Mavros position topic, MsgType: geometry_msgs/PoseStamped
 ```
 ```
@@ -128,7 +131,10 @@ Name: "land_detector_topic", Description: Topic for knowing if drone is on groun
 Name: "land_xy_goto_altitude", Description: Decides what altitude to use before landing on landxy cmd
 ```
 ```
-Name: "min_in_air_altitude", Description: Minimul altitude drone is allowed to fly (except when landing) 
+Name: "min_in_air_altitude", Description: Minimum altitude drone is allowed to fly (except when landing) 
+```
+```
+Name: "velocity_reached_margin", "Description: Allowed deviation from target velocity
 ```
 
 *Drone have to wait to allow the drone to slow down before doing a transition
