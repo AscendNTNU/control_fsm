@@ -10,8 +10,6 @@
 #include <control/tools/target_tools.hpp>
 #include <control/fsm/control_fsm.hpp>
 #include "gtest/gtest.h"
-#include <ros/topic_manager.h>
-
 
 constexpr double PI_HALF = 1.57079632679;
 constexpr double PI = 3.14159265359;
@@ -68,7 +66,6 @@ TEST(ControlTest, quatConversionTest) {
 }
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "control_fsm_unit_test");
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
