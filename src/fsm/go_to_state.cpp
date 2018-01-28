@@ -1,12 +1,8 @@
 #include "control/fsm/go_to_state.hpp"
-#include "control/tools/setpoint_msg_defines.h"
-#include <ros/ros.h>
 #include "control/fsm/control_fsm.hpp"
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
-#include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
-#include "control/tools/drone_handler.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
@@ -57,7 +53,6 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    is_active_ = true;
     cmd_ = event;
     //Has not arrived yet
     delay_transition_.enabled = false;
@@ -97,7 +92,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    is_active_ = false;
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -119,11 +113,13 @@ void GoToState::loopState(ControlFSM& fsm) {
         double delta_y = current_position.y - cmd_.position_goal.y;
         double delta_z = current_position.z - cmd_.position_goal.z;
         //Check if we're close enough
-        bool xy_reached = (std::pow(delta_x, 2) + std::pow(delta_y, 2)) <= std::pow(dest_reached_margin_, 2);
-        bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
-        bool yaw_reached = (std::fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= yaw_reached_margin_);
+        using std::pow;
+        using std::fabs;
+        using control::Config;
+        bool xy_reached = (pow(delta_x, 2) + pow(delta_y, 2)) <= pow(Config::dest_reached_margin, 2);
+        bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
+        bool yaw_reached = (fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= Config::yaw_reached_margin);
         //If destination is reached, begin transition to another state
-
         if (xy_reached && z_reached && yaw_reached) {
             destinationReached(fsm);
         } else {
@@ -156,9 +152,6 @@ void GoToState::stateInit(ControlFSM& fsm) {
     //TODO Uneccesary variables - Config can be used directly
     //Set state variables
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
-    dest_reached_margin_ = Config::dest_reached_margin;
-    setpoint_reached_margin_ = Config::setpoint_reached_margin;
-    yaw_reached_margin_ = Config::yaw_reached_margin;
 
     control::handleInfoMsg("GoTo init completed!");
 }
