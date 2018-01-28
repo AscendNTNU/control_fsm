@@ -11,10 +11,13 @@ private:
     ros::NodeHandle nh_;
     ///Reload service
     ros::ServiceServer reload_config_service;
+    static std::set<std::string> missing_param_set_;
     ///Shared instance ptr
     static std::unique_ptr<Config> shared_instance_p_;
     ///Constructor
     Config();
+
+
 public:
     ///Are we close enough to the target?
     static double dest_reached_margin;
@@ -68,6 +71,8 @@ public:
      * @throw control::ROSNotInitializedException
      */
     static void loadParams();
+
+    static const std::set<std::string>& getMissingParamSet() { return missing_param_set_; }
 
 
 };

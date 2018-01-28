@@ -4,14 +4,20 @@
 
 #include <control/tools/target_tools.hpp>
 #include <control/fsm/control_fsm.hpp>
+#include <control/tools/config.hpp>
 #include "gtest/gtest.h"
 
 constexpr double PI_HALF = 1.57079632679;
 constexpr double PI = 3.14159265359;
 
+TEST(ControlTest, configTest) {
+    control::Config::loadParams();
+    EXPECT_TRUE(control::Config::getMissingParamSet().empty()) << "Not all params found";
+}
+
 TEST(ControlTest, stateHandlerTest) {
     ///There should be multiple states in the state vector
-    EXPECT_NE(0, StateInterface::getNumStates());
+    EXPECT_NE(0, StateInterface::getNumStates()) << "No states in state vector";
 }
 
 TEST(ControlTest, yawTargetTest) {
@@ -38,12 +44,12 @@ TEST(ControlTest, quatConversionTest) {
     EXPECT_NEAR(PI / 6.0, quat2yaw(pi6), 0.001);
     EXPECT_NEAR(PI, quat2yaw(pi), 0.001);
     EXPECT_NEAR(PI / 3.0, quat2yaw(pi3), 0.001);
-
     EXPECT_NEAR(0.0 - PI_HALF, quat2mavrosyaw(zero), 0.001);
 
 }
 
 int main(int argc, char** argv) {
+    ros::init(argc, argv, "control_fsm_unit_test");
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

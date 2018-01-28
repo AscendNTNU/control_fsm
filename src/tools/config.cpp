@@ -1,9 +1,15 @@
 #include "control/tools/config.hpp"
 #include <control/exceptions/ros_not_initialized_exception.hpp>
 #include <ascend_msgs/ReloadConfig.h>
+#include <control/tools/logger.hpp>
 
 using control::Config;
 using control::ROSNotInitializedException;
+
+
+std::set<std::string> Config::missing_param_set_;
+
+//Global config params
 double Config::dest_reached_margin = 0.3;
 double Config::blind_hover_alt = 1.0;
 double Config::takeoff_altitude = 1.0;
@@ -40,7 +46,12 @@ void Config::loadParams() {
     auto getDoubleParam = [&](const std::string& name, double& var, double min, double max) {
         double temp;
         if(!n.getParam(name, temp) || temp < min || temp > max) {
-            ROS_WARN("[Control FSM Param] Load param failed: %s, using %f", name.c_str(), var);
+            std::string warn_msg = "Load param failed: ";
+            warn_msg += name;
+            warn_msg += ", using ";
+            warn_msg += std::to_string(var);
+            control::handleWarnMsg(warn_msg);
+            missing_param_set_.insert(name);
         } else {
             var = temp;
         }
@@ -48,14 +59,24 @@ void Config::loadParams() {
 
     auto getStringParam = [&](const std::string& name, std::string& var) {
         if(!n.getParam(name, var)) {
-            ROS_WARN("[Control FSM Param] Load param failed: %s, using %s", name.c_str(), var.c_str());
+            std::string warn_msg = "Load param failed: ";
+            warn_msg += name;
+            warn_msg += ", using ";
+            warn_msg += var;
+            control::handleWarnMsg(warn_msg);
+            missing_param_set_.insert(name);
         }
     };
 
     auto getIntParam = [&](const std::string& name, int& var, int min, int max) {
         int temp;
         if(!n.getParam(name, temp) || temp < min || temp > max) {
-            ROS_WARN("[Control FSM Param] Load param failed: %s, using %d", name.c_str(), var);
+            std::string warn_msg = "Load param failed: ";
+            warn_msg += name;
+            warn_msg += ", using ";
+            warn_msg += std::to_string(var);
+            control::handleWarnMsg(warn_msg);
+            missing_param_set_.insert(name);
         } else {
             var = temp;
         }
@@ -63,7 +84,12 @@ void Config::loadParams() {
 
     auto getBoolParam = [&](const std::string& name, bool& var) {
         if(!n.getParam(name, var)) {
-            ROS_WARN("[Control FSM Param] Load param failed: %s, using %s", name.c_str(), var ? "true" : "false");
+            std::string warn_msg = "Load param failed: ";
+            warn_msg += name;
+            warn_msg += ", using ";
+            warn_msg += std::to_string(var);
+            control::handleWarnMsg(warn_msg);
+            missing_param_set_.insert(name);
         }
     };
 
