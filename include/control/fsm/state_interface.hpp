@@ -5,7 +5,7 @@
 #include <iostream>
 #include <mavros_msgs/PositionTarget.h>
 #include "control/tools/setpoint_msg_defines.h"
-#include <vector>
+#include <list>
 
 class ControlFSM;
 
@@ -31,7 +31,7 @@ private:
      * This idiom is a workaround for the "static initialiazation fiasco"
      * @return vector of states
      */
-    static std::vector<StateInterface*>* getAllStatesVector();
+    static std::list<StateInterface*>* getAllStatesVector();
 
     ///Assigmnet operator should be removed
     StateInterface& operator=(const StateInterface&) = delete;
@@ -80,9 +80,9 @@ public:
     virtual const mavros_msgs::PositionTarget* getSetpointPtr() = 0;
 
     ///Static interface returning iterator to first state
-    static std::vector<StateInterface*>::const_iterator cbegin() { return getAllStatesVector()->cbegin(); }
+    static std::list<StateInterface*>::const_iterator cbegin() { return getAllStatesVector()->cbegin(); }
     ///Static interface returning iterator to last + 1 state
-    static std::vector<StateInterface*>::const_iterator cend() { return getAllStatesVector()->cend(); }
+    static std::list<StateInterface*>::const_iterator cend() { return getAllStatesVector()->cend(); }
     ///Returns number of instanciated states
     static size_t getNumStates() { return getAllStatesVector()->size(); }
 };
