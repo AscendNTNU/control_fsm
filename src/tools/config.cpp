@@ -43,8 +43,8 @@ void Config::loadParams() {
         throw ROSNotInitializedException();
     }
     if(shared_instance_p_ == nullptr) {
-        shared_instance_p_ = std::unique_ptr<Config>();
-    }
+        shared_instance_p_ = std::unique_ptr<Config>(new Config);
+    } 
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var, double min, double max) {
         double temp;
@@ -131,9 +131,14 @@ void Config::loadParams() {
 
 }
 
-
-bool reloadConfigCB(ascend_msgs::ReloadConfig::Request&, ascend_msgs::ReloadConfig::Response&) {
+using Request = ascend_msgs::ReloadConfig::Request;
+using Response = ascend_msgs::ReloadConfig::Response;
+bool reloadConfigCB(Request&, Response& resp) {
     control::Config::loadParams();
+    //Missing param set should be empty!
+    for(auto& s : control::Config::getMissingParamSet()) {
+        resp.missing_params.emplace_back(s);
+    }
     return true;
 }
 

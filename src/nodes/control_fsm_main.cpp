@@ -27,7 +27,6 @@ int main(int argc, char** argv) {
     //Init ros and nodehandles
     ros::init(argc, argv, "control_fsm_main");
     ros::NodeHandle n;
-    ros::NodeHandle np("~");
 
     //Load ros params
     Config::loadParams();
