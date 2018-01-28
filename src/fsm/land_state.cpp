@@ -4,6 +4,7 @@
 #include <control/tools/target_tools.hpp>
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
+#include <control/tools/config.hpp>
 #include "control/fsm/control_fsm.hpp"
 #include "control/tools/drone_handler.hpp"
 
@@ -50,6 +51,14 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //Position XY is ignored in typemask, but the values are set as a precaution.
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
+
+        //Only land blind when the drone is below a certain altitude
+        if(position.z >= control::Config::min_in_air_alt) {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
+        } else {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
+        }
+
         //Set yaw setpoint based on current rotation
         using control::getMavrosCorrectedTargetYaw;
         using control::pose::quat2yaw;
@@ -66,6 +75,15 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 void LandState::loopState(ControlFSM& fsm) {
     try {
+        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto& position = pose_stamped.pose.position;
+        //Switch to blind land when altitude is below certain limit.
+        if(position.z >= control::Config::min_in_air_alt) {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
+        } else {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
+        }
+        //Check landing
         auto land_detector_p = LandDetector::getSharedInstancePtr();
         if(land_detector_p->isOnGround()) {
             if(cmd_.isValidCMD()) {

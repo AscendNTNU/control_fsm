@@ -105,6 +105,13 @@ void ActionServer::preemptCB() {
 
 //If goal is goto, send valid goto cmd to fsm
 void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
+
+    if(goal_p->z < control::Config::min_in_air_alt) {
+        control::handleWarnMsg("Action goal target altitude is too low, aborting!");
+        as_.setAborted();
+        return;
+    }
+
     GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
@@ -143,7 +150,6 @@ void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     //TODO Implement when landgb procedure is decided
     ROS_WARN("[Control ActionServer] LandGB not implemented!!");
     ascend_msgs::ControlFSMResult result;
-    result.finished = false;
     action_is_running_ = false;
     as_.setAborted(result);
 }
@@ -185,7 +191,6 @@ void ActionServer::run(ControlFSM *fsm_p) {
 
 void ActionServer::onActionComplete() {
         ascend_msgs::ControlFSMResult result;
-        result.finished = static_cast<unsigned char>(true);
         action_is_running_ = false;
         as_.setSucceeded(result);
 }
@@ -199,7 +204,6 @@ void ActionServer::onActionFeedback(const std::string& msg) {
 void ActionServer::onActionError(const std::string& msg) {
         control::handleWarnMsg(std::string("CMD error: ") + msg);
         ascend_msgs::ControlFSMResult result;
-        result.finished = static_cast<unsigned char>(false);
         action_is_running_ = false;
         as_.setAborted(result);
 }
