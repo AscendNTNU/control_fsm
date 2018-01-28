@@ -2,8 +2,6 @@
 
 [![Build Status](http://build.ascendntnu.no/buildStatus/icon?job=control_fsm)](http://build.ascendntnu.no/job/control_fsm/)
 
-Main control node 
-
 It's a ros package, build as usual with catkin_make. It requires that you have ascend_msgs in your catking workspace
 
 **FSM depends on:**
