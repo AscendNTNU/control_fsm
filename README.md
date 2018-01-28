@@ -2,13 +2,10 @@
 
 [![Build Status](http://build.ascendntnu.no/buildStatus/icon?job=control_fsm)](http://build.ascendntnu.no/job/control_fsm/)
 
-Main control node 
-
 It's a ros package, build as usual with catkin_make. It requires that you have ascend_msgs in your catking workspace
 
 **FSM depends on:**
-- Obstacle detection node for avoiding obstacles (ascend_msgs/PointArray)
-- Mavros for position and drone state
+- Mavros for position, velocity and drone state.
 
 **Some notes:**
 - The control node will automatically transition to preflight state when fsm is ready.
@@ -16,10 +13,10 @@ It's a ros package, build as usual with catkin_make. It requires that you have a
     - An alternative is to manually request manual flight mode to fly around manually before transitioning to positionhold when switching to OFFBOARD
 - Each state handles all legal transition from itself. (ONLY exception is from begin state to preflight which is forced by fsm)
 - CMDs are "special" events that can be stored by a state, and allows autotransition to next state. CMDs
-can therefore "ripple" through the fsm to reach the target state.
+can therefore "ripple" through the fsm to reach the target state. See RequestsVsCommands.md
 - Do not send manual debug requests to fsm in normal operation.
-    - The only purpose of a manual request is debugging! Be careful!
-- Tracking and interacting with groundrobots is not implemented
+    - The only purpose of a manual request is debugging, and internal transitions! Be careful!
+- Tracking and interacting with groundrobots is not yet implemented
 - Altitude restrictions is implemented. Drone will not attempt to fly below min_in_air_altitude!
 
 **Startup procedure**
@@ -30,8 +27,8 @@ roslaunch control_fsm control_fsm.launch
 2. On startup FSM will initialize all states and set up necessary ros publishers, subscribers and services.
 3. FSM will then wait for all ros data from other nodes to be available
     - Some of the data streams that is not needed for flight can be skipped for testing if require_all_streams is set to false
-4. The actionserver will then become active
-5. Preflight is finsihed. The FSM will then transition to preflight mode automaticly and wait for an AUTONOMOUS event (drone is in OFFBOARD mode and ARMED). All other events are ignored
+4. The actionserver will then become active, but not accept actions until enabled by user (via a ros service)
+5. Preflight is finished. The FSM will then transition to preflight mode automaticly and wait for an AUTONOMOUS event (drone is in OFFBOARD mode and ARMED). All other events are ignored
 6. The node will loop at 30Hz and publish setpoints to mavros
 
 **Design pattern inspiration:**
