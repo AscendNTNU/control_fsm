@@ -7,6 +7,7 @@
 #include <ascend_msgs/GRState.h>
 
 #include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -23,80 +24,118 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance
 
 constexpr float PI{3.14159265359f};
 
-inline float angleWrapper(float angle){
+// wrap any angle to range [0, 2pi)
+inline float angleWrapper(const float angle){
     return angle - 2*PI*floor(angle/(2*PI));
 }
 
-inline float getDistanceToObstacle(const geometry_msgs::Pose& pose, const ascend_msgs::GRState& obstacle){
-    geometry_msgs::Vector3 delta_drone_obstacle;
-    delta_drone_obstacle.x = pose.position.x - obstacle.x; 
-    delta_drone_obstacle.y = pose.position.y - obstacle.y;
-    delta_drone_obstacle.z = pose.position.z; 
-    const float distance_to_obstacle = std::sqrt(std::pow(delta_drone_obstacle.x, 2) + std::pow(delta_drone_obstacle.y, 2));
+inline float calcDistanceToObstacle(const geometry_msgs::Point& point, const ascend_msgs::GRState& obstacle){
+    geometry_msgs::Vector3 delta_to_obstacle;
+    delta_to_obstacle.x = point.x - obstacle.x; 
+    delta_to_obstacle.y = point.y - obstacle.y;
+    delta_to_obstacle.z = point.z;
+
+    const float distance_to_obstacle = std::sqrt(std::pow(delta_to_obstacle.x, 2) + std::pow(delta_to_obstacle.y, 2));
+
     return distance_to_obstacle;
 }
 
-inline float getAngleToObstacle(const geometry_msgs::Pose& pose, const ascend_msgs::GRState obstacle){
-    
+inline float calcAngleToObstacle(const geometry_msgs::Point& point, const ascend_msgs::GRState& obstacle){
     geometry_msgs::Vector3 delta_drone_obstacle;
-    delta_drone_obstacle.x = pose.position.x - obstacle.x; 
-    delta_drone_obstacle.y = pose.position.y - obstacle.y;
-    delta_drone_obstacle.z = pose.position.z; 
+    delta_drone_obstacle.x = point.x - obstacle.x; 
+    delta_drone_obstacle.y = point.y - obstacle.y;
+    delta_drone_obstacle.z = point.z; 
 
     const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle.theta);
+    
     return angle_to_obstacle;
+}
+
+inline geometry_msgs::Vector3 rotateXY(geometry_msgs::Vector3 point, float angle){
+    // Apply 2d transformation matrix
+    point.x = point.x * std::cos(angle) - point.y * std::sin(angle);
+    point.y = point.x * std::sin(angle) + point.y * std::cos(angle);
+
+    return point;
+}
+
+/// Return a vector (x,y,z) which corresponds to the point closest to the obstacle
+/// which is allowed, referenced from the obstacles coordinate system. y-axis is positive 
+/// direction of motion, and x-axis is the rightward direction.
+/// As of jan. 2018, z is always 0.0 since only the xy-plane is concidered
+/// TODO: The angle references are most likely wrong and may need a constant offset to be correct.
+///       Fix once perception algorithm is implemented!!!!
+inline geometry_msgs::Vector3 avoidZone(const float angle, const float front_clearance, const float back_clearance, const float side_clearance){
+    const bool drone_in_front_of_obstacle = angle <= PI;
+
+    geometry_msgs::Vector3 minimum_vector;
+    minimum_vector.z = 0.0f; 
+
+    if (drone_in_front_of_obstacle){
+        minimum_vector.x = side_clearance * std::cos(angle);
+        minimum_vector.y = front_clearance/side_clearance * (side_clearance - std::abs(minimum_vector.x));
+    }
+    else {
+        minimum_vector.x = side_clearance * std::cos(angle);
+        minimum_vector.y = back_clearance * std::sin(angle);
+    } 
+
+    return minimum_vector;
 }
 
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
     using control::Config; 
-
-    bool setpoint_modified = false;
+    bool setpoint_modified{false};
     
-    const std::vector<ascend_msgs::GRState> obstacles = control::ObstacleStateHandler::getCurrentObstacles();
+    const auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
     const geometry_msgs::PoseStamped drone_pose = control::DroneHandler::getCurrentPose();
 
     for (const auto& obstacle : obstacles){
+        
+        const auto drone_distance_to_obstacle = calcDistanceToObstacle(drone_pose.pose.position, obstacle);
+        const auto setpoint_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle);
 
-        const float distance_to_obstacle = getDistanceToObstacle(drone_pose.pose, obstacle);
-
-        if (distance_to_obstacle < Config::obstacle_clearance_checkradius){
+        if (drone_distance_to_obstacle < Config::obstacle_clearance_checkradius){
             // perform obstacle avoidance
-            const float angle_to_obstacle = getAngleToObstacle(drone_pose.pose, obstacle);
-            
-            const bool drone_in_front_of_obstacle = angle_to_obstacle <= PI; 
-            
-            geometry_msgs::Vector3 minimum_delta;
-            minimum_delta.z = 0.0; // not used
-            if (drone_in_front_of_obstacle){
-                //ROS_INFO_THROTTLE(0.2, "[control]: %.2f -> drone in front of obstacle", angle_to_obstacle);
+            const auto drone_angle_to_obstacle = calcAngleToObstacle(drone_pose.pose.position, obstacle);
 
-                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle_to_obstacle);
-                minimum_delta.y = Config::obstacle_clearance_front/Config::obstacle_clearance_side * (Config::obstacle_clearance_side - std::abs(minimum_delta.x));
+            const auto setpoint_angle_to_obstacle = calcAngleToObstacle(setpoint->position, obstacle);
+            // True if setpoint is within a 120 deg cone away from the obstacle
+            // TODO: turn this angle into a param once complete
+            const bool setpoint_reachable = 
+                (drone_angle_to_obstacle - 3*PI/8) < setpoint_angle_to_obstacle &&
+                setpoint_angle_to_obstacle < (drone_angle_to_obstacle + 3*PI/8);
+            
+            geometry_msgs::Vector3 minimum_vector = avoidZone(drone_angle_to_obstacle,
+                    Config::obstacle_clearance_front, Config::obstacle_clearance_back, Config::obstacle_clearance_side);
+
+            // Rotate to global coordinate system
+            minimum_vector = rotateXY(minimum_vector, -obstacle.theta);
+
+            const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
+
+            if (setpoint_reachable
+                    && setpoint_distance_to_obstacle > drone_distance_to_obstacle
+                    && setpoint_distance_to_obstacle > minimum_distance
+                    && drone_distance_to_obstacle < minimum_distance){
+                // no action, maybe logging?
+                ROS_INFO("Going to setpoint instead");
             }
-            else {
-                //ROS_INFO_THROTTLE(0.2, "[control]: %.2f -> drone behind obstacle", angle_to_obstacle);
-
-                minimum_delta.x = Config::obstacle_clearance_side * std::cos(angle_to_obstacle);
-                minimum_delta.y = Config::obstacle_clearance_back * std::sin(angle_to_obstacle);
-            } 
-
-            const float minimum_distance = std::sqrt(std::pow(minimum_delta.x, 2) + std::pow(minimum_delta.y, 2));
-            ROS_INFO_THROTTLE(1, "distances: %.2f\t[%.2f]", distance_to_obstacle, minimum_distance);
-            if (distance_to_obstacle < minimum_distance) {
+            else if (drone_distance_to_obstacle < minimum_distance) {
+                ROS_WARN_COND(setpoint_modified, "[obstacle avoidance]: Two obstacles in range, undefined behaviour!");
                 // need to avoid obstacle
                 setpoint_modified = true;
-                setpoint->position.x = obstacle.x + minimum_delta.x;
-                setpoint->position.y = obstacle.y + minimum_delta.y;
+                setpoint->position.x = obstacle.x + minimum_vector.x;
+                setpoint->position.y = obstacle.y + minimum_vector.y;
             }
         }
-    }
-    
-    // debug helpers
-    if (setpoint_modified){
-        ROS_INFO_THROTTLE(1 , "setpoint changed");
+
+        if (setpoint_modified){
+            const auto new_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle);
+            ROS_INFO_THROTTLE(1, "Distance improvement %.3f to %.3f", drone_distance_to_obstacle, new_distance_to_obstacle);
+        }
     }
 
-    //Return true if setpoint has been modified.
     return setpoint_modified;
 }
 
@@ -125,12 +164,17 @@ std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::getShare
 }
 
 void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {
-    for(auto it = on_modified_cb_set_.begin(); it != on_modified_cb_set_.end(); ++it) {
-        if(*it == cb_p) {
-            on_modified_cb_set_.erase(it);
-            //std::set - no duplicates
-            return;
-        }
+    const auto it = on_modified_cb_set_.find(cb_p);
+    if (it != on_modified_cb_set_.cend()){
+        on_modified_cb_set_.erase(it);
     }
+    
+    //for(auto it = on_modified_cb_set_.begin(); it != on_modified_cb_set_.end(); ++it) {
+    //    if(*it == cb_p) {
+    //        on_modified_cb_set_.erase(it);
+    //        //std::set - no duplicates
+    //        return;
+    //    }
+    //}
 }
 
