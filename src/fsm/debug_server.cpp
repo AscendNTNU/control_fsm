@@ -64,7 +64,6 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
             case REQ::COMMAND: return EventType::COMMAND;
             case REQ::AUTONOMOUS: return EventType::AUTONOMOUS;
             case REQ::MANUAL: return EventType::MANUAL;
-            case REQ::GROUNDDETECTED: return EventType::GROUNDDETECTED;
             default: return EventType::NONE;
         }
     })();

@@ -32,8 +32,7 @@ enum class EventType {
     COMMAND,
     AUTONOMOUS, //Notify system is in autonomous mode (ARMED and OFFBOARD)
     MANUAL, //Notify system is in manual mode (DISARMED and/or not OFFBOARD)
-    POSLOST, //Notify position is lost
-    GROUNDDETECTED
+    POSLOST //Notify position is lost
 };
 
 ///Command types - what command is it?
