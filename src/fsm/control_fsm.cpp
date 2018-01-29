@@ -116,6 +116,11 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");
                 return false;
             }
+            //Obstacle avoidance must be ready
+            if(!obstacle_avoidance_.isReady()) {
+                control::handleWarnMsg("Preflight Check: Obstacle avoidance not ready!");
+                return false;
+            }
         } catch(const std::exception& e) {
             ///Critical bug -
             control::handleCriticalMsg(e.what());
@@ -178,5 +183,10 @@ void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
 
 void ControlFSM::handleManual() {
     getState()->handleManual(*this);
+}
+
+mavros_msgs::PositionTarget ControlFSM::getMavrosSetpoint() {
+    auto state_setpoint = getState()->getSetpointPtr();
+    return obstacle_avoidance_.run(*state_setpoint);
 }
 
