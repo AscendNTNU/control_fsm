@@ -4,11 +4,11 @@
     </include>
     <include file="$(find control_fsm)/launch/mocap_feedback.launch"/>
 
+    <arg name="fsm_name" default="control_fsm_node"/>
     <include file="$(find control_fsm)/launch/control_fsm.launch">
-        <arg name="topic_land_detector" value="/mavros/extended_state"/>
-        <arg name="require_all_streams" value="true"/>
-        <arg name="require_obs_detection" value="false"/>
+        <arg name="node_name" value="$(arg fsm_name)"/>
     </include>
+    <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
 
 
 </launch>
