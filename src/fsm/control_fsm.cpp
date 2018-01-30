@@ -124,11 +124,6 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");
                 return false;
             }
-            //Obstacle avoidance must be ready
-            if(!obstacle_avoidance_.isReady()) {
-                control::handleWarnMsg("Preflight Check: Obstacle avoidance not ready!");
-                return false;
-            }
         } catch(const std::exception& e) {
             ///Critical bug -
             control::handleCriticalMsg(e.what());
