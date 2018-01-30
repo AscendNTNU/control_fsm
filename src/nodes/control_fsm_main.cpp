@@ -8,6 +8,7 @@
 #include "control/tools/obstacle_avoidance.hpp"
 #include <control/tools/logger.hpp>
 #include "control/fsm/debug_server.hpp"
+#include <ascend_msgs/StringService.h>
 
 
 //How often is setpoints published to flightcontroller?
@@ -15,12 +16,17 @@ constexpr float SETPOINT_PUB_RATE = 30.0f; //In Hz
 
 constexpr char mavrosSetpointTopic[] = "mavros/setpoint_raw/local";
 
+//Returns nodes namespace
+bool nameServiceCB(ascend_msgs::StringService::Request &, ascend_msgs::StringService::Response &response) {
+    response.data = ros::names::append(ros::this_node::getNamespace(), ros::this_node::getName());
+    return true;
+}
+
 int main(int argc, char** argv) {
     using control::Config;
     //Init ros and nodehandles
     ros::init(argc, argv, "control_fsm_main");
     ros::NodeHandle n;
-    ros::NodeHandle np("~");
 
     //Load ros params
     Config::loadParams();
@@ -38,6 +44,10 @@ int main(int argc, char** argv) {
     //Set up neccesary publishers
     ros::Publisher setpoint_pub= n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
     ros::Publisher fsm_on_state_changed_pub = n.advertise<std_msgs::String>(Config::fsm_state_changed_topic, Config::fsm_status_buffer_size);
+    using ascend_msgs::StringServiceRequest;
+    using ascend_msgs::StringServiceResponse;
+
+    ros::ServiceServer namespace_service = n.advertiseService("/control_fsm_node_name", nameServiceCB);
 
     //Set up debug server
     DebugServer debugServer;
