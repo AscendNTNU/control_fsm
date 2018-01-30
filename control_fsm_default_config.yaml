@@ -21,6 +21,8 @@
     land_detector_topic: /mavros/extended_state, 
     #Topic for recieving lidar info
     lidar_topic: /perception/obstacles/lidar,
+    #Topic for recieving local velocity estimates
+    local_velocity_topic: /mavros/local_position/velocity,
     #Topic for recieving local position estimates
     local_position_topic: /mavros/local_position/pose, 
     #Topic for recieving mavros state
@@ -50,5 +52,7 @@
     #Minimum flying altitude
     min_in_air_alt: 0.5,
     #Topic for recieving obstacle state data
-    obstacle_state_topic: perception/obstacles
+    obstacle_state_topic: perception/obstacles,
+    #Margin to determine if velocity is reached
+    velocity_reached_margin: 0.2
 }

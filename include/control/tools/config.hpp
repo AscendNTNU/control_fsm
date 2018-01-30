@@ -43,6 +43,8 @@ public:
     static double yaw_reached_margin;
     /// \fsmparam What is our cruising altitude when landing at point xy?
     static double land_xy_goto_alt;
+    //// \fsmparam Margin to determine when velocity is reached
+    static double velocity_reached_margin;
     /// \fsmparam Search altitude
     static double gb_search_altitude;
     /// \fsmparam Topic to publish FSM error msg
@@ -55,6 +57,8 @@ public:
     static std::string fsm_state_changed_topic;
     /// \fsmparam Topic for recieving local position from FC
     static std::string mavros_local_pos_topic;
+    /// \fsmparam Topic for recieving local velocity from FC
+    static std::string mavros_local_vel_topic;
     /// \fsmparam Topic for recieving current state from FC
     static std::string mavros_state_changed_topic;
     /// \fsmparam Topic for recieving current state from land detector
@@ -83,11 +87,9 @@ public:
      * @throw control::ROSNotInitializedException
      */
     static void loadParams();
-
+    
     ///Returns set of unloaded params
     static const std::set<std::string>& getMissingParamSet() { return missing_param_set_; }
-
-
 };
 }
 

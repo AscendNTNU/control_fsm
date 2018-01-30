@@ -2,12 +2,12 @@
 #include "control/fsm/control_fsm.hpp"
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
+#include <control/fsm/go_to_state.hpp>
+#include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
-
-
 
 GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
@@ -21,32 +21,25 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 cmd_ = EventData();
             }
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
-        } 
-        else if(event.request == RequestType::POSHOLD) {
+        } else if(event.request == RequestType::POSHOLD) {
             if(cmd_.isValidCMD()) {
                 control::handleWarnMsg("ABORT CMD before sending manual request!");
-            }
-            else {
+            } else {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             }
-        } 
-        else if(event.request == RequestType::GOTO) {
+        } else if(event.request == RequestType::GOTO) {
             if(cmd_.isValidCMD()) {
                 control::handleWarnMsg("ABORT CMD before sending manual request!");
-            } 
-            else {
+            } else {
                 fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
             }
-        } 
-        else {
+        } else {
             control::handleWarnMsg("Illegal transiton request");
         }
-    } 
-    else if(event.isValidCMD()) {
+    } else if(event.isValidCMD()) {
         if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
-        } 
-        else {
+        } else {
             fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event); //Transition to itself
         }
     }
@@ -97,7 +90,7 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 void GoToState::loopState(ControlFSM& fsm) {
     try {
         //Check that position data is valid
-        if (!control::DroneHandler::isPoseValid()) {
+        if(!control::DroneHandler::isPoseValid()) {
             throw control::PoseNotValidException();
         }
 
@@ -105,9 +98,9 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Get pose
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         //Get reference to position in pose
-        auto &current_position = pose_stamped.pose.position;
+        auto& current_position = pose_stamped.pose.position;
         //Get reference to orientation in pose
-        auto &quat = pose_stamped.pose.orientation;
+        auto& quat = pose_stamped.pose.orientation;
         //Calculate distance to target
         double delta_x = current_position.x - cmd_.position_goal.x;
         double delta_y = current_position.y - cmd_.position_goal.y;
@@ -120,7 +113,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
         bool yaw_reached = (fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= Config::yaw_reached_margin);
         //If destination is reached, begin transition to another state
-        if (xy_reached && z_reached && yaw_reached) {
+        if(xy_reached && z_reached && yaw_reached) {
             destinationReached(fsm);
         } else {
             delay_transition_.enabled = false;
@@ -129,7 +122,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Exceptions should never occur!
         control::handleCriticalMsg(e.what());
         //Go to PosHold
-        if (cmd_.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
             cmd_.eventError("No position");
             cmd_ = EventData();
         }
@@ -144,8 +137,6 @@ const mavros_msgs::PositionTarget* GoToState::getSetpointPtr() {
     return &setpoint_;
 }
 
-
-
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
     using control::Config;
@@ -156,10 +147,16 @@ void GoToState::stateInit(ControlFSM& fsm) {
     control::handleInfoMsg("GoTo init completed!");
 }
 
-//Calculates a yaw setpoints that is a multiple of 90 degrees
-//and is as close to the path direction as possible 
-//NOTE - method assumes dx and dy is not equal to zero
-double GoToState::calculatePathYaw(double dx, double dy) {
+/**
+ * @brief Returns a yaw that is a multiple of 90 degrees
+ * @details Drone should fly as straight forward as possible
+ * , but yaw should be a multiple of 90 degrees.
+ * This method assumes dx and dy != 0 at the same time
+ * @param dx difference in x
+ * @param dy difference in y
+ * @return Yaw angle in radians - not mavros corrected
+ */
+double calculatePathYaw(double dx, double dy) {
     //Avoid fatal error if dx and dy is too small
     //If method is used correctly this should NEVER be a problem
     if(std::fabs(dx * dx + dy * dy) < 0.001) {
@@ -173,74 +170,98 @@ double GoToState::calculatePathYaw(double dx, double dy) {
     //Select closest multiple of 90 degrees
     if(angle > 3 * PI / 4) {
         angle = PI;
-    } 
-    else if(angle > PI/4) {
-        angle = PI/2.0;
-    } 
-    else {
+    } else if(angle > PI / 4) {
+        angle = PI / 2.0;
+    } else {
         angle = 0;
     }
     //Invert if dy is negative
-    if(dy < 0) {
+    if (dy < 0) {
         angle = -angle;
     }
 
     return angle;
 }
 
-bool GoToState::stateIsReady(ControlFSM &fsm) {
+bool GoToState::stateIsReady(ControlFSM& fsm) {
     return true;
 }
 
-void GoToState::handleManual(ControlFSM &fsm) {
+void GoToState::handleManual(ControlFSM& fsm) {
     cmd_.eventError("Lost OFFBOARD");
     cmd_ = EventData();
     RequestEvent manual_event(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
 
+//Check if velocity is close enough to zero
+bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
+    using control::Config;
+    using std::pow;
+    auto& t_l = target.twist.linear;
+    //Calculate square velocity
+    double dx_sq = pow(t_l.x, 2);
+    double dy_sq = pow(t_l.y, 2);
+    double dz_sq = pow(t_l.z, 2);
+    return (dx_sq + dy_sq + dz_sq) < pow(Config::velocity_reached_margin, 2);
+}
 
-void GoToState::destinationReached(ControlFSM &fsm){
+void GoToState::destinationReached(ControlFSM& fsm) {
     //Transition to correct state
     if(cmd_.isValidCMD()) {
         switch(cmd_.command_type) {
-            case CommandType::LANDXY:
-                //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-                if(!delay_transition_.enabled) {
-                    delay_transition_.started = ros::Time::now();
-                    delay_transition_.enabled = true;
-
-                    if(cmd_.isValidCMD()) {
-                        cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-                    }
-                }
-                //Delay transition
-                if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+            case CommandType::LANDXY: {
+                //If no valid twist data it's unsafe to land
+                if(!control::DroneHandler::isTwistValid()) {
+                    control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
+                    cmd_.eventError("Unsafe to land!");
+                    cmd_ = EventData();
+                    RequestEvent abort_event(RequestType::ABORT);
+                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
                     return;
-                } 
-                
-                fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+                }
+                //Check if drone is moving
+                if(droneNotMoving(control::DroneHandler::getCurrentTwist())) {
+                    //Hold current position for a duration - avoiding unwanted velocity before doing anything else
+                    if(!delay_transition_.enabled) {
+                        delay_transition_.started = ros::Time::now();
+                        delay_transition_.enabled = true;
+
+                        if(cmd_.isValidCMD()) {
+                            cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
+                        }
+                    }
+                    //Delay transition
+                    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+                        return;
+                    }
+                    //If all checks passed - land!
+                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+                } else {
+                    //If drone is moving, reset delayed transition
+                    delay_transition_.enabled = false;
+                }
                 break;
-            //TODO(rendellc): why is this commented out?
-            /*
-            case CommandType::LANDGB:
-                fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
-                break;
-            */
+            }
+                //NOTE: Land groundrobot algorithm not implemented yet, so this is commented out
+                /*
+                case CommandType::LANDGB:
+                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
+                    break;
+                */
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);
                 //Attempt to hold position target
                 done_event.position_goal = cmd_.position_goal;
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
-                }
+            }
                 break;
             default:
                 control::handleWarnMsg("Unrecognized command type");
                 break;
         }
-    } 
-    else {
+    } else {
         RequestEvent pos_hold_event(RequestType::POSHOLD);
         pos_hold_event.position_goal = cmd_.position_goal;
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
