@@ -248,7 +248,7 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                 }
                 break;
             }
-                //TODO(rendellc): why is this commented out?
+                //NOTE: Land groundrobot algorithm not implemented yet, so this is commented out
                 /*
                 case CommandType::LANDGB:
                     fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
