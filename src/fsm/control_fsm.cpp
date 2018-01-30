@@ -155,8 +155,14 @@ void ControlFSM::startPreflight() {
         control::handleWarnMsg("FSM not ready, can't transition to preflight!");
         return;
     }
-    RequestEvent event(RequestType::PREFLIGHT);
-    transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
+    if(getState() == &BEGIN_STATE) {
+        RequestEvent event(RequestType::PREFLIGHT);
+        transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
+    } else {
+        std::string err_msg = "Can't transition to preflight from ";
+        err_msg += getState()->getStateName();
+        control::handleErrorMsg(err_msg);
+    }
 }
 
 void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
