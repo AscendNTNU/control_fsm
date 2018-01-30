@@ -32,17 +32,6 @@ private:
     double setpoint_reached_margin_ = DEFAULT_SETPOINT_REACHED_MARGIN;
     ///Margin used to determine if we are close enough to target yaw
     double yaw_reached_margin_ = DEFAULT_YAW_REACHED_MARGIN;
-    /**
-     * @brief Returns a yaw that is a multiple of 90 degrees 
-     * @details Drone should fly as straight forward as possible
-     * , but yaw should be a multiple of 90 degrees.
-     * This method assumes dx and dy != 0 at the same time
-     * @param dx difference in x
-     * @param dy difference in y
-     * 
-     * @return Yaw angle in radians - not mavros corrected
-     */
-    double calculatePathYaw(double dx, double dy);
 public:
     GoToState();
     void stateInit(ControlFSM& fsm) override;
@@ -61,5 +50,12 @@ public:
     ///Handles delayed transition when position is reached
     void destinationReached(ControlFSM &fsm);
 };
+
+//Only make these available for unit testing
+#ifdef CONTROL_FSM_UNIT_TEST
+#include <geometry_msgs/TwistStamped.h>
+bool droneNotMoving(const geometry_msgs::TwistStamped& vel);
+double calculatePathYaw(double dx, double dy);
+#endif
 
 #endif
