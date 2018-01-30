@@ -17,21 +17,21 @@ GoToState::GoToState() : StateInterface::StateInterface() {
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    if (event.isValidRequest()) {
-        if (event.request == RequestType::ABORT) {
-            if (cmd_.isValidCMD()) {
+    if(event.isValidRequest()) {
+        if(event.request == RequestType::ABORT) {
+            if(cmd_.isValidCMD()) {
                 cmd_.eventError("ABORT");
                 cmd_ = EventData();
             }
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
-        } else if (event.request == RequestType::POSHOLD) {
-            if (cmd_.isValidCMD()) {
+        } else if(event.request == RequestType::POSHOLD) {
+            if(cmd_.isValidCMD()) {
                 control::handleWarnMsg("ABORT CMD before sending manual request!");
             } else {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
             }
-        } else if (event.request == RequestType::GOTO) {
-            if (cmd_.isValidCMD()) {
+        } else if(event.request == RequestType::GOTO) {
+            if(cmd_.isValidCMD()) {
                 control::handleWarnMsg("ABORT CMD before sending manual request!");
             } else {
                 fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
@@ -39,8 +39,8 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         } else {
             control::handleWarnMsg("Illegal transiton request");
         }
-    } else if (event.isValidCMD()) {
-        if (cmd_.isValidCMD()) {
+    } else if(event.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
         } else {
             fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event); //Transition to itself
@@ -56,11 +56,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     //Is target altitude too low?
     bool target_alt_too_low = cmd_.position_goal.z < control::Config::min_in_air_alt;
-    if (target_alt_too_low) {
+    if(target_alt_too_low) {
         control::handleWarnMsg("Target altitude is too low");
     }
-    if (!event.position_goal.xyz_valid || target_alt_too_low) {
-        if (cmd_.isValidCMD()) {
+    if(!event.position_goal.xyz_valid || target_alt_too_low) {
+        if(cmd_.isValidCMD()) {
             event.eventError("No valid position target");
             cmd_ = EventData();
         }
@@ -79,7 +79,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         using control::DroneHandler;
         auto quat = DroneHandler::getCurrentPose().pose.orientation;
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
-    } catch (const std::exception& e) {
+    } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
         control::handleCriticalMsg(e.what());
@@ -95,7 +95,7 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 void GoToState::loopState(ControlFSM& fsm) {
     try {
         //Check that position data is valid
-        if (!control::DroneHandler::isPoseValid()) {
+        if(!control::DroneHandler::isPoseValid()) {
             throw control::PoseNotValidException();
         }
 
@@ -115,16 +115,16 @@ void GoToState::loopState(ControlFSM& fsm) {
         bool z_reached = (std::fabs(delta_z) <= control::Config::altitude_reached_margin);
         bool yaw_reached = (std::fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= yaw_reached_margin_);
         //If destination is reached, begin transition to another state
-        if (xy_reached && z_reached && yaw_reached) {
+        if(xy_reached && z_reached && yaw_reached) {
             destinationReached(fsm);
         } else {
             delay_transition_.enabled = false;
         }
-    } catch (const std::exception& e) {
+    } catch(const std::exception& e) {
         //Exceptions should never occur!
         control::handleCriticalMsg(e.what());
         //Go to PosHold
-        if (cmd_.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
             cmd_.eventError("No position");
             cmd_ = EventData();
         }
@@ -164,7 +164,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
 double calculatePathYaw(double dx, double dy) {
     //Avoid fatal error if dx and dy is too small
     //If method is used correctly this should NEVER be a problem
-    if (std::fabs(dx * dx + dy * dy) < 0.001) {
+    if(std::fabs(dx * dx + dy * dy) < 0.001) {
         return 0;
     }
     /*
@@ -173,9 +173,9 @@ double calculatePathYaw(double dx, double dy) {
     double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
 
     //Select closest multiple of 90 degrees
-    if (angle > 3 * PI / 4) {
+    if(angle > 3 * PI / 4) {
         angle = PI;
-    } else if (angle > PI / 4) {
+    } else if(angle > PI / 4) {
         angle = PI / 2.0;
     } else {
         angle = 0;
@@ -213,11 +213,11 @@ bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
 
 void GoToState::destinationReached(ControlFSM& fsm) {
     //Transition to correct state
-    if (cmd_.isValidCMD()) {
-        switch (cmd_.command_type) {
+    if(cmd_.isValidCMD()) {
+        switch(cmd_.command_type) {
             case CommandType::LANDXY: {
                 //If no valid twist data it's unsafe to land
-                if (!control::DroneHandler::isTwistValid()) {
+                if(!control::DroneHandler::isTwistValid()) {
                     control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
                     cmd_.eventError("Unsafe to land!");
                     cmd_ = EventData();
@@ -226,18 +226,18 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                     return;
                 }
                 //Check if drone is moving
-                if (droneNotMoving(control::DroneHandler::getCurrentTwist())) {
+                if(droneNotMoving(control::DroneHandler::getCurrentTwist())) {
                     //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-                    if (!delay_transition_.enabled) {
+                    if(!delay_transition_.enabled) {
                         delay_transition_.started = ros::Time::now();
                         delay_transition_.enabled = true;
 
-                        if (cmd_.isValidCMD()) {
+                        if(cmd_.isValidCMD()) {
                             cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
                         }
                     }
                     //Delay transition
-                    if (ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+                    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
                         return;
                     }
                     //If all checks passed - land!
