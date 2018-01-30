@@ -150,7 +150,6 @@ bool reloadConfigCB(Request&, Response& resp) {
     //Missing param set should be empty!
     for(auto& s : control::Config::getMissingParamSet()) {
         resp.missing_params.emplace_back(s);
-        control::handleWarnMsg(s + " not found, using old value");
     }
     return true;
 }
