@@ -59,6 +59,7 @@ void Config::loadParams() {
             missing_param_set_.insert(name);
         } else {
             var = temp;
+            control::handleInfoMsg("Param " + name + " loaded: " + std::to_string(var));
         }
     };
 
@@ -70,6 +71,8 @@ void Config::loadParams() {
             warn_msg += var;
             control::handleWarnMsg(warn_msg);
             missing_param_set_.insert(name);
+        } else {
+            control::handleInfoMsg("Param " + name + " loaded: " + var);
         }
     };
 
@@ -84,6 +87,7 @@ void Config::loadParams() {
             missing_param_set_.insert(name);
         } else {
             var = temp;
+            control::handleInfoMsg("Param " + name + " loaded: " + std::to_string(var));
         }
     };
 
@@ -95,6 +99,8 @@ void Config::loadParams() {
             warn_msg += std::to_string(var);
             control::handleWarnMsg(warn_msg);
             missing_param_set_.insert(name);
+        } else {
+            control::handleInfoMsg("Param " + name + " loaded: " + std::to_string(var));
         }
     };
 
@@ -139,9 +145,12 @@ using Request = ascend_msgs::ReloadConfig::Request;
 using Response = ascend_msgs::ReloadConfig::Response;
 bool reloadConfigCB(Request&, Response& resp) {
     control::Config::loadParams();
+    control::handleInfoMsg("Config reloaded by service!");
+
     //Missing param set should be empty!
     for(auto& s : control::Config::getMissingParamSet()) {
         resp.missing_params.emplace_back(s);
+        control::handleWarnMsg(s + " not found, using old value");
     }
     return true;
 }

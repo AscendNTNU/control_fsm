@@ -22,8 +22,6 @@ TEST(ControlTest, configTest) {
     for(auto& s : control::Config::getMissingParamSet()) {
         not_found << s << "\n";
     }
-
-
     EXPECT_TRUE(control::Config::getMissingParamSet().empty()) << "Not all params found:\n" << not_found.str();
 }
 
