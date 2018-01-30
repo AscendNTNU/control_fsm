@@ -52,6 +52,16 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
 
+        //If it is a valid landxy command
+        if(cmd_.isValidCMD() && cmd_.command_type == CommandType::LANDXY) {
+            //Set xy setpoint to positionGoal if we're close enough for it to be safe
+            double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
+            if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
+                setpoint_.position.x = event.position_goal.x;
+                setpoint_.position.y = event.position_goal.y;
+            }
+        }
+
         //Only land blind when the drone is below a certain altitude
         if(position.z >= control::Config::min_in_air_alt) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
