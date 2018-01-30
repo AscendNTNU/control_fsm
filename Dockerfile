@@ -8,7 +8,8 @@ RUN apt-get update -qq && apt-get install -yqq \
     build-essential \
     ros-kinetic-mavros \
     ros-kinetic-mavros-extras \
-    ros-kinetic-tf2
+    ros-kinetic-tf2 \
+    ros-kinetic-vrpn-client-ros
 
 
 RUN mkdir -p $ROS_WORKSPACE_PATH/src

@@ -44,7 +44,6 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Takeoff altitude
     setpoint_.position.z = Config::takeoff_altitude;
     //Takeoff finished threshold
-    altitude_reached_margin_ = Config::altitude_reached_margin;
 
     if(event.isValidCMD()) {
         cmd_ = event;
@@ -70,9 +69,10 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void TakeoffState::loopState(ControlFSM& fsm) {
+    using control::Config;
     try {
         auto current_position = control::DroneHandler::getCurrentPose().pose.position;
-        if (current_position.z > (setpoint_.position.z - altitude_reached_margin_)) {
+        if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
                 cmd_ = EventData();
