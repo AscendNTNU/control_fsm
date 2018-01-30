@@ -97,6 +97,14 @@ bool ControlFSM::isReady() {
         control::handleInfoMsg((*it)->getStateName() + " is testing");
         if(!(*it)->stateIsReady(*this)) return false;
     }
+    //Make sure obstacle avoidance is ready if enabled
+    if(control::Config::require_obstacle_detection) {
+        //Obstacle avoidance must be ready
+        if(!obstacle_avoidance_.isReady()) {
+            control::handleWarnMsg("Preflight Check: Obstacle avoidance not ready!");
+            return false;
+        }
+    }
 
     //Some checks can be skipped for debugging purposes
     if(control::Config::require_all_data_streams) {
