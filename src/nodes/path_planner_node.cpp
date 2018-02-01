@@ -12,7 +12,7 @@
 
 using ActionServerType = actionlib::SimpleActionServer<ascend_msgs::PathPlannerAction>;
 
-
+std::list<float> obstacle_coordinates;
 
 struct PlannerState{
 	float current_x, current_y, goal_x, goal_y;
@@ -51,11 +51,11 @@ void newPlanCB(ActionServerType* server, PlannerState* planner_state){
 }
 
 
-void updateObstaclesCB(std::list<float> *obstacle_coordinates ,ascend_msgs::GRStateArray::ConstPtr& msg_p){
-	obstacle_coordinates->clear();
-	for(std::vector<T>::iterator it = msg_p.begin(); it != msg_p.end(); ++it) {
-    	obstacle_coordinates.push_back(msg_p->x);
-    	obstacle_coordinates.push_back(msg_p->y);
+void updateObstaclesCB(ascend_msgs::GRStateArray::ConstPtr msg_p){
+	obstacle_coordinates.clear();
+	for(auto it = msg_p->states.begin(); it != msg_p->states.end(); ++it) {
+    	obstacle_coordinates.push_back(it->x);
+    	obstacle_coordinates.push_back(it->y);
 	}
 }
 
@@ -63,7 +63,6 @@ void updateObstaclesCB(std::list<float> *obstacle_coordinates ,ascend_msgs::GRSt
 int main(int argc, char** argv){
 
 	PlannerState planner_state;
-	std::list<float> obstacle_coordinates;
 	PathPlanner plan;
 
     ros::init(argc, argv, "path_planner_server");
@@ -76,7 +75,7 @@ int main(int argc, char** argv){
     server.registerPreemptCallback(boost::bind(preemptCB, &server, &planner_state));
     server.start();
 
-    ros::Subscriber sub = n.subscribe("", 1, boost::bind(updateObstaclesCB, _1,&obstacle_coordinates));
+    ros::Subscriber sub = n.subscribe("", 1, updateObstaclesCB);
 
     ROS_INFO("Hello world!");
 
