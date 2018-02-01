@@ -32,9 +32,12 @@ private:
     std::list<Node> plan;
     std::list<Node> simple_plan;
 
+    std::list<float> obstacle_coordinates;
+
     Node end_node;
     Node start_node;
 
+    bool noPlan = true;
     bool destination_reached = false;
 
 public:
@@ -45,6 +48,7 @@ public:
 
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);
+    void refreshObstacles(std::list<float> obstacle_coordinates);
 
     // Diagonal heuristic - can move in 8 directions from current point
     float calculateDiagonalHeuristic(float x, float y);
@@ -72,6 +76,7 @@ public:
     void simplifyPlan();
     // Verify the plan from where the drone is to the end point
     bool isPlanSafe(float current_x, float current_y);
+    void resetParameters();
 
     // These functions are mainly for the visualization
     std::array<std::array<Node, GRAPH_SIZE>, GRAPH_SIZE> getGraph(){return graph;}

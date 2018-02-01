@@ -3,7 +3,6 @@
 
 int coordToIndex(float k) {
     int index = static_cast<int>(k/NODE_DISTANCE+0.5);
-    //std::cout << k << " ---> " << index << std::endl;
     return (index);
 }
 
@@ -60,6 +59,21 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
     }
 }
 
+void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
+    this->obstacle_coordinates = obstacle_coordinates;
+    if(noPlan){
+        return;
+    }
+    std::list<float>::iterator x = obstacle_coordinates.begin();
+    std::list<float>::iterator y = x;
+    y++;
+    while(y != obstacle_coordinates.end()){
+        std::cout << "adding obstacle" << std::endl;
+        addObstacle(*x, *y);
+        x++;
+        y++;
+    }
+}
 
 float PathPlanner::calculateDiagonalHeuristic(float x, float y) {
     return (calculateEuclidianHeuristic(x,y));
@@ -88,7 +102,6 @@ void PathPlanner::printGraph(){
 void PathPlanner::relaxGraph(){
     Node current_node;
     while(!open_list.empty()){
-        //std::cout << "open list open" << std::endl;
         // Always search from the node with lowest f value
         current_node = open_list.top();
         open_list.pop();
@@ -162,7 +175,7 @@ bool PathPlanner::isDestination(float x, float y) {
 }
 
 bool PathPlanner::isStart(float x, float y) {
-    float margin = NODE_DISTANCE/2;
+    float margin = NODE_DISTANCE/1.5;
     return ((x < start_node.getX()+margin && x>start_node.getX()-margin)
             && (y < start_node.getY()+margin && y > start_node.getY()-margin));
 }
@@ -179,14 +192,18 @@ bool PathPlanner::isSafeLine(float x1, float y1, float x2, float y2) {
         x1 += delta_x/num_points;
         y1 += delta_y/num_points;
         // checking if the line goes through an obstacle at this point
-        if(graph[coordToIndex(x1)][coordToIndex(y1)].obstacle){
-            return false;
+        if(isValidCoordinate(x1,y1)){
+            if (graph[coordToIndex(x1)][coordToIndex(y1)].obstacle) {
+                return false;
+            }
         }
     }
     return true;
 }
 
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
+
+    noPlan = false;
 
     // If start or end point is not valid, a plan is not created
     if(!isValidCoordinate(current_x,current_y)){
@@ -198,6 +215,8 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         return;
     }
 
+    resetParameters();
+
     start_node = Node(current_x, current_y, 0, 0);
     start_node.setParentX(0);
     start_node.setParentY(0);
@@ -205,12 +224,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     initializeGraph();
     initializeClosedList();
 
-    //addObstacle(8.8,13);
-    addObstacle(7.2,13);
-    addObstacle(9,15);
-    addObstacle(10.4,13);
-    addObstacle(15.5,8);
-
+    refreshObstacles(obstacle_coordinates);
 
     float x = end_node.getX();
     float y = end_node.getY();
@@ -229,7 +243,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     // Add nodes to the plan
 
     while(!isStart(x, y)){
-        std::cout << "Iterate backwards through plan" << std::endl;
         plan.push_front(graph[coordToIndex(x)][coordToIndex(y)]);
         float x_temp = graph[coordToIndex(x)][coordToIndex(y)].getParentX();
         float y_temp = graph[coordToIndex(x)][coordToIndex(y)].getParentY();
@@ -242,10 +255,10 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     // Add start node to the plan (might not be necessary)
     plan.push_front(graph[coordToIndex(x)][coordToIndex(y)]);
     // Print the plan - can be removed
-    std::cout << std::endl << "Whole plan:" << std::endl;
+    /*std::cout << std::endl << "Whole plan:" << std::endl;
     for (std::list<Node>::iterator it = plan.begin(); it!= plan.end(); ++it){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
-    }
+    }*/
 
     // Delete unnecessary points
     simplifyPlan();
@@ -328,30 +341,33 @@ void PathPlanner::simplifyPlan() {
     }
 }
 
-bool PathPlanner::isPlanSafe(float current_x, float current_y) {
+bool PathPlanner::isPlanSafe(float setpoint_x, float setpoint_y) {
     if(simple_plan.empty()){
         return false;
     }
 
-    std::list<Node>::iterator current = simple_plan.begin();
-    std::list<Node>::iterator next = current;
-    next++;
-    while(next != simple_plan.end()){
-        if(((current_x < current->getX() && current_x > next->getX())
-           || (current_x > current->getX() && current_x < next->getX()))
-            && ((current_y < current->getY() && current_y > next->getY())
-               || (current_y > current->getY() && current_y < next->getY()))){
-            std::cout << "between " << current->getX() << " and " << next->getX() << std::endl;
+    std::list<Node>::iterator prev = simple_plan.begin();
+    std::list<Node>::iterator current = prev;
+    current++;
+
+    while(current != simple_plan.end()){
+        if(abs(current->getX()-setpoint_x)<0.1 && abs(current->getY()-setpoint_y) < 0.1){
+            std::cout << "Setpoint: " << current->getX() << ", " << current->getY() << std::endl;
+            std::cout << "Search from:" << prev->getX() << ", " << current->getY() << std::endl;
             break;
-        } else{
-            simple_plan.erase(current);
-            current = next;
-            next++;
+        }
+        else{
+            //simple_plan.erase(current);
+            prev = current;
+            current++;
+            if(current == simple_plan.end()){
+                return false;
+            }
         }
     }
 
-    current = simple_plan.begin();
-    next = current;
+    current = prev;
+    std::list<Node>::iterator next = current;
     next++;
     while(next != simple_plan.end()){
         if(!isSafeLine(current->getX(), current->getY(), next->getX(), next->getY())){
@@ -361,4 +377,13 @@ bool PathPlanner::isPlanSafe(float current_x, float current_y) {
         next++;
     }
     return true;
+}
+
+void PathPlanner::resetParameters() {
+    while(!open_list.empty()){
+        open_list.pop();
+    }
+    plan.clear();
+    simple_plan.clear();
+    destination_reached = false;
 }
