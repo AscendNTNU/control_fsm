@@ -128,6 +128,7 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     fsm_p->handleEvent(go_to_event);
     action_is_running_ = true;
 }
+
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     LandXYCMDEvent land_xy_event(goal_p->x, goal_p->y);
