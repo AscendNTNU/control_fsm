@@ -5,6 +5,7 @@
 #include <mavros_msgs/State.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <functional>
+#include <control/tools/obstacle_avoidance.hpp>
 
 #include "state_interface.hpp"
 #include "begin_state.hpp"
@@ -27,9 +28,6 @@
 ///Main FSM logic
 class ControlFSM {
 private:
-    ///Shared instance pointer
-    static std::shared_ptr<ControlFSM> shared_instance_p_;
-
     //Add state classes as friend classes here - allowing them to use transitionTo.
     friend class BeginState;
     friend class PreFlightState;
@@ -95,16 +93,15 @@ private:
     ///Callback when a transition is made
     std::function<void()> on_state_changed_ = [](){};
 
-    ///Constructor sets default/starting state
-    ControlFSM();
-
     ///Copy constructor deleted
     ControlFSM(const ControlFSM&) = delete;
+
     ///Assignment operator deleted
     ControlFSM& operator=(const ControlFSM&) = delete;
 
     ///Shared nodehandle for all states
     ros::NodeHandle node_handler_;
+
     ///Struct holding all shared ControlFSM ros subscribers
     struct {
         friend class ControlFSM;
@@ -118,6 +115,9 @@ private:
     ///Initializes all states
     void initStates();
 
+    ///All states needs access to obstacle avoidance
+    control::ObstacleAvoidance obstacle_avoidance_;
+
 
 protected:
     /**
@@ -130,14 +130,10 @@ protected:
     void transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event);
     
 public:
-
-    /**Get shared instance pointer - singleton patter
-     * @throw control::ROSNotInitialized
-     * @throw std::bad_alloc
-     * @return shared_ptr to shared instance - singleton
-     */
-    static std::shared_ptr<ControlFSM> getSharedInstancePtr();
-
+    ///Constructor sets default/starting state
+    ControlFSM();
+    ///Constructor using custom obstacle avoidance
+    ControlFSM(control::ObstacleAvoidance ob) : ControlFSM() { obstacle_avoidance_ = ob; }
     ///Destructor not used to anything specific.
     ~ControlFSM() {}
 
@@ -156,7 +152,7 @@ public:
 
     
     ///Returns setpoint from current state
-    const mavros_msgs::PositionTarget* getSetpointPtr() { return getState()->getSetpointPtr(); }
+    mavros_msgs::PositionTarget getMavrosSetpoint();
 
     ///Sets new callback function for onStateChanged
     void setOnStateChangedCB(std::function<void()> cb) { on_state_changed_ = cb; }

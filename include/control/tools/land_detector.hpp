@@ -14,7 +14,7 @@ class LandDetector {
 
 private:
     ///Shared instance - singleton pattern
-    static std::shared_ptr<LandDetector> shared_instance_p_;
+    static std::unique_ptr<LandDetector> shared_instance_p_;
     ///ROS Nodehandle
     ros::NodeHandle nh_;
     ///Subscriber for land detector messages
@@ -36,7 +36,7 @@ public:
      * @throw std::bad_alloc
      * @return shared_ptr to shared instance (singleton)
      */
-    static std::shared_ptr<LandDetector> getSharedInstancePtr();
+    static const LandDetector* getSharedInstancePtr();
 };
 
 #endif //CONTROL_FSM_LANDDETECTOR_HPP

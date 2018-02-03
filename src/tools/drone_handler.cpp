@@ -9,7 +9,7 @@
 
 using control::DroneHandler;
 
-std::shared_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
+std::unique_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 
 DroneHandler::DroneHandler() {
     using control::Config;
@@ -22,14 +22,14 @@ DroneHandler::DroneHandler() {
     last_twist_ = TwistStamped::ConstPtr(new TwistStamped);
 }
 
-std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
+const DroneHandler* DroneHandler::getSharedInstancePtr() {
     if(shared_instance_p_ == nullptr) {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
         }
-        shared_instance_p_ = std::shared_ptr<DroneHandler>(new DroneHandler);
+        shared_instance_p_ = std::unique_ptr<DroneHandler>(new DroneHandler);
     }
-    return shared_instance_p_;
+    return shared_instance_p_.get();
 }
 
 const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
