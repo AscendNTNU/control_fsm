@@ -207,11 +207,11 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
     // If start or end point is not valid, a plan is not created
     if(!isValidCoordinate(current_x,current_y)){
-        // send error to fsm
+        ROS_INFO("Drone outside field!");
         return;
     }
     if(!isValidCoordinate(target_x,target_y)){
-        // send error to fsm
+        ROS_INFO("Target outside field!");
         return;
     }
 
