@@ -1,6 +1,8 @@
 #include "control/planner/path_planner.hpp"
 
 
+using control::PathPlanner;
+
 int coordToIndex(float k) {
     int index = static_cast<int>(k/NODE_DISTANCE+0.5);
     return (index);
@@ -302,7 +304,7 @@ void PathPlanner::simplifyPlan() {
     third++;
     third++;
 
-    float x1, x2, y1, y2, delta_x, delta_y, num_points;
+    float x1, x2, y1, y2;
     bool hit_obstacle = false;
 
     while(third != simple_plan.end()){

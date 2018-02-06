@@ -7,6 +7,7 @@
 #include "ascend_msgs/PathPlannerAction.h"
 #include "ascend_msgs/GRStateArray.h"
 
+using control::PathPlanner;
 
 // typedefs
 

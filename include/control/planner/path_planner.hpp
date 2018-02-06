@@ -22,6 +22,9 @@ constexpr float DIAGONAL_NODE_DISTANCE = sqrt(2*NODE_DISTANCE*NODE_DISTANCE); //
 constexpr int GRAPH_SIZE = FIELD_LENGTH/NODE_DISTANCE+1.5; // number of nodes in one direction
 
 
+namespace control{
+
+class PathPlanner;
 class PathPlanner{
 private:
     std::array<std::array<Node, GRAPH_SIZE>, GRAPH_SIZE> graph;
@@ -85,6 +88,7 @@ public:
     // For the colors in the visualization
     float max_f = 0;
 };
+}
 
 // Convert between coordinate x or y in metres and index in graph
 int coordToIndex(float k);
