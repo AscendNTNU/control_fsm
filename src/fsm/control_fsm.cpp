@@ -195,7 +195,7 @@ void ControlFSM::handleManual() {
 }
 
 mavros_msgs::PositionTarget ControlFSM::getMavrosSetpoint() {
-    auto state_setpoint = getState()->getSetpointPtr();
-    return obstacle_avoidance_.run(*state_setpoint);
+    auto state_setpoint_p = getState()->getSetpointPtr();
+    return obstacle_avoidance_.run(*state_setpoint_p);
 }
 
