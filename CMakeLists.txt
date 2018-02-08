@@ -64,7 +64,6 @@ target_link_libraries(control_fsm_lib
 ## Declare a C++ executable
 
 add_executable(control_fsm_main src/nodes/control_fsm_main)
-add_executable(land_detector_node src/nodes/land_detector_node)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
 
 add_executable(path_planner_node src/nodes/path_planner_node src/nodes/path_planner src/nodes/node)
@@ -73,7 +72,6 @@ target_compile_features(path_planner_node PRIVATE cxx_range_for)
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(control_fsm_main control_fsm_lib)
-target_link_libraries(land_detector_node ${catkin_LIBRARIES})
 target_link_libraries(action_interface_client ${catkin_LIBRARIES})
 
 target_link_libraries(path_planner_node 
@@ -83,11 +81,12 @@ target_link_libraries(path_planner_node
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(control_fsm_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(land_detector_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_tools_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(action_interface_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-catkin_add_gtest(utest test/utest.cpp)
-target_link_libraries(utest control_fsm_lib)
-roslaunch_add_file_check(launch)
+if(CATKIN_ENABLE_TESTING)
+    find_package(rostest REQUIRED)
+    add_rostest_gtest(utest test/launch_test.test test/utest.cpp)
+    target_link_libraries(utest control_fsm_lib)
+    roslaunch_add_file_check(launch)
+endif()
