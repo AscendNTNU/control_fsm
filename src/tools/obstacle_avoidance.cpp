@@ -72,10 +72,12 @@ inline geometry_msgs::Vector3 avoidZone(const float angle, const float front_cle
     minimum_vector.z = 0.0f; 
 
     if (drone_in_front_of_obstacle){
+        // Triangle shape
         minimum_vector.x = side_clearance * std::cos(angle);
         minimum_vector.y = front_clearance/side_clearance * (side_clearance - std::abs(minimum_vector.x));
     }
     else {
+        // Ellipse
         minimum_vector.x = side_clearance * std::cos(angle);
         minimum_vector.y = back_clearance * std::sin(angle);
     } 
@@ -87,7 +89,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     using control::Config; 
     bool setpoint_modified{false};
     
-    const auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
+    const auto obstacles = control::ObstacleStateHandler::getCurrentObstacles(); // Format of isn't finalized yet
     const geometry_msgs::PoseStamped drone_pose = control::DroneHandler::getCurrentPose();
 
     for (const auto& obstacle : obstacles){
@@ -113,6 +115,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             minimum_vector = rotateXY(minimum_vector, -obstacle.theta);
 
             const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
+
+	    ROS_INFO_THROTTLE(1, "Minimum distance: %.3f", minimum_distance);
 
             if (setpoint_reachable
                     && setpoint_distance_to_obstacle > drone_distance_to_obstacle
