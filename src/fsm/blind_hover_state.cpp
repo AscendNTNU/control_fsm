@@ -34,7 +34,11 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
         }
     } else if(event.isValidCMD()) {
         if(!cmd_.isValidCMD()) {
-            cmd_ = event; //Hold event until position is regained.
+            if(event.command_type == CommandType::TAKEOFF) {
+                event.finishCMD();
+            } else {
+                cmd_ = event; //Hold event until position is regained.
+            }
         } else {
             event.eventError("CMD rejected!");
             control::handleInfoMsg("ABORT old command first");

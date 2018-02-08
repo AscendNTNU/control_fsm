@@ -31,8 +31,13 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
             control::handleWarnMsg("ABORT should be sent before new command!");
             event.eventError("ABORT should be sent before new command!");
         } else {
-            control::handleWarnMsg("Not accepting CMDs before land is completed!");
-            event.eventError("Not accpeting CMDs before land is completed!");
+            if(event.command_type == CommandType::TAKEOFF) {
+                //Already in air
+                event.finishCMD();
+            } else {
+                control::handleWarnMsg("Not accepting CMDs before land is completed!");
+                event.eventError("Not accpeting CMDs before land is completed!");
+            }
         }
     }
 }

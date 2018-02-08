@@ -40,6 +40,7 @@ enum class CommandType {
     NONE, //Not part of a command
     LANDXY, //Request part of command to land at XY
     GOTOXYZ, //Reqeust part of going to specified XYZ
+    TAKEOFF,
     //LANDGB //Request part of interacting with ground robot
 };
 
@@ -95,6 +96,13 @@ public:
     bool isValidRequest() const { return (event_type == EventType::REQUEST && request != RequestType::NONE); }
 };
 
+class TakeoffCMDEvent : public EventData {
+public:
+    TakeoffCMDEvent() {
+        event_type = EventType::COMMAND;
+        command_type = CommandType::TAKEOFF;
+    }
+};
 
 ///Wrapper class for LandXY CMD events
 class LandXYCMDEvent : public EventData {
