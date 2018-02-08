@@ -90,14 +90,13 @@ int main(int argc, char** argv){
     ros::Subscriber sub_setpoint = n.subscribe("", 1, updateSetpointCB);
 
 
-
     while(ros::ok()){
 
     	ros::spinOnce();
 
     	plan.refreshObstacles(obstacle_coordinates);
 
-    	//	SELVOM FORRIGE PLAN ER SAFE MÅ EN NY PLAN LAGES HVIS DET ER GITT NYTT MÅL
+    	
     	if(planner_state.make_plan && (!plan.isPlanSafe(setpoint_x,setpoint_y) || planner_state.new_goal)){
     		ROS_INFO("Make new plan.");
     		planner_state.new_goal = false;
