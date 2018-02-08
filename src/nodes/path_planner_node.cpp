@@ -109,7 +109,7 @@ int main(int argc, char** argv){
         		point.y = it->getY();
 
         		ascend_msgs::PathPlannerFeedback feedback;
-        		feedback.points_in_plan[index] = point;
+        		feedback.points_in_plan[index++] = point;
 
         		server.publishFeedback(feedback);
     		}
