@@ -15,14 +15,15 @@
 #include <algorithm>
 #include <limits>
 
-#define OBSTACLE_RADIUS 1 //meters
-#define NODE_DISTANCE 0.4 // meters
+namespace control{
+namespace pathplanner{
+
+constexpr float OBSTACLE_RADIUS = 1.0; //meters
+constexpr float NODE_DISTANCE = 0.4; // meters
 constexpr float DIAGONAL_NODE_DISTANCE = sqrt(2*NODE_DISTANCE*NODE_DISTANCE); // meters
 
 constexpr int GRAPH_SIZE = FIELD_LENGTH/NODE_DISTANCE+1.5; // number of nodes in one direction
 
-
-namespace control{
 
 class PathPlanner;
 class PathPlanner{
@@ -88,10 +89,11 @@ public:
     // For the colors in the visualization
     float max_f = 0;
 };
-}
 
 // Convert between coordinate x or y in metres and index in graph
-int coordToIndex(float k);
+//int coordToIndex(float k);
 
+}
+}
 
 #endif // PATH_PLANNER_HPP

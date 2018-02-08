@@ -1,7 +1,7 @@
 #include "control/planner/path_planner.hpp"
 
 
-using control::PathPlanner;
+using namespace control::pathplanner;
 
 int coordToIndex(float k) {
     int index = static_cast<int>(k/NODE_DISTANCE+0.5);
@@ -9,7 +9,7 @@ int coordToIndex(float k) {
 }
 
 
-
+using control::pathplanner::PathPlanner;
 PathPlanner::PathPlanner(){}
 
 void PathPlanner::initializeGraph(){
@@ -305,7 +305,6 @@ void PathPlanner::simplifyPlan() {
     third++;
 
     float x1, x2, y1, y2;
-    bool hit_obstacle = false;
 
     while(third != simple_plan.end()){
         // Parameters for finding the straight line between the first and third point
@@ -333,7 +332,6 @@ void PathPlanner::simplifyPlan() {
             second = third;
             third++;
         }
-        hit_obstacle = false;
     }
 
     // Print the remaining points
@@ -353,13 +351,13 @@ bool PathPlanner::isPlanSafe(float setpoint_x, float setpoint_y) {
     current++;
 
     while(current != simple_plan.end()){
+        // Find next point in plan by checking distance between setpoint and points in plan
         if(abs(current->getX()-setpoint_x)<0.1 && abs(current->getY()-setpoint_y) < 0.1){
             std::cout << "Setpoint: " << current->getX() << ", " << current->getY() << std::endl;
             std::cout << "Search from:" << prev->getX() << ", " << current->getY() << std::endl;
             break;
         }
         else{
-            //simple_plan.erase(current);
             prev = current;
             current++;
             if(current == simple_plan.end()){
