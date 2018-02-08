@@ -6,18 +6,22 @@
 #include <vector>
 #include "ascend_msgs/PathPlannerAction.h"
 #include "ascend_msgs/GRStateArray.h"
+#include <mavros_msgs/PositionTarget.h>
 
-using control::PathPlanner;
+using control::pathplanner::PathPlanner;
 
 // typedefs
 
 using ActionServerType = actionlib::SimpleActionServer<ascend_msgs::PathPlannerAction>;
 
 std::list<float> obstacle_coordinates;
+float setpoint_x = 0;
+float setpoint_y = 0;
 
 struct PlannerState{
 	float current_x, current_y, goal_x, goal_y;
 	bool make_plan;
+	bool new_goal;
 };
 
 
@@ -41,6 +45,7 @@ void newPlanCB(ActionServerType* server, PlannerState* planner_state){
 	}
 
 	//Accept the new goal
+	planner_state->new_goal = true;
 	auto goal = server->acceptNewGoal();
 	planner_state->goal_x = goal->x;
 	planner_state->goal_y = goal->y;
@@ -60,6 +65,11 @@ void updateObstaclesCB(ascend_msgs::GRStateArray::ConstPtr msg_p){
 	}
 }
 
+void updateSetpointCB(mavros_msgs::PositionTarget::ConstPtr msg_p){
+	setpoint_x = msg_p->position.x;
+	setpoint_y = msg_p->position.y;
+}
+
 
 int main(int argc, char** argv){
 
@@ -76,9 +86,10 @@ int main(int argc, char** argv){
     server.registerPreemptCallback(boost::bind(preemptCB, &server, &planner_state));
     server.start();
 
-    ros::Subscriber sub = n.subscribe("", 1, updateObstaclesCB);
+    ros::Subscriber sub_obstacles = n.subscribe("", 1, updateObstaclesCB);
+    ros::Subscriber sub_setpoint = n.subscribe("", 1, updateSetpointCB);
 
-    ROS_INFO("Hello world!");
+
 
     while(ros::ok()){
 
@@ -86,10 +97,10 @@ int main(int argc, char** argv){
 
     	plan.refreshObstacles(obstacle_coordinates);
 
-    	float setpoint_x = 0;
-    	float setpoint_y = 0;
     	//	SELVOM FORRIGE PLAN ER SAFE MÅ EN NY PLAN LAGES HVIS DET ER GITT NYTT MÅL
-    	if(planner_state.make_plan && !plan.isPlanSafe(setpoint_x,setpoint_y)){ // MÅ HENTE INN NESTE SETPOINT FRA GOTO STATE
+    	if(planner_state.make_plan && (!plan.isPlanSafe(setpoint_x,setpoint_y) || planner_state.new_goal)){
+    		ROS_INFO("Make new plan.");
+    		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
 		    std::list<Node> points = plan.getSimplePlan();
 		    geometry_msgs::Point32 point;
