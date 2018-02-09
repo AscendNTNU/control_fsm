@@ -74,7 +74,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
         auto current_position = control::DroneHandler::getCurrentPose().pose.position;
         if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
             //If it's a takeoff command, set completed.
-            if(cmd_.isValidCMD() && cmd_.command_type == CommandType::TAKEOFF) {
+            if(cmd_.isValidCMD(CommandType::TAKEOFF)) {
                 cmd_.finishCMD();
                 cmd_ = EventData();
             }

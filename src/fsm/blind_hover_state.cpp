@@ -34,7 +34,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
         }
     } else if(event.isValidCMD()) {
         if(!cmd_.isValidCMD()) {
-            if(event.command_type == CommandType::TAKEOFF) {
+            if(event.isValidCMD(CommandType::TAKEOFF)) {
                 event.finishCMD();
             } else {
                 cmd_ = event; //Hold event until position is regained.
