@@ -19,7 +19,7 @@ private:
     ///Last recieved message
     ascend_msgs::GRStateArray::ConstPtr last_msg_p_;    
     ///Callback to run when new message is recieved 
-    void onMsgRecievedCB(ascend_msgs::GRStateArray::ConstPtr msg_msg_);
+    void onMsgRecievedCB(ascend_msgs::GRStateArray::ConstPtr msg_p);
     ///Private constructor
     ObstacleStateHandler();
 public:
