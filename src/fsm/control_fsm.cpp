@@ -19,8 +19,6 @@ GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 
-std::shared_ptr<ControlFSM> ControlFSM::shared_instance_p_ = nullptr;
-
 //Change the current running state - be carefull to only change into an allowed state
 //Due to poor design, transitionTo has no strong nothrow guarantees - not exception safe!!
 //Will lead to undefined behaviour if exception is thrown
@@ -99,6 +97,14 @@ bool ControlFSM::isReady() {
         control::handleInfoMsg((*it)->getStateName() + " is testing");
         if(!(*it)->stateIsReady(*this)) return false;
     }
+    //Make sure obstacle avoidance is ready if enabled
+    if(control::Config::require_obstacle_detection) {
+        //Obstacle avoidance must be ready
+        if(!obstacle_avoidance_.isReady()) {
+            control::handleWarnMsg("Preflight Check: Obstacle avoidance not ready!");
+            return false;
+        }
+    }
 
     //Some checks can be skipped for debugging purposes
     if(control::Config::require_all_data_streams) {
@@ -149,8 +155,14 @@ void ControlFSM::startPreflight() {
         control::handleWarnMsg("FSM not ready, can't transition to preflight!");
         return;
     }
-    RequestEvent event(RequestType::PREFLIGHT);
-    transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
+    if(getState() == &BEGIN_STATE) {
+        RequestEvent event(RequestType::PREFLIGHT);
+        transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
+    } else {
+        std::string err_msg = "Can't transition to preflight from ";
+        err_msg += getState()->getStateName();
+        control::handleErrorMsg(err_msg);
+    }
 }
 
 void ControlFSM::mavrosStateChangedCB(const mavros_msgs::State &state) {
@@ -182,19 +194,8 @@ void ControlFSM::handleManual() {
     getState()->handleManual(*this);
 }
 
-std::shared_ptr<ControlFSM> ControlFSM::getSharedInstancePtr() {
-    if(shared_instance_p_ == nullptr) {
-        if(!ros::isInitialized()) {
-            throw control::ROSNotInitializedException();
-        }
-        shared_instance_p_ = std::shared_ptr<ControlFSM>(new ControlFSM);
-    }
-    return shared_instance_p_;
+mavros_msgs::PositionTarget ControlFSM::getMavrosSetpoint() {
+    auto state_setpoint_p = getState()->getSetpointPtr();
+    return obstacle_avoidance_.run(*state_setpoint_p);
 }
-
-
-
-
-
-
 
