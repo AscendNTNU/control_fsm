@@ -4,6 +4,8 @@
 
 ///Tracks ground robot
 class TrackGBState : public StateInterface {
+private:
+    EventData cmd_;
 public:
     TrackGBState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
