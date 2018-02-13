@@ -48,20 +48,19 @@ inline float calcAngleToObstacle(const geometry_msgs::Point& point, const ascend
     return angle_to_obstacle;
 }
 
-inline geometry_msgs::Vector3 rotateXY(geometry_msgs::Vector3 point, float angle){
+inline geometry_msgs::Vector3 rotateXY(const geometry_msgs::Vector3 point, const float angle){
     // Apply 2d transformation matrix
-    point.x = point.x * std::cos(angle) - point.y * std::sin(angle);
-    point.y = point.x * std::sin(angle) + point.y * std::cos(angle);
+    geometry_msgs::Vector3 new_point;
+    new_point.x = point.x * std::cos(angle) - point.y * std::sin(angle);
+    new_point.y = point.x * std::sin(angle) + point.y * std::cos(angle);
+    new_point.z = point.z;
 
-    return point;
+    return new_point;
 }
 
 /// Return a vector (x,y,z) which corresponds to the point closest to the obstacle
-/// which is allowed, referenced from the obstacles coordinate system. y-axis is positive 
-/// direction of motion, and x-axis is the rightward direction.
-/// As of jan. 2018, z is always 0.0 since only the xy-plane is concidered
-/// TODO: The angle references are most likely wrong and may need a constant offset to be correct.
-///       Fix once perception algorithm is implemented!!!!
+/// which is allowed, referenced from the obstacles coordinate system. x-axis is positive 
+/// direction of motion. Obstacle driving in with angle=0 would be driving i x-direction
 inline geometry_msgs::Vector3 avoidZone(const float angle, const float front_clearance, const float back_clearance, const float side_clearance){
     const bool drone_in_front_of_obstacle = angle <= PI;
 
@@ -90,7 +89,6 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     const geometry_msgs::PoseStamped drone_pose = control::DroneHandler::getCurrentPose();
 
     for (const auto& obstacle : obstacles){
-        
         const auto drone_distance_to_obstacle = calcDistanceToObstacle(drone_pose.pose.position, obstacle);
         const auto setpoint_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle);
 
