@@ -127,6 +127,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             }
             else if (drone_distance_to_obstacle < minimum_distance) {
                 ROS_WARN_COND(setpoint_modified, "[obstacle avoidance]: Two obstacles in range, undefined behaviour!");
+		// TODO: find out a better solution to this problem
                 // need to avoid obstacle
                 setpoint_modified = true;
                 setpoint->position.x = obstacle.x + minimum_vector.x;
