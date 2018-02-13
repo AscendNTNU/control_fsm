@@ -1,26 +1,26 @@
-#include "control/tools/config.hpp"
+#include "control/tools/planner_config.hpp"
 #include <control/exceptions/ros_not_initialized_exception.hpp>
 #include <ascend_msgs/ReloadConfig.h>
 #include <control/tools/logger.hpp>
 
-using control::Config;
+using control::PlannerConfig;
 using control::ROSNotInitializedException;
 
 
-std::set<std::string> Config::missing_param_set_;
-std::unique_ptr<Config> Config::shared_instance_p_ = nullptr;
+std::set<std::string> PlannerConfig::missing_param_set_;
+std::unique_ptr<PlannerConfig> PlannerConfig::shared_instance_p_ = nullptr;
 
-//Global config params
+//Global PlannerConfig params
 
-std::string Config::obstacle_state_topic = "/perception_obstacle_states";
+std::string PlannerConfig::obstacle_state_topic = "/perception_obstacle_states";
 
 
-void Config::loadParams() {
+void PlannerConfig::loadParams() {
     if(!ros::isInitialized()) {
         throw ROSNotInitializedException();
     }
     if(shared_instance_p_ == nullptr) {
-        shared_instance_p_ = std::unique_ptr<Config>(new Config);
+        shared_instance_p_ = std::unique_ptr<PlannerConfig>(new PlannerConfig);
     } 
     ros::NodeHandle n("~");
     auto getDoubleParam = [&](const std::string& name, double& var, double min, double max) {
@@ -88,20 +88,20 @@ void Config::loadParams() {
 
 using Request = ascend_msgs::ReloadConfig::Request;
 using Response = ascend_msgs::ReloadConfig::Response;
-bool reloadConfigCB(Request&, Response& resp) {
-    control::Config::loadParams();
-    control::handleInfoMsg("Config reloaded by service!");
+bool reloadPlannerConfigCB(Request&, Response& resp) {
+    control::PlannerConfig::loadParams();
+    control::handleInfoMsg("PlannerConfig reloaded by service!");
 
     //Missing param set should be empty!
-    for(auto& s : control::Config::getMissingParamSet()) {
+    for(auto& s : control::PlannerConfig::getMissingParamSet()) {
         resp.missing_params.emplace_back(s);
     }
     return true;
 }
 
-control::Config::Config() {
+control::PlannerConfig::PlannerConfig() {
     if(!ros::isInitialized()) {
         throw control::ROSNotInitializedException();
     }
-    reload_config_service = nh_.advertiseService("/control_fsm_reload_config", reloadConfigCB);
+    reload_config_service = nh_.advertiseService("/control_fsm_reload_Config", reloadPlannerConfigCB);
 }
