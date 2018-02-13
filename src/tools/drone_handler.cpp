@@ -9,21 +9,27 @@
 
 using control::DroneHandler;
 
-std::shared_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
+std::unique_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 
 DroneHandler::DroneHandler() {
     using control::Config;
+    using geometry_msgs::PoseStamped;
+    using geometry_msgs::TwistStamped;
     pose_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &DroneHandler::onPoseRecievedCB, this);
+    twist_sub_ = n_.subscribe(Config::mavros_local_vel_topic, 1, &DroneHandler::onTwistRecievedCB, this);
+    //Init default, empty value
+    last_pose_ = PoseStamped::ConstPtr(new PoseStamped);
+    last_twist_ = TwistStamped::ConstPtr(new TwistStamped);
 }
 
-std::shared_ptr<DroneHandler> DroneHandler::getSharedInstancePtr() {
+const DroneHandler* DroneHandler::getSharedInstancePtr() {
     if(shared_instance_p_ == nullptr) {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
         }
-        shared_instance_p_ = std::shared_ptr<DroneHandler>(new DroneHandler);
+        shared_instance_p_ = std::unique_ptr<DroneHandler>(new DroneHandler);
     }
-    return shared_instance_p_;
+    return shared_instance_p_.get();
 }
 
 const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
@@ -32,12 +38,27 @@ const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
 
 
 const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
-    if(control::message::hasTimedOut(last_pose_)) {
+    if(control::message::hasTimedOut(*last_pose_)) {
         control::handleErrorMsg("DroneHandler: Using old pose");
     }
-    return last_pose_;
+    return *last_pose_;
+}
+
+const geometry_msgs::TwistStamped& DroneHandler::getTwist() const {
+    if(control::message::hasTimedOut(*last_twist_)) {
+        control::handleErrorMsg("DroneHandler: Using old twist");
+    }
+    return *last_twist_;
 }
 
 bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(getSharedInstancePtr()->last_pose_);
+    return !control::message::hasTimedOut(getCurrentPose());
+}
+
+bool DroneHandler::isTwistValid() {
+    return !control::message::hasTimedOut(getCurrentTwist());
+}
+
+const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
+    return getSharedInstancePtr()->getTwist();
 }

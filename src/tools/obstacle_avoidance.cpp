@@ -19,9 +19,6 @@
 #include <cmath>
 #include <algorithm>
 
-//Static instance
-std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::instance_p_;
-
 constexpr float PI{3.14159265359f};
 
 // wrap any angle to range [0, 2pi)
@@ -158,14 +155,6 @@ mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::Positio
         onModified();
     }
     return setpoint;
-}
-
-std::shared_ptr<control::ObstacleAvoidance> control::ObstacleAvoidance::getSharedInstancePtr() {
-    //Create new instance if there isn't one
-    if(instance_p_ == nullptr) {
-        instance_p_ = std::shared_ptr<ObstacleAvoidance>(new ObstacleAvoidance);
-    }
-    return instance_p_;
 }
 
 void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {

@@ -1,0 +1,5 @@
+<launch>
+	<test test-name="test_fsm" pkg="control_fsm" type="utest">
+		<rosparam file="$(find control_fsm)/control_fsm_default_config.yaml" command="load"/>
+	</test>
+</launch>

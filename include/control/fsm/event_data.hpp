@@ -1,6 +1,7 @@
 #ifndef EVENT_DATA_HPP
 #define EVENT_DATA_HPP
 #include <functional>
+#include <control/tools/config.hpp>
 /*
 This class should contain all information a state might need to make a correct decision.
 */
@@ -31,8 +32,7 @@ enum class EventType {
     COMMAND,
     AUTONOMOUS, //Notify system is in autonomous mode (ARMED and OFFBOARD)
     MANUAL, //Notify system is in manual mode (DISARMED and/or not OFFBOARD)
-    POSLOST, //Notify position is lost
-    GROUNDDETECTED
+    POSLOST //Notify position is lost
 };
 
 ///Command types - what command is it?
@@ -98,12 +98,9 @@ public:
 
 ///Wrapper class for LandXY CMD events
 class LandXYCMDEvent : public EventData {
-private:
-    //Altitude to go to before landing
-    const double go_to_altitude_ = 1.0f;
 public:
     LandXYCMDEvent(double x, double y) {
-        position_goal = PositionGoal(x, y, go_to_altitude_);
+        position_goal = PositionGoal(x, y, control::Config::land_xy_goto_alt);
         event_type = EventType::COMMAND;
         command_type = CommandType::LANDXY;
     }
