@@ -7,6 +7,7 @@
 #include "ascend_msgs/PathPlannerAction.h"
 #include "ascend_msgs/GRStateArray.h"
 #include <mavros_msgs/PositionTarget.h>
+#include "control/tools/planner_config.hpp"
 
 using control::pathplanner::PathPlanner;
 
@@ -15,6 +16,7 @@ using control::pathplanner::PathPlanner;
 using ActionServerType = actionlib::SimpleActionServer<ascend_msgs::PathPlannerAction>;
 
 std::list<float> obstacle_coordinates;
+// Only setpoints within plan (not goal)
 float setpoint_x = 0;
 float setpoint_y = 0;
 
@@ -35,6 +37,7 @@ void preemptCB(ActionServerType* server, PlannerState* planner_state) {
 void newPlanCB(ActionServerType* server, PlannerState* planner_state){
 	planner_state->make_plan = true;
 
+	// Update planner state
 	geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();
 	auto& position = current_pose.pose.position;
 	planner_state->current_x = position.x;
@@ -80,13 +83,15 @@ int main(int argc, char** argv){
     ros::NodeHandle n;
     ros::Rate rate(30.0);
  
+    control::PlannerConfig::loadParams();
+
     ActionServerType server(n, "plan_path", false);
 
     server.registerGoalCallback(boost::bind(newPlanCB, &server, &planner_state));
     server.registerPreemptCallback(boost::bind(preemptCB, &server, &planner_state));
     server.start();
 
-    ros::Subscriber sub_obstacles = n.subscribe("", 1, updateObstaclesCB);
+    ros::Subscriber sub_obstacles = n.subscribe(control::PlannerConfig::obstacle_state_topic, 1, updateObstaclesCB);
     ros::Subscriber sub_setpoint = n.subscribe("", 1, updateSetpointCB);
 
 
@@ -96,7 +101,7 @@ int main(int argc, char** argv){
 
     	plan.refreshObstacles(obstacle_coordinates);
 
-    	
+    	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(setpoint_x,setpoint_y) || planner_state.new_goal)){
     		ROS_INFO("Make new plan.");
     		planner_state.new_goal = false;
@@ -104,6 +109,7 @@ int main(int argc, char** argv){
 		    std::list<Node> points = plan.getSimplePlan();
 		    geometry_msgs::Point32 point;
 		    int index = 0;
+		    // Iterate through the points in the plan and publish to pathplanner-action
 		    for(std::list<Node>::iterator it = points.begin(); it != points.end(); it++){
         		point.x = it->getX();
         		point.y = it->getY();
