@@ -37,7 +37,7 @@ public:
     void handleManual(ControlFSM &fsm) override;
 
     ///Handles delayed transition when position is reached
-    void destinationReached(ControlFSM &fsm);
+    void destinationReached(ControlFSM &fsm, bool z_reached);
 };
 
 //Only make these available for unit testing
