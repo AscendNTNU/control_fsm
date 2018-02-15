@@ -52,6 +52,15 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
+
+    //TAKEOFF cmd should not be processed by FSM
+    if(event.isValidCMD(CommandType::TAKEOFF)) {
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        control::handleErrorMsg("TAKEOFF CMD should not be processed by GoTo - BUG!");
+        return;
+    }
+
     cmd_ = event;
     //Has not arrived yet
     delay_transition_.enabled = false;
