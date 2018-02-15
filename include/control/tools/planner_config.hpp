@@ -29,7 +29,8 @@ private:
 public:
     /// \fsmparam Topic for recieving obstacle positions
     static std::string obstacle_state_topic;
-
+    static std::string mavros_setpoint_topic;
+    static std::string plan_points_topic;
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */

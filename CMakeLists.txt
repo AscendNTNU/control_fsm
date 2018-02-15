@@ -66,7 +66,7 @@ target_link_libraries(control_fsm_lib
 add_executable(control_fsm_main src/nodes/control_fsm_main)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
 
-add_executable(path_planner_node src/nodes/path_planner_node src/nodes/path_planner src/nodes/node)
+add_executable(path_planner_node src/nodes/path_planner_node src/path_planner/path_planner src/path_planner/node)
 target_compile_features(path_planner_node PRIVATE cxx_range_for)
 
 ## Specify libraries to link a library or executable target against

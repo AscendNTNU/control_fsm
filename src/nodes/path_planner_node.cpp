@@ -8,6 +8,7 @@
 #include "ascend_msgs/GRStateArray.h"
 #include <mavros_msgs/PositionTarget.h>
 #include "control/tools/planner_config.hpp"
+#include "ascend_msgs/PointArray.h"
 
 using control::pathplanner::PathPlanner;
 
@@ -92,7 +93,9 @@ int main(int argc, char** argv){
     server.start();
 
     ros::Subscriber sub_obstacles = n.subscribe(control::PlannerConfig::obstacle_state_topic, 1, updateObstaclesCB);
-    ros::Subscriber sub_setpoint = n.subscribe("", 1, updateSetpointCB);
+    ros::Subscriber sub_setpoint = n.subscribe(control::PlannerConfig::mavros_setpoint_topic, 1, updateSetpointCB);
+
+    ros::Publisher pub_plan = n.advertise<ascend_msgs::PointArray>(control::PlannerConfig::plan_points_topic, 1);
 
 
     while(ros::ok()){
@@ -107,18 +110,25 @@ int main(int argc, char** argv){
     		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
 		    std::list<Node> points = plan.getSimplePlan();
-		    geometry_msgs::Point32 point;
-		    int index = 0;
+		    geometry_msgs::Point32 point_32;
+		    geometry_msgs::Point point;
 		    // Iterate through the points in the plan and publish to pathplanner-action
+		    ascend_msgs::PathPlannerFeedback feedback;
+		    // For saving memory
+		    feedback.points_in_plan.reserve(20);
+		    ascend_msgs::PointArray plan_to_send;
+		    plan_to_send.points.reserve(20);
 		    for(std::list<Node>::iterator it = points.begin(); it != points.end(); it++){
+        		point_32.x = it->getX();
+        		point_32.y = it->getY();	
         		point.x = it->getX();
         		point.y = it->getY();
-
-        		ascend_msgs::PathPlannerFeedback feedback;
-        		feedback.points_in_plan[index++] = point;
-
-        		server.publishFeedback(feedback);
+        		
+        		feedback.points_in_plan.push_back(point_32);
+        		plan_to_send.points.push_back(point);
     		}
+    		server.publishFeedback(feedback);
+    		pub_plan.publish(plan_to_send);
     	}
     	else{
     		rate.sleep();

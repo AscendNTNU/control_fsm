@@ -13,7 +13,8 @@ std::unique_ptr<PlannerConfig> PlannerConfig::shared_instance_p_ = nullptr;
 //Global PlannerConfig params
 
 std::string PlannerConfig::obstacle_state_topic = "/perception_obstacle_states";
-
+std::string PlannerConfig::mavros_setpoint_topic = "/mavros/setpoint_raw/local";
+std::string PlannerConfig::plan_points_topic = "/control/planner/plan";
 
 void PlannerConfig::loadParams() {
     if(!ros::isInitialized()) {
@@ -83,6 +84,8 @@ void PlannerConfig::loadParams() {
 
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
+    getStringParam("mavros_setpoint_topic", mavros_setpoint_topic);
+    getStringParam("plan_points_topic", plan_points_topic);
 
 }
 
