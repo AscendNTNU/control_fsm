@@ -68,21 +68,23 @@ inline geometry_msgs::Vector3 rotateXY(const T& point, const float angle){
 inline geometry_msgs::Vector3 avoidZone(const float angle, 
         const float front_clearance, const float back_clearance, const float side_clearance){
 
-    const auto anglePositive = angleWrapper(angle);
-    const bool drone_in_front_of_obstacle = PI/2 <= anglePositive || anglePositive >= 3*PI/2;
+    const auto angle_positive = angleWrapper(angle);
+    const bool drone_in_front_of_obstacle = angle_positive <=  PI/2 || angle_positive >= 3*PI/2;
 
     geometry_msgs::Vector3 minimum_vector;
     minimum_vector.z = 0.0f; 
 
     if (drone_in_front_of_obstacle){
+	//ROS_INFO_THROTTLE(1, "Drone in front of obstacle: %f", angle_positive);
         // Triangle shape
         minimum_vector.y = side_clearance * std::sin(angle);
-        minimum_vector.x = front_clearance/side_clearance*(side_clearance - abs(minimum_vector.y));
+        minimum_vector.x = (front_clearance/side_clearance)*(side_clearance - abs(minimum_vector.y));
     }
     else {
         // Ellipse
+	//ROS_INFO_THROTTLE(1, "Drone behind obstacle: %f", angle_positive);
         minimum_vector.y = side_clearance*std::sin(angle);
-        minimum_vector.x = front_clearance*std::cos(angle);
+        minimum_vector.x = back_clearance*std::cos(angle);
     }
 
     return minimum_vector;
@@ -104,7 +106,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         if (drone_distance_to_obstacle < Config::obstacle_clearance_checkradius){
             // perform obstacle avoidance
             const auto drone_angle_to_obstacle = calcAngleToObstacle(drone_pose.pose.position, obstacle_position, obstacle_direction);
-	    ROS_INFO("Angle: %f", drone_angle_to_obstacle);
+	    //ROS_INFO("Angle: %f", drone_angle_to_obstacle);
 
             const auto setpoint_angle_to_obstacle = calcAngleToObstacle(setpoint->position, obstacle_position, obstacle_direction);
             // True if setpoint is within a 120 deg cone away from the obstacle
@@ -116,24 +118,25 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             geometry_msgs::Vector3 minimum_vector = avoidZone(drone_angle_to_obstacle,
                     Config::obstacle_clearance_front, Config::obstacle_clearance_back, Config::obstacle_clearance_side);
 
+	    ROS_INFO_THROTTLE(1, "Local minimum vector: %.3f\t%.3f", minimum_vector.x, minimum_vector.y);
+
             // Rotate to global coordinate system
             minimum_vector = rotateXY(minimum_vector, -obstacle_direction);
 
             const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
 
-	    ROS_INFO_THROTTLE(1, "Minimum distance: %.3f", minimum_distance);
 
             if (setpoint_reachable
                     && setpoint_distance_to_obstacle > drone_distance_to_obstacle
                     && setpoint_distance_to_obstacle > minimum_distance
                     && drone_distance_to_obstacle < minimum_distance){
                 // no action, maybe logging?
-                ROS_INFO("Going to setpoint instead");
+                ROS_INFO_THROTTLE(1, "Going to setpoint instead");
             }
             else if (drone_distance_to_obstacle < minimum_distance) {
-                ROS_WARN_COND(setpoint_modified, "[obstacle avoidance]: Two obstacles in range, undefined behaviour!");
 		if (setpoint_modified){
-			setpoint->position.z = Config::safe_hover_altitude; // hover taller than all obstacles :)
+                    ROS_WARN("[obstacle avoidance]: Two obstacles in range, undefined behaviour!");
+                    setpoint->position.z = Config::safe_hover_altitude; // hover taller than all obstacles :)
 		}
 		// TODO: find out a better solution to this problem
                 // need to avoid obstacle
@@ -152,66 +155,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         }
 
     }
-/*
-    for (const auto& obstacle : obstacles){
-        geometry_msgs::Point32 obstacle_position;
-        obstacle_position.x = obstacle.x;
-        obstacle_position.y = obstacle.y;
-        obstacle_position.z = 0.f;
 
-        const auto drone_distance_to_obstacle = calcDistanceToObstacle(drone_pose.pose.position, obstacle_position);
-        const auto setpoint_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_position);
-
-        if (drone_distance_to_obstacle < Config::obstacle_clearance_checkradius){
-            // perform obstacle avoidance
-            const auto drone_angle_to_obstacle = calcAngleToObstacle(drone_pose.pose.position, obstacle);
-
-            const auto setpoint_angle_to_obstacle = calcAngleToObstacle(setpoint->position, obstacle);
-            // True if setpoint is within a 120 deg cone away from the obstacle
-            // TODO: turn this angle into a param once complete
-            const bool setpoint_reachable = 
-                (drone_angle_to_obstacle - 3*PI/8) < setpoint_angle_to_obstacle &&
-                setpoint_angle_to_obstacle < (drone_angle_to_obstacle + 3*PI/8);
-            
-            geometry_msgs::Vector3 minimum_vector = avoidZone(drone_angle_to_obstacle,
-                    Config::obstacle_clearance_front, Config::obstacle_clearance_back, Config::obstacle_clearance_side);
-
-            // Rotate to global coordinate system
-            minimum_vector = rotateXY(minimum_vector, -obstacle.theta);
-
-            const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
-
-	    ROS_INFO_THROTTLE(1, "Minimum distance: %.3f", minimum_distance);
-
-            if (setpoint_reachable
-                    && setpoint_distance_to_obstacle > drone_distance_to_obstacle
-                    && setpoint_distance_to_obstacle > minimum_distance
-                    && drone_distance_to_obstacle < minimum_distance){
-                // no action, maybe logging?
-                ROS_INFO("Going to setpoint instead");
-            }
-            else if (drone_distance_to_obstacle < minimum_distance) {
-                ROS_WARN_COND(setpoint_modified, "[obstacle avoidance]: Two obstacles in range, undefined behaviour!");
-		if (setpoint_modified){
-			setpoint->position.z = Config::safe_hover_altitude; // hover taller than all obstacles :)
-		}
-		// TODO: find out a better solution to this problem
-                // need to avoid obstacle
-                setpoint_modified = true;
-                setpoint->position.x = obstacle.x + minimum_vector.x;
-                setpoint->position.y = obstacle.y + minimum_vector.y;
-		if (setpoint->position.z < Config::min_air_alt){
-                    setpoint->position.z = Config::min_air_alt;
-		}
-            }
-        }
-
-        if (setpoint_modified){
-            const auto new_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_position);
-            ROS_INFO_THROTTLE(1, "Distance improvement %.3f to %.3f", drone_distance_to_obstacle, new_distance_to_obstacle);
-        }
-    }
-*/
     return setpoint_modified;
 }
 
