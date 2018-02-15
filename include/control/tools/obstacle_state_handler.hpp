@@ -3,7 +3,6 @@
 #include <ros/ros.h>
 #include <ascend_msgs/GRState.h>
 #include <ascend_msgs/GRStateArray.h>
-#include <ascend_msgs/DetectedRobotsGlobalPositions.h>
 #include "control/tools/config.hpp"
 #include "control/tools/logger.hpp"
 #include "control_message.hpp"
@@ -18,18 +17,18 @@ private:
     ///Subscriber to obstacle stream
     ros::Subscriber obs_sub_;
     ///Last recieved message
-    ascend_msgs::DetectedRobotsGlobalPositions::ConstPtr last_msg_p_;    
+    ascend_msgs::GRStateArray::ConstPtr last_msg_p_;    
     ///Callback to run when new message is recieved 
-    void onMsgRecievedCB(ascend_msgs::DetectedRobotsGlobalPositions::ConstPtr msg_p);
+    void onMsgRecievedCB(ascend_msgs::GRStateArray::ConstPtr msg_p);
     ///Private constructor
     ObstacleStateHandler();
 public:
     ///Get shared pointer to shared instance
     static const ObstacleStateHandler* getSharedObstacleHandlerPtr();
     ///Get last obstacles from shared instance
-    static const ascend_msgs::DetectedRobotsGlobalPositions& getCurrentObstacles();
+    static const std::vector<ascend_msgs::GRState>& getCurrentObstacles();
     ///Returns obstacles from instance
-    const ascend_msgs::DetectedRobotsGlobalPositions& getObstacles() const;
+    const std::vector<ascend_msgs::GRState>& getObstacles() const;
     ///Is shared instance ready?
     static bool isInstanceReady();
     ///is current instance ready
