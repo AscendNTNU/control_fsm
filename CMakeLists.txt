@@ -67,7 +67,8 @@ add_executable(control_fsm_main src/nodes/control_fsm_main)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
 
 add_executable(path_planner_node src/nodes/path_planner_node src/path_planner/path_planner src/path_planner/node)
-target_compile_features(path_planner_node PRIVATE cxx_range_for)
+
+add_executable(test_path_planner_node src/nodes/test_path_planner_node)
 
 ## Specify libraries to link a library or executable target against
 
@@ -75,6 +76,10 @@ target_link_libraries(control_fsm_main control_fsm_lib)
 target_link_libraries(action_interface_client ${catkin_LIBRARIES})
 
 target_link_libraries(path_planner_node 
+        ${catkin_LIBRARIES}
+        control_tools_lib)
+
+target_link_libraries(test_path_planner_node 
         ${catkin_LIBRARIES}
         control_tools_lib)
 
