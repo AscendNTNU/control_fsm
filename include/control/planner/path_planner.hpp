@@ -44,6 +44,11 @@ private:
     bool noPlan = true;
     bool destination_reached = false;
 
+    // Because of the NODE_DISTANCE, the destination found and the one requested
+    // might not be exactly equal
+    float destination_found_x;
+    float destination_found_y;
+
 public:
     PathPlanner();
 

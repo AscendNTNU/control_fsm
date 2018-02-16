@@ -129,8 +129,10 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             graph[coordToIndex(x)][coordToIndex(y)].setParentX(parent_x);
             graph[coordToIndex(x)][coordToIndex(y)].setParentY(parent_y);
             destination_reached = true;
-            std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
-            std::cout << "Destination parent: x=" << graph[coordToIndex(x)][coordToIndex(y)].getParentX() << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
+            destination_found_x = x;
+            destination_found_y = y;
+            //std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
+            //std::cout << "Destination parent: x=" << graph[coordToIndex(x)][coordToIndex(y)].getParentX() << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
         }
         // If node is not destination and hasn't been searched yet
         else if(closed_list[coordToIndex(x)][coordToIndex(y)] == false){
@@ -152,7 +154,6 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 }
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
-    // LOVER Å LØSE DETTE PÅ EN BEDRE MÅTE
     handleSuccessor(x+NODE_DISTANCE,y, x, y, NODE_DISTANCE);
     if(destination_reached){return;}
     handleSuccessor(x+NODE_DISTANCE, y+NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
@@ -171,7 +172,7 @@ void PathPlanner::handleAllSuccessors(float x, float y) {
 }
 
 bool PathPlanner::isDestination(float x, float y) {
-    float margin = NODE_DISTANCE/2;
+    float margin = NODE_DISTANCE/2+0.001;
     return ((x < end_node.getX()+margin && x>end_node.getX()-margin)
             && (y < end_node.getY()+margin && y > end_node.getY()-margin));
 }
@@ -243,6 +244,10 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     int counter = 0;
     // Go through the graph from end to start through the parents of each node
     // Add nodes to the plan
+
+    plan.push_front(graph[coordToIndex(x)][coordToIndex(y)]);
+    x = destination_found_x;
+    y = destination_found_y;
 
     while(!isStart(x, y)){
         plan.push_front(graph[coordToIndex(x)][coordToIndex(y)]);
@@ -343,6 +348,7 @@ void PathPlanner::simplifyPlan() {
 
 bool PathPlanner::isPlanSafe(float setpoint_x, float setpoint_y) {
     if(simple_plan.empty()){
+        std::cout << "Simple plan empty" << std::endl;
         return false;
     }
 
@@ -351,16 +357,18 @@ bool PathPlanner::isPlanSafe(float setpoint_x, float setpoint_y) {
     current++;
 
     while(current != simple_plan.end()){
+
         // Find next point in plan by checking distance between setpoint and points in plan
         if(abs(current->getX()-setpoint_x)<0.1 && abs(current->getY()-setpoint_y) < 0.1){
-            std::cout << "Setpoint: " << current->getX() << ", " << current->getY() << std::endl;
-            std::cout << "Search from:" << prev->getX() << ", " << current->getY() << std::endl;
+            //std::cout << "Setpoint: " << current->getX() << ", " << current->getY() << std::endl;
+            //std::cout << "Search from:" << prev->getX() << ", " << prev->getY() << std::endl;
             break;
         }
         else{
             prev = current;
             current++;
             if(current == simple_plan.end()){
+                // iterated through list without finding match in plan for the setpoint
                 return false;
             }
         }
@@ -376,6 +384,7 @@ bool PathPlanner::isPlanSafe(float setpoint_x, float setpoint_y) {
         current++;
         next++;
     }
+
     return true;
 }
 
