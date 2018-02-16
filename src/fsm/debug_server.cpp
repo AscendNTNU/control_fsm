@@ -9,7 +9,8 @@ DebugServer::DebugServer() {
         throw control::ROSNotInitializedException();
     }
     //Advertise service! 
-    server_ = nh_.advertiseService("control_fsm_debug", &DebugServer::handleDebugEvent, this);
+    using control::Config;
+    server_ = nh_.advertiseService(Config::debug_server_topic, &DebugServer::handleDebugEvent, this);
 }
 
 bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
