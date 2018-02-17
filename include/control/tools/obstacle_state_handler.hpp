@@ -1,8 +1,6 @@
 #ifndef OBSTACLE_HANDLER_HPP
 #define OBSTACLE_HANDLER_HPP
 #include <ros/ros.h>
-#include <ascend_msgs/GRState.h>
-#include <ascend_msgs/GRStateArray.h>
 #include <ascend_msgs/DetectedRobotsGlobalPositions.h>
 #include "control/tools/config.hpp"
 #include "control/tools/logger.hpp"

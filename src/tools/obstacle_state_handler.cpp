@@ -2,16 +2,17 @@
 #include "control/exceptions/ros_not_initialized_exception.hpp"
 
 using control::ObstacleStateHandler;
+using ascend_msgs::DetectedRobotsGlobalPositions;
 
 std::unique_ptr<ObstacleStateHandler> ObstacleStateHandler::shared_instance_p_ = nullptr;
 
-ObstacleStateHandler::ObstacleStateHandler() : last_msg_p_(new ascend_msgs::DetectedRobotsGlobalPositions) {
+ObstacleStateHandler::ObstacleStateHandler() : last_msg_p_(new DetectedRobotsGlobalPositions) {
     using control::Config;
     std::string& topic = Config::lidar_topic;
     obs_sub_ = n_.subscribe(topic.c_str(), 1, &ObstacleStateHandler::onMsgRecievedCB, this);
 }
 
-void ObstacleStateHandler::onMsgRecievedCB(ascend_msgs::DetectedRobotsGlobalPositions::ConstPtr msg_p) {
+void ObstacleStateHandler::onMsgRecievedCB(DetectedRobotsGlobalPositions::ConstPtr msg_p) {
     last_msg_p_ = msg_p;
 }
 
@@ -26,11 +27,11 @@ const ObstacleStateHandler* ObstacleStateHandler::getSharedObstacleHandlerPtr() 
     return shared_instance_p_.get();
 }
 
-const ascend_msgs::DetectedRobotsGlobalPositions& ObstacleStateHandler::getCurrentObstacles() {
+const DetectedRobotsGlobalPositions& ObstacleStateHandler::getCurrentObstacles() {
     return getSharedObstacleHandlerPtr()->getObstacles();
 }
 
-const ascend_msgs::DetectedRobotsGlobalPositions& ObstacleStateHandler::getObstacles() const {
+const DetectedRobotsGlobalPositions& ObstacleStateHandler::getObstacles() const {
     isReady();
     return *last_msg_p_;
 }
