@@ -4,7 +4,7 @@
 using namespace control::pathplanner;
 
 int coordToIndex(float k) {
-    int index = static_cast<int>(k/NODE_DISTANCE+0.5);
+    int index = round(k/NODE_DISTANCE+0.5);
     return (index);
 }
 
@@ -63,7 +63,7 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
 
 void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
     this->obstacle_coordinates = obstacle_coordinates;
-    if(noPlan){
+    if(no_plan){
         return;
     }
     std::list<float>::iterator x = obstacle_coordinates.begin();
@@ -206,7 +206,7 @@ bool PathPlanner::isSafeLine(float x1, float y1, float x2, float y2) {
 
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
 
-    noPlan = false;
+    no_plan = false;
 
     // If start or end point is not valid, a plan is not created
     if(!isValidCoordinate(current_x,current_y)){

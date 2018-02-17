@@ -41,7 +41,7 @@ private:
     Node end_node;
     Node start_node;
 
-    bool noPlan = true;
+    bool no_plan = true;
     bool destination_reached = false;
 
     // Because of the NODE_DISTANCE, the destination found and the one requested
