@@ -7,6 +7,6 @@
 		<arg name="node_name" value="$(arg fsm_name)"/>
 	</include>
     	<param name="$(arg fsm_name)/require_obs_detection" value="false"/>
-    	<param name="$(arg fsm_name)/land_xy_goto_altitude" value="2.0"/>
-    	<param name="$(arg fsm_name)/takeoff_altitude" value="2.0"/>
+    	<param name="$(arg fsm_name)/land_xy_goto_altitude" value="1.0"/>
+    	<param name="$(arg fsm_name)/takeoff_altitude" value="1.0"/>
 </launch>
