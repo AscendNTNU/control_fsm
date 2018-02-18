@@ -20,12 +20,17 @@ void PoseStampedCorrelation::poseRecievedCB(PoseStamped::ConstPtr msg_p, SignalT
 
     auto& msg = *msg_p;
 
+    auto elapsed_since_start = msg.header.stamp - start_time_;
+    if(elapsed_since_start > ros::Duration(SAMPLE_TIME)) {
+        *overflow = true;
+    }
+
     if(main_overflow_ && delayed_overflow_) {
         calculateCrossCorrelation();
         start_time_ = msg.header.stamp;
         main_overflow_ = delayed_overflow_ = false;
     }
-    auto elapsed_since_start = msg.header.stamp - start_time_;
+    elapsed_since_start = msg.header.stamp - start_time_;
     constexpr double SCALE = SAMPLE_DT / NANO_PREFIX;
     double scaled_time = static_cast<double>(elapsed_since_start.toNSec()) / SCALE;
     auto index = static_cast<unsigned int>(std::round(scaled_time));
@@ -38,13 +43,13 @@ void PoseStampedCorrelation::poseRecievedCB(PoseStamped::ConstPtr msg_p, SignalT
         if(diff > 1) {
             double dx = (signal->at(index).x - signal->at(*last_index).x) / static_cast<double>(diff);
             double dy = (signal->at(index).y - signal->at(*last_index).y) / static_cast<double>(diff);
-            for(int i = *last_index + 1; i < diff; ++i) {
-                signal->at(*last_index + i).x += dx * i;
-                signal->at(*last_index + i).y += dy * i;
+            for(unsigned int i = *last_index + 1; i < index; ++i) {
+                signal->at(i).x = dx * i + signal->at(*last_index).x;
+                signal->at(i).y = dy * i + signal->at(*last_index).y;
             }
         }
         *last_index = index;
-    } else if((diff > 1) && *last_index != signal->size() - 1) {
+    } else if(*overflow) {
         //Clear last part of signal
         for(unsigned int i = *last_index + 1; i < signal->size(); ++i) {
             signal->at(i).x = 0.0;
@@ -74,9 +79,9 @@ void PoseStampedCorrelation::calculateCrossCorrelation() {
         double correlation_y = 0;
         for(unsigned int i = 0; i < NUM_SAMPLES - n; ++i) {
             auto& filter = delayed_signal_[i + n];
-            auto& perception = main_signal_[i + n];
-            correlation_x = filter.x * perception.x;
-            correlation_y = filter.y * perception.y;
+            auto& perception = main_signal_[i];
+            correlation_x += filter.x * perception.x;
+            correlation_y += filter.y * perception.y;
             sum_squared_x_f += filter.x * filter.x; //Squared
             sum_squared_y_f += filter.y * filter.y; //Squared
             sum_squared_x_p += perception.x * perception.x; //Squared
@@ -87,10 +92,11 @@ void PoseStampedCorrelation::calculateCrossCorrelation() {
         corr.y = correlation_y / std::sqrt(sum_squared_y_f * sum_squared_y_p);
         if(getErrorSquared(corr) < getErrorSquared(best_correlation_) || n == 0) {
             best_correlation_ = corr;
-            delay_ = n * SAMPLE_TIME;
+            delay_ = n * SAMPLE_DT;
         }
     }
     last_calculated_ = ros::Time::now();
+    std::cout << "Best correlation, X: " << best_correlation_.x << " Y: " << best_correlation_.y << " at delay " << delay_ << std::endl;
 
 
 }

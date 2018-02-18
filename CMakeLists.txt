@@ -65,11 +65,13 @@ target_link_libraries(control_fsm_lib
 
 add_executable(control_fsm_main src/nodes/control_fsm_main)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
+add_executable(corr_test src/nodes/corr_test.cpp)
 
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(control_fsm_main control_fsm_lib)
 target_link_libraries(action_interface_client ${catkin_LIBRARIES})
+target_link_libraries(corr_test control_fsm_lib)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above

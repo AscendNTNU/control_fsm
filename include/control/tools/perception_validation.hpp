@@ -18,10 +18,10 @@ struct Vec2 {
 
 class PoseStampedCorrelation {
     static constexpr double NANO_PREFIX = std::pow(10, -9);
-    static constexpr double SAMPLE_TIME = 0.2;
-    static constexpr double SAMPLE_DT = 0.001;
+    static constexpr double SAMPLE_TIME = 0.1;
+    static constexpr double SAMPLE_DT = 0.02;
     static constexpr size_t NUM_SAMPLES = static_cast<const size_t>(std::ceil(SAMPLE_TIME / SAMPLE_DT));
-    static constexpr size_t NUM_DELAYS = 10;
+    static constexpr size_t NUM_DELAYS = 2;
     using SignalType = std::array<Vec2, NUM_SAMPLES>;
 private:
     bool running_ = false;
@@ -51,7 +51,7 @@ public:
     PoseStampedCorrelation(const std::string& main_topic, const std::string& delayed_topic);
 
     ///Start repeated calculations
-    void start() { running_ = true; };
+    void start() { running_ = true; start_time_ = ros::Time::now(); };
     ///Stop repeated calculations
     void stop() { running_ = false; };
 
