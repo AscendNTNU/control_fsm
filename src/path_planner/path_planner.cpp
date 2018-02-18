@@ -265,34 +265,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 }
 
 void PathPlanner::simplifyPlan() {
-    /*std::list<Node>::iterator current = plan.begin();
-    std::list<Node>::iterator next = plan.begin();
-    next++;
-    simple_plan.push_back(*current);
-    while(next != plan.end()){
-        if(coordToIndex(current->getX()) == coordToIndex(next->getX())){
-            //std::cout << "VERTICAL" << std::endl;
-            while(coordToIndex(current->getX()) == coordToIndex(next->getX()) && next != plan.end()){
-                current++;
-                next++;
-            }
-        }
-        else if(coordToIndex(current->getY()) == coordToIndex(next->getY())){
-            //std::cout << "HORISONTAL" << std::endl;
-            while(coordToIndex(current->getY()) == coordToIndex(next->getY()) && next != plan.end()){
-                current++;
-                next++;
-            }
-        }
-        else{
-            //std::cout << "DIAGONAL" << std::endl;
-            while(coordToIndex(current->getX()) != coordToIndex(next->getX()) && coordToIndex(current->getY()) != coordToIndex(next->getY()) && next != plan.end()){
-                current++;
-                next++;
-            }
-        }
-        simple_plan.push_back(*current);
-    }*/
     simple_plan = plan;
     // Pointing at the three first elements
     std::list<Node>::iterator first = simple_plan.begin();
