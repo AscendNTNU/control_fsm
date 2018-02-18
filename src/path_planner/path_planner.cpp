@@ -21,7 +21,7 @@ void PathPlanner::initializeGraph(){
             }
             else {
                 graph[coordToIndex(x)][coordToIndex(y)] =
-                        Node(x,y, std::numeric_limits<float>::infinity(), calculateDiagonalHeuristic(x,y));
+                        Node(x,y, std::numeric_limits<float>::infinity(), calculateEuclidianHeuristic(x,y));
             }
         }
     }
@@ -70,7 +70,6 @@ void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
 }
 
 float PathPlanner::calculateDiagonalHeuristic(float x, float y) {
-    return (calculateEuclidianHeuristic(x,y));
     return (std::max(abs(x-end_node.getX()), abs(y-end_node.getY())));
 }
 
