@@ -33,6 +33,7 @@ public:
     void updateF(float new_g);
 
     bool obstacle = false;
+    bool closed = false;
 
     // Implemented only for the closed list priority queue
     friend bool operator< (const Node &lhs, const Node &rhs);

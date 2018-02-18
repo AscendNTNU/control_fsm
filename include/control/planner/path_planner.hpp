@@ -53,7 +53,6 @@ public:
     PathPlanner();
 
     void initializeGraph();
-    void initializeClosedList();
 
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);

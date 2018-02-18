@@ -27,13 +27,6 @@ void PathPlanner::initializeGraph(){
     }
 }
 
-void PathPlanner::initializeClosedList(){
-    for (int i = 0; i < GRAPH_SIZE; i++) {
-        for (int j = 0; j < GRAPH_SIZE; j++){
-            closed_list[i][j] = false;
-        }
-    }
-}
 
 void PathPlanner::addObstacle(float center_x, float center_y) {
     // Find the y value for each x in the circle
@@ -42,7 +35,7 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
         // Do this to fill the circle
         for(float i = center_y-y; i<=center_y+y; i+= NODE_DISTANCE) {
             if (isValidCoordinate(x, i)) {
-                closed_list[coordToIndex(x)][coordToIndex(i)] = true;
+                graph[coordToIndex(x)][coordToIndex(i)].closed = true;
                 graph[coordToIndex(x)][coordToIndex(i)].obstacle = true;
             }
         }
@@ -53,7 +46,7 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
         float x = sqrt(OBSTACLE_RADIUS*OBSTACLE_RADIUS-(y-center_y)*(y-center_y));
         for(float i = center_x-x; i<=center_x+x; i+= NODE_DISTANCE) {
             if (isValidCoordinate(i, y)) {
-                closed_list[coordToIndex(i)][coordToIndex(y)] = true;
+                graph[coordToIndex(i)][coordToIndex(y)].closed = true;
                 graph[coordToIndex(i)][coordToIndex(y)].obstacle = true;
             }
         }
@@ -109,7 +102,7 @@ void PathPlanner::relaxGraph(){
         float x = current_node.getX();
         float y = current_node.getY();
         // Mark node as searched
-        closed_list[coordToIndex(x)][coordToIndex(y)] = true;
+        graph[coordToIndex(x)][coordToIndex(y)].closed = true;
         // Search all eight points around current point
         handleAllSuccessors(x,y);
         // Stop search if destination is reached
@@ -134,7 +127,7 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX() << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
         }
             // If node is not destination and hasn't been searched yet
-        else if(closed_list[x_index][y_index] == false){
+        else if(!graph[x_index][y_index].closed){
             // Calculate distance from start through the parent
             float new_g = graph[coordToIndex(parent_x)][coordToIndex(parent_y)].getG() + distance_to_parent;
             // Update graph and open list if distance is less than before through the parent
@@ -225,7 +218,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     start_node.setParentY(0);
     end_node = Node(target_x,target_y, std::numeric_limits<float>::infinity(), 0);
     initializeGraph();
-    initializeClosedList();
 
     refreshObstacles(obstacle_coordinates);
 
