@@ -65,6 +65,8 @@ public:
     static std::string land_detector_topic;
     /// \fsmparam Topic for recieving obstacle positions
     static std::string obstacle_state_topic;
+    /// \fsmparam Topic for recieving perception pose
+    static std::string perception_pose_topic;
     /// \fsmparam Buffer size used for FSMError, FSMWarn etc
     static int fsm_status_buffer_size;
     /// \fsmparam Time gotostate waits before transitioning
