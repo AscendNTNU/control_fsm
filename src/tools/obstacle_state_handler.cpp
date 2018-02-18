@@ -2,16 +2,17 @@
 #include "control/exceptions/ros_not_initialized_exception.hpp"
 
 using control::ObstacleStateHandler;
+using ascend_msgs::DetectedRobotsGlobalPositions;
 
 std::unique_ptr<ObstacleStateHandler> ObstacleStateHandler::shared_instance_p_ = nullptr;
 
-ObstacleStateHandler::ObstacleStateHandler() : last_msg_p_(new ascend_msgs::GRStateArray) {
+ObstacleStateHandler::ObstacleStateHandler() : last_msg_p_(new DetectedRobotsGlobalPositions) {
     using control::Config;
-    std::string& topic = Config::obstacle_state_topic;
+    std::string& topic = Config::lidar_topic;
     obs_sub_ = n_.subscribe(topic.c_str(), 1, &ObstacleStateHandler::onMsgRecievedCB, this);
 }
 
-void ObstacleStateHandler::onMsgRecievedCB(ascend_msgs::GRStateArray::ConstPtr msg_p) {
+void ObstacleStateHandler::onMsgRecievedCB(DetectedRobotsGlobalPositions::ConstPtr msg_p) {
     last_msg_p_ = msg_p;
 }
 
@@ -26,13 +27,13 @@ const ObstacleStateHandler* ObstacleStateHandler::getSharedObstacleHandlerPtr() 
     return shared_instance_p_.get();
 }
 
-const std::vector<ascend_msgs::GRState>& ObstacleStateHandler::getCurrentObstacles() {
+const DetectedRobotsGlobalPositions& ObstacleStateHandler::getCurrentObstacles() {
     return getSharedObstacleHandlerPtr()->getObstacles();
 }
 
-const std::vector<ascend_msgs::GRState>& ObstacleStateHandler::getObstacles() const {
+const DetectedRobotsGlobalPositions& ObstacleStateHandler::getObstacles() const {
     isReady();
-    return last_msg_p_->states;
+    return *last_msg_p_;
 }
 
 bool ObstacleStateHandler::isInstanceReady() {
@@ -40,10 +41,10 @@ bool ObstacleStateHandler::isInstanceReady() {
 }
 
 bool ObstacleStateHandler::isReady() const {
-    if(last_msg_p_->states.empty()) {
+    if(last_msg_p_->count == 0) {
         control::handleWarnMsg("Obstacle handler: No data available");
         return false;
-    } else if(control::message::hasTimedOut(last_msg_p_->states[0])) {
+    } else if(control::message::hasTimedOut(*last_msg_p_)) {
         control::handleWarnMsg("Obstacle handler: Using old data");
         return false;
     }
