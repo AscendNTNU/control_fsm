@@ -98,7 +98,7 @@ int main(int argc, char** argv){
     	//plan.refreshObstacles(obstacle_coordinates);
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
-    	if(planner_state.make_plan && (!plan.isPlanSafe(/*setpoint_x,setpoint_y*/19.9,19.9) || planner_state.new_goal)){
+    	if(planner_state.make_plan && (!plan.isPlanSafe(/*setpoint_x,setpoint_y*/1,13) || planner_state.new_goal)){
     		//ROS_INFO("Make new plan.");
     		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
