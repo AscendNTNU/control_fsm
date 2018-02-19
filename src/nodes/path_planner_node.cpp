@@ -18,9 +18,6 @@ using control::pathplanner::PathPlanner;
 using ActionServerType = actionlib::SimpleActionServer<ascend_msgs::PathPlannerAction>;
 
 std::list<float> obstacle_coordinates;
-// Only setpoints within plan (not goal)
-float setpoint_x = 0;
-float setpoint_y = 0;
 
 struct PlannerState{
 	float current_x, current_y, goal_x, goal_y;
@@ -63,11 +60,6 @@ void updateObstaclesCB(ascend_msgs::GRStateArray::ConstPtr msg_p){
 	}
 }
 
-void updateSetpointCB(mavros_msgs::PositionTarget::ConstPtr msg_p){
-	setpoint_x = msg_p->position.x;
-	setpoint_y = msg_p->position.y;
-}
-
 
 int main(int argc, char** argv){
 
@@ -84,7 +76,6 @@ int main(int argc, char** argv){
 
 
     //ros::Subscriber sub_obstacles = n.subscribe(control::PlannerConfig::obstacle_state_topic, 1, updateObstaclesCB);
-    ros::Subscriber sub_setpoint = n.subscribe(control::PlannerConfig::mavros_setpoint_topic, 1, updateSetpointCB);
 
     ros::Publisher pub_plan = n.advertise<ascend_msgs::PointArray>(control::PlannerConfig::plan_points_topic, 1);
 
