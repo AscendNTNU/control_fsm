@@ -31,9 +31,9 @@ const GroundRobotHandler *control::GroundRobotHandler::getSharedInstancePtr() {
     return shared_instance_p_.get();
 }
 
-const GroundRobotHandler::MsgType &control::GroundRobotHandler::getGroundRobots() const {
+const GroundRobotHandler::GBVectorType& GroundRobotHandler::getGroundRobots() const {
     isReady();
-    return *last_gb_msg_p_;
+    return last_gb_msg_p_->ground_robots;
 }
 
 bool GroundRobotHandler::isReady() const {

@@ -27,14 +27,15 @@ private:
     void gbCB(MsgType::ConstPtr msg_p) { last_gb_msg_p_ = std::move(msg_p); }
 
 public:
+    using GBVectorType = boost::array<ascend_msgs::GRState, 10>;
     ///Constructor
     GroundRobotHandler();
     ///Get valid shared instance
     static const GroundRobotHandler* getSharedInstancePtr();
     ///Get ground robots from instance
-    const MsgType& getGroundRobots() const;
+    const GBVectorType& getGroundRobots() const;
     ///Get current ground robots from shared instance
-    static const MsgType& getCurrentGroundRobots() { return getSharedInstancePtr()->getGroundRobots(); }
+    static GBVectorType getCurrentGroundRobots() { return getSharedInstancePtr()->getGroundRobots(); }
     ///Check if ready
     bool isReady() const;
 
