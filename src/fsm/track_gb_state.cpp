@@ -27,10 +27,14 @@ void TrackGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             control::handleWarnMsg("ABORT cmd before sending new");
         } else {
-            //TODO Remember to add takeoff as command type when merging!
-
-            //Transition to poshold, using new command
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            if(event.command_type == CommandType::TAKEOFF) {
+                //Drone already in air!
+                control::handleWarnMsg("Wrong usage of takeoff cmd, already in air!");
+                event.finishCMD();
+            } else {
+                //Transition to poshold, using new command
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            }
         }
     }
 }
