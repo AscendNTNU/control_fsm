@@ -12,6 +12,7 @@ public:
     IdleState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const { return "Idle"; }
+    ascend_msgs::ControlFSMState getStateMsg(); 
     const mavros_msgs::PositionTarget* getSetpointPtr();
     void handleManual(ControlFSM &fsm) override;
 };
