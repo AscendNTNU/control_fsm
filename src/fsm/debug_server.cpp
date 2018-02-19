@@ -83,7 +83,6 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
                 case REQ::POSHOLD: return RequestType::POSHOLD;
                 case REQ::GOTO: return RequestType::GOTO;
                 case REQ::LAND: return RequestType::LAND;
-                //case REQ::TRACKGB: return RequestType::TRACKGB;
                 //case REQ::INTERGB: return RequestType::INTERGB;
                 case REQ::MANUALFLIGHT: return RequestType::MANUALFLIGHT;
                 default: return RequestType::NONE;

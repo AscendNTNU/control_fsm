@@ -28,7 +28,7 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
         const auto& gb_state = GroundRobotHandler::getCurrentGroundRobots();
         //Check gb_id
-        if(cmd_.gb_id < 0 || cmd_.gb_id >= gb_state.size()) {
+        if(cmd_.gb_id < 0 || static_cast<size_t>(cmd_.gb_id) >= gb_state.size()) {
             if(cmd_.isValidCMD()) {
                 cmd_.eventError("Invalid GB id!");
                 cmd_ = EventData();
@@ -37,7 +37,6 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
                 return;
             }
         }
-        
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -48,7 +47,7 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void InteractGBState::loopState(ControlFSM& fsm) {
-    //TODO Run
+    //TODO Run Chris's algorithm
 }
 
 const mavros_msgs::PositionTarget* InteractGBState::getSetpointPtr() {
@@ -57,5 +56,10 @@ const mavros_msgs::PositionTarget* InteractGBState::getSetpointPtr() {
 }
 
 void InteractGBState::handleManual(ControlFSM &fsm) {
-    //TODO Implement
+    if(cmd_.isValidCMD()) {
+        cmd_.eventError("OFFBOARD lost");
+        cmd_ = EventData();
+    }
+    RequestEvent manual_event(RequestType::MANUALFLIGHT);
+    fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }

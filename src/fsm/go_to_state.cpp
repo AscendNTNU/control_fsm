@@ -260,11 +260,9 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                 break;
             }
                 //NOTE: Land groundrobot algorithm not implemented yet, so this is commented out
-                /*
-                case CommandType::LANDGB:
-                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
-                    break;
-                */
+            case CommandType::LANDGB:
+                fsm.transitionTo(ControlFSM::INTERACT_GB_STATE, this, cmd_);
+                break;
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);
