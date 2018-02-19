@@ -27,6 +27,8 @@
     local_position_topic: /mavros/local_position/pose, 
     #Topic for recieving mavros state
     mavros_state_topic: /mavros/state,
+    #Topic for recieving obstacle states
+    ground_robot_state_topic: /ai/world_observation,
     #When is message considered old?
     message_timeout: 2.0, 
     #For what distances is it uneccesary to adjust yaw

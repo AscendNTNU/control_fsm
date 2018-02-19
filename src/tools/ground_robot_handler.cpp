@@ -12,8 +12,10 @@ using control::GroundRobotHandler;
 using control::Config;
 using ascend_msgs::AIWorldObservation;
 
+std::unique_ptr<GroundRobotHandler> GroundRobotHandler::shared_instance_p_ = nullptr;
+
 GroundRobotHandler::GroundRobotHandler() : last_gb_msg_p_(new AIWorldObservation) {
-    auto cb = boost::bind(GroundRobotHandler::gbCB, this, _1);
+    auto cb = boost::bind(&GroundRobotHandler::gbCB, this, _1);
     auto& topic = Config::ground_robot_state_topic;
     gb_sub_ = n_.subscribe<AIWorldObservation>(topic, 1, cb);
 }
