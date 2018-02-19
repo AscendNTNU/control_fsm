@@ -37,12 +37,14 @@ int main(int argc, char** argv) {
 
     //FSM
     ControlFSM fsm;
+    
+    using ascend_msgs::StringServiceRequest;
+    using ascend_msgs::StringServiceResponse;
+    using ascend_msgs::ControlFSMState;
 
     //Set up neccesary publishers
     ros::Publisher setpoint_pub = n.advertise<mavros_msgs::PositionTarget>(mavrosSetpointTopic, 1);
-    ros::Publisher fsm_on_state_changed_pub = n.advertise<std_msgs::String>(Config::fsm_state_changed_topic, Config::fsm_status_buffer_size);
-    using ascend_msgs::StringServiceRequest;
-    using ascend_msgs::StringServiceResponse;
+    ros::Publisher fsm_on_state_changed_pub = n.advertise<ControlFSMState>(Config::fsm_state_changed_topic, Config::fsm_status_buffer_size);
 
     ros::ServiceServer namespace_service = n.advertiseService("/control_fsm_node_name", nameServiceCB);
 
@@ -54,8 +56,7 @@ int main(int argc, char** argv) {
 
     //Set FSM callbacks
     fsm.setOnStateChangedCB([&](){
-        std_msgs::String msg;
-        msg.data = fsm.getState()->getStateName();
+        auto msg = fsm.getState()->getStateMsg();
         fsm_on_state_changed_pub.publish(msg);
     });
 
