@@ -11,9 +11,9 @@ class IdleState : public StateInterface {
 public:
     IdleState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
-    std::string getStateName() const { return "Idle"; }
-    ascend_msgs::ControlFSMState getStateMsg(); 
-    const mavros_msgs::PositionTarget* getSetpointPtr();
+    std::string getStateName() const override { return "Idle"; }
+    ascend_msgs::ControlFSMState getStateMsg() override; 
+    const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
 };
 

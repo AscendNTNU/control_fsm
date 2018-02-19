@@ -10,10 +10,10 @@ public:
     LandState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
-    void loopState(ControlFSM& fsm);
+    void loopState(ControlFSM& fsm) override;
     std::string getStateName() const override { return "Land"; }
-    ascend_msgs::ControlFSMState getStateMsg();
-    const mavros_msgs::PositionTarget* getSetpointPtr();
+    ascend_msgs::ControlFSMState getStateMsg() override;
+    const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
 };
 #endif
