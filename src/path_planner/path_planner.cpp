@@ -309,35 +309,30 @@ void PathPlanner::simplifyPlan() {
     }
 }
 
-bool PathPlanner::isPlanSafe(float setpoint_x, float setpoint_y) {
+bool PathPlanner::isPlanSafe(float current_x, float current_y) {
     if(simple_plan.empty()){
         return false;
     }
 
-    std::list<Node>::iterator prev = simple_plan.begin();
-    std::list<Node>::iterator current = prev;
-    current++;
+    // Check if current point is the first point of the plan
+    float margin = NODE_DISTANCE;
 
-    while(current != simple_plan.end()){
-        if(abs(current->getX()-setpoint_x)<0.1 && abs(current->getY()-setpoint_y) < 0.1){
-            //std::cout << "Setpoint: " << current->getX() << ", " << current->getY() << std::endl;
-            //std::cout << "Search from:" << prev->getX() << ", " << current->getY() << std::endl;
-            break;
-        }
-        else{
-            //simple_plan.erase(current);
-            prev = current;
-            current++;
-            if(current == simple_plan.end()){
-                return false;
-            }
-        }
+    if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY())<margin){
+        std::cout << "Remove " << simple_plan.begin()->getX() << ", "
+            << simple_plan.begin()->getY() << std::endl;
+        simple_plan.pop_front();
     }
 
-    current = prev;
-    std::list<Node>::iterator next = current;
-    next++;
-    while(next != simple_plan.end()){
+    std::list<Node>::iterator current = simple_plan.begin();
+    std::list<Node>::iterator next = ++(simple_plan.begin());
+
+    // Check if current point to first point in remaining plan is safe
+    if(!isSafeLine(current_x, current_y, current->getX(), current->getY())){
+        return false;
+    }
+
+    // Check if rest of plan is safe
+    while(next != simple_plan.end() && current != simple_plan.end()){
         if(!isSafeLine(current->getX(), current->getY(), next->getX(), next->getY())){
             return false;
         }
