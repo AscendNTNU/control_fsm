@@ -26,12 +26,3 @@ const mavros_msgs::PositionTarget* TrackGBState::getSetpointPtr() {
 void TrackGBState::handleManual(ControlFSM &fsm) {
     //TODO Implement
 }
-
-
-ascend_msgs::ControlFSMState TrackGBState::getStateMsg() {
-    using ascend_msgs::ControlFSMState;
-    ControlFSMState msg;
-    msg.name = getStateName();
-    msg.state_id = ControlFSMState::TRACK_GB_STATE;
-    return msg;
-}

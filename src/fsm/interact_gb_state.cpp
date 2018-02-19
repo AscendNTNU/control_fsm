@@ -26,12 +26,3 @@ const mavros_msgs::PositionTarget* InteractGBState::getSetpointPtr() {
 void InteractGBState::handleManual(ControlFSM &fsm) {
     //TODO Implement
 }
-
-
-ascend_msgs::ControlFSMState InteractGBState::getStateMsg() {
-    using ascend_msgs::ControlFSMState;
-    ControlFSMState msg;
-    msg.name = getStateName();
-    msg.state_id = ControlFSMState::INTERACT_GB_STATE;
-    return msg;
-}

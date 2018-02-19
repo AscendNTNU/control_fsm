@@ -34,10 +34,5 @@ void BeginState::handleManual(ControlFSM &fsm) {
     //Does nothing
 }
 
-ascend_msgs::ControlFSMState BeginState::getStateMsg() {
-    ascend_msgs::ControlFSMState msg;
-    msg.name = getStateName();
-    msg.state_id = ascend_msgs::ControlFSMState::BEGIN_STATE;
-    return msg;
-}
+
 
