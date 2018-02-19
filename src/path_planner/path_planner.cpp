@@ -118,7 +118,7 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
         // Making sure the zero is actually zero and not something like 1.4895e-9
         if(x > 0.0 && x < 0.01){x = 0.0;}
         if(y > 0.0 && y < 0.01){y = 0.0;}
-        if(isDestination(x,y)){
+        if(isDestination(x,y) && !graph[x_index][y_index].closed){
             graph[x_index][y_index].setParentX(parent_x);
             graph[x_index][y_index].setParentY(parent_y);
             destination_reached = true;
@@ -288,10 +288,8 @@ void PathPlanner::simplifyPlan() {
         if(!isSafeLine(x1,y1,x2,y2)){
             //std::cout << "Hit: first = (" << x1 << ", " << y1 << ") Third = ("
             //                  << x2 << ", " << y2 << ")" << std::endl;
-            first = second;
-            second = first;
+            first++;
             second++;
-            third = second;
             third++;
         }
             // If the straight line does not go through an obstacle, delete the second point

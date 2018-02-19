@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     ascend_msgs::PathPlanner clientCall;
 
     clientCall.request.goal_x = 1;
-	clientCall.request.goal_y = 13;
+	clientCall.request.goal_y = 1;
 
 	if(client.call(clientCall)){
 		ROS_INFO("Request handled");
