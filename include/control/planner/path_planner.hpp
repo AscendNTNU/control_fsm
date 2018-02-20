@@ -85,6 +85,7 @@ public:
     // Verify the plan from where the drone is to the end point
     bool isPlanSafe(float current_x, float current_y);
     void resetParameters();
+    void removeOldPoints(float current_x, float current_y);
 
     // These functions are mainly for the visualization
     std::array<std::array<Node, GRAPH_SIZE>, GRAPH_SIZE> getGraph(){return graph;}

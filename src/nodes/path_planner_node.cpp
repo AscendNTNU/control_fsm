@@ -70,7 +70,7 @@ int main(int argc, char** argv){
 
     ros::init(argc, argv, "path_planner_server");
     ros::NodeHandle n;
-    ros::Rate rate(30.0);
+    ros::Rate rate(1);
  
     control::PlannerConfig::loadParams();
 
@@ -81,33 +81,35 @@ int main(int argc, char** argv){
 
     ros::ServiceServer server = n.advertiseService<Request, Response>("path_planner_service", boost::bind(&newPlanCB, _1, _2, &planner_state));
 
+    ascend_msgs::PointArray points_in_plan;
 
     while(ros::ok()){
 
     	ros::spinOnce();
+    	
 
     	//plan.refreshObstacles(obstacle_coordinates);
+    	plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(planner_state.current_x,planner_state.current_y) || planner_state.new_goal)){
     		//ROS_INFO("Make new plan.");
     		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
-		    std::list<Node> points = plan.getSimplePlan();
+		    std::list<Node> simple_plan = plan.getSimplePlan();
 
 		    geometry_msgs::Point point;
 		    // Iterate through the points in the plan and publish to pathplanner-action
 		    ascend_msgs::PathPlannerFeedback feedback;
 		    // For saving memory
 		    feedback.points_in_plan.reserve(20);
-		    ascend_msgs::PointArray points_in_plan;
 		    points_in_plan.points.reserve(20);
 		    
 		    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
-		    std::list<Node>::iterator second_point = ++(points.begin());
+		    std::list<Node>::iterator second_point = ++(simple_plan.begin());
 
 		    std::cout << "Published points:\t";
-		    for(std::list<Node>::iterator it = second_point; it != points.end(); it++){
+		    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
 
         		point.x = it->getX();
         		point.y = it->getY();
@@ -120,9 +122,19 @@ int main(int argc, char** argv){
     		pub_plan.publish(points_in_plan);
     		std::cout << std::endl;
     	}
-    	else{
-    		rate.sleep();
+    
+    	// Publish plan as long as a plan is requested
+    	if(planner_state.make_plan){
+    		std::cout << "Published points:\t";
+    		for(auto it = points_in_plan.points.begin(); it != points_in_plan.points.end(); it++){
+    			std::cout << it->x << ", " << it->y << "\t" << std::endl;
+    		}
+    		pub_plan.publish(points_in_plan);
+    		std::cout << std::endl;
     	}
+
+    	rate.sleep();
+    	
     }
 
     ros::spin();

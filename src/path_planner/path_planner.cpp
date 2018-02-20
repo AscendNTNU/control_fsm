@@ -110,8 +110,6 @@ void PathPlanner::relaxGraph(){
 }
 
 void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent_y, float distance_to_parent) {
-    //std::cout << "Point: " << x << ", " << y << " Parent: " << parent_x
-    //                        << ", " << parent_y << std::endl;
     if(isValidCoordinate(x,y)){
         int x_index = coordToIndex(x);
         int y_index = coordToIndex(y);
@@ -145,7 +143,6 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 }
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
-    // LOVER Å LØSE DETTE PÅ EN BEDRE MÅTE
     handleSuccessor(x+NODE_DISTANCE,y, x, y, NODE_DISTANCE);
     if(destination_reached){return;}
     handleSuccessor(x+NODE_DISTANCE, y+NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
@@ -286,8 +283,6 @@ void PathPlanner::simplifyPlan() {
         // If an obstacle is hit, the points are necessary and the search will start
         // at the end of the current search.
         if(!isSafeLine(x1,y1,x2,y2)){
-            //std::cout << "Hit: first = (" << x1 << ", " << y1 << ") Third = ("
-            //                  << x2 << ", " << y2 << ")" << std::endl;
             first++;
             second++;
             third++;
@@ -317,7 +312,7 @@ bool PathPlanner::isPlanSafe(float current_x, float current_y) {
     // Check if current point is the first point of the plan
     float margin = NODE_DISTANCE;
 
-    if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY())<margin){
+    if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY()) < margin){
         std::cout << "Remove " << simple_plan.begin()->getX() << ", "
             << simple_plan.begin()->getY() << std::endl;
         simple_plan.pop_front();
@@ -349,4 +344,19 @@ void PathPlanner::resetParameters() {
     plan.clear();
     simple_plan.clear();
     destination_reached = false;
+}
+
+void PathPlanner::removeOldPoints(float current_x, float current_y){
+    // Check if current point is the first point of the plan
+    float margin = NODE_DISTANCE;
+
+    if(simple_plan.empty()){
+        return;
+    }
+
+    if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY())<margin){
+        std::cout << "Remove " << simple_plan.begin()->getX() << ", "
+                  << simple_plan.begin()->getY() << std::endl;
+        simple_plan.pop_front();
+    }
 }
