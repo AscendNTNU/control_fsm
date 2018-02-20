@@ -80,6 +80,12 @@ void TakeoffState::loopState(ControlFSM& fsm) {
         }
 
         if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
+            //If it's a takeoff command, set completed.
+            if(cmd_.isValidCMD(CommandType::TAKEOFF)) {
+                cmd_.finishCMD();
+                cmd_ = EventData();
+            }
+
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
                 cmd_ = EventData();

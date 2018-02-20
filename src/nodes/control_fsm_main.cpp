@@ -59,12 +59,10 @@ int main(int argc, char** argv) {
         fsm_on_state_changed_pub.publish(msg);
     });
 
-
-
     //Wait for all systems to initalize and position to become valid
     control::handleInfoMsg("Waiting for necessary data streams!");
     while(ros::ok() && !fsm.isReady()) {
-        ros::Duration(0.5).sleep();
+        ros::Duration(2.0).sleep();
         ros::spinOnce();
     }
     control::handleInfoMsg("Necessary data streams are ready!");
