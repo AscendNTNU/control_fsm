@@ -40,12 +40,28 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
         } else {
-            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event); //Transition to itself
+            if(event.command_type == CommandType::TAKEOFF) {
+                //Drone already in air!
+                event.finishCMD();
+            } else {
+                //All other command needs to go via the GOTO state
+                fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+            }
         }
     }
 }
 
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
+
+    //TAKEOFF cmd should not be processed by FSM
+    if(event.isValidCMD(CommandType::TAKEOFF)) {
+        event.eventError("Goto begin cmd bug!!");
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        control::handleErrorMsg("TAKEOFF CMD should not be processed by GoTo - BUG!");
+        return;
+    }
+
     cmd_ = event;
     //Has not arrived yet
     delay_transition_.enabled = false;

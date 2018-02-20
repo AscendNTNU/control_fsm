@@ -100,6 +100,7 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
                 case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
                 case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
                     //case REQ::LANDGB: return LandGBCMDEvent();
+                case REQ::TAKEOFFCMD: return TakeoffCMDEvent();
                 default:
                     EventData e;
                     e.event_type = EventType::COMMAND;
