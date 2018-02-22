@@ -5,8 +5,12 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
-enum class LOCAL_STATE{IDLE, LAND, RECOVER} _local_state;
-bool stateValid = false;
+enum class LOCAL_STATE{IDLE, LAND, RECOVER};
+//Struct for controlling local state.
+struct{
+    LOCAL_STATE state;
+    bool valid = false;
+}_local_state;
 
 bool
 idleStateHandler()
@@ -15,7 +19,7 @@ idleStateHandler()
 
     if (/*Success*/true)
     {
-        _local_state = LOCAL_STATE::LAND;
+        _local_state.state = LOCAL_STATE::LAND;
         return true;
     }
 }
@@ -26,14 +30,14 @@ landStateHandler()
     if (/*!checks*/ false)
     {
         //Failure
-        _local_state = LOCAL_STATE::RECOVER;
+        _local_state.state = LOCAL_STATE::RECOVER;
         return false;
     }
 
     if(/*has landed*/true)
     {
         //Success
-        _local_state = LOCAL_STATE::RECOVER;
+        _local_state.state = LOCAL_STATE::RECOVER;
         return true;
     }
 }
@@ -90,8 +94,8 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Sets the local state to tracking, awaiting clearance for landing.
-    _local_state = LOCAL_STATE::TRACK;
-    stateValid = true;
+    _local_state.state = LOCAL_STATE::TRACK;
+    _local_state.valid = true;
 }
 
 void InteractGBState::loopState(ControlFSM& fsm) {
@@ -101,30 +105,30 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     //Checks if we still have visible ground robots to interact with
     //Is the transition to hold pos correct?
     if (/*!gbIsVisible*/false ||
-        (!stateValid && _local_state == LOCAL_STATE::RECOVER))
+        (!_local_state.valid && _local_state.state == LOCAL_STATE::RECOVER))
     {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE,this, cmd_);
-        stateValid = false;
+        _local_state.valid = false;
     }
 
     //Unsure if this way of handling states is efficient.
-    switch(_local_state)
+    switch(_local_state.state)
     {
         case LOCAL_STATE::IDLE:
-        stateValid = idleStateHandler()
+        _local_state.valid = idleStateHandler()
         break;
-        
+
         case LOCAL_STATE::LAND:
         //Chris' landing algorithm?
-        stateValid = landStateHandler()
+        _local_state.valid = landStateHandler()
         break;
 
         case LOCAL_STATE::RECOVER:
-        stateValid = recoverStateHandler()
+        _local_state.valid = recoverStateHandler()
         break;
 
         default:
-        stateValid = false;
+        _local_state.valid = false;
         break;
     }
 
