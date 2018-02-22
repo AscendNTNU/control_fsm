@@ -13,6 +13,42 @@ GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
 }
 
+/**
+ * @brief Returns a yaw that is a multiple of 90 degrees
+ * @details Drone should fly as straight forward as possible
+ * , but yaw should be a multiple of 90 degrees.
+ * This method assumes dx and dy != 0 at the same time
+ * @param dx difference in x
+ * @param dy difference in y
+ * @return Yaw angle in radians - not mavros corrected
+ */
+double calculatePathYaw(double dx, double dy) {
+    //Avoid fatal error if dx and dy is too small
+    //If method is used correctly this should NEVER be a problem
+    if(std::fabs(dx * dx + dy * dy) < 0.001) {
+        return 0;
+    }
+    /*
+    angle = acos(([dx, dy] dot [1,0]) / (norm([dx, dy]) * norm([1,0]))) = acos(dx / (norm([dx, dy]) * 1))
+    */
+    double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
+
+    //Select closest multiple of 90 degrees
+    if(angle > 3 * PI / 4) {
+        angle = PI;
+    } else if(angle > PI / 4) {
+        angle = PI / 2.0;
+    } else {
+        angle = 0;
+    }
+    //Invert if dy is negative
+    if (dy < 0) {
+        angle = -angle;
+    }
+
+    return angle;
+}
+
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT) {
@@ -74,7 +110,21 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
         auto quat = DroneHandler::getCurrentPose().pose.orientation;
-        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+        auto pos  = DroneHandler::getCurrentPose().pose.position;
+
+	// calculate dx,dy
+	auto dx = setpoint_.position.x - pos.x;
+	auto dy = setpoint_.position.y - pos.y;
+
+            setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+	    /*
+	if (std::fabs(dx*dx + dy*dy) < 0.01){
+	    // assume drone is stationary and dont change orientation
+	} else{
+            setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(calculatePathYaw(dx, dy)));
+        }
+	*/
+
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -147,41 +197,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
     control::handleInfoMsg("GoTo init completed!");
 }
 
-/**
- * @brief Returns a yaw that is a multiple of 90 degrees
- * @details Drone should fly as straight forward as possible
- * , but yaw should be a multiple of 90 degrees.
- * This method assumes dx and dy != 0 at the same time
- * @param dx difference in x
- * @param dy difference in y
- * @return Yaw angle in radians - not mavros corrected
- */
-double calculatePathYaw(double dx, double dy) {
-    //Avoid fatal error if dx and dy is too small
-    //If method is used correctly this should NEVER be a problem
-    if(std::fabs(dx * dx + dy * dy) < 0.001) {
-        return 0;
-    }
-    /*
-    angle = acos(([dx, dy] dot [1,0]) / (norm([dx, dy]) * norm([1,0]))) = acos(dx / (norm([dx, dy]) * 1))
-    */
-    double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
 
-    //Select closest multiple of 90 degrees
-    if(angle > 3 * PI / 4) {
-        angle = PI;
-    } else if(angle > PI / 4) {
-        angle = PI / 2.0;
-    } else {
-        angle = 0;
-    }
-    //Invert if dy is negative
-    if (dy < 0) {
-        angle = -angle;
-    }
-
-    return angle;
-}
 
 bool GoToState::stateIsReady(ControlFSM& fsm) {
     return true;
