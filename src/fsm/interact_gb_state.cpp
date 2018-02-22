@@ -5,6 +5,50 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
+enum class LOCAL_STATE{IDLE, LAND, RECOVER} _local_state;
+bool stateValid = false;
+
+bool
+idleStateHandler()
+{
+    //Do checks here and transition to land
+
+    if (/*Success*/true)
+    {
+        _local_state = LOCAL_STATE::LAND;
+        return true;
+    }
+}
+
+bool
+landStateHandler()
+{
+    if (/*!checks*/ false)
+    {
+        //Failure
+        _local_state = LOCAL_STATE::RECOVER;
+        return false;
+    }
+
+    if(/*has landed*/true)
+    {
+        //Success
+        _local_state = LOCAL_STATE::RECOVER;
+        return true;
+    }
+}
+
+bool
+recoverStateHandler()
+{
+    if (/*!checks*/ false)
+    {
+
+        return false;
+    }
+
+}
+
 InteractGBState::InteractGBState() {
     setpoint_.type_mask = default_mask;
 }
@@ -44,10 +88,46 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
+
+    //Sets the local state to tracking, awaiting clearance for landing.
+    _local_state = LOCAL_STATE::TRACK;
+    stateValid = true;
 }
 
 void InteractGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
+    //TODO Remove thought comments
+
+    //Checks if we still have visible ground robots to interact with
+    //Is the transition to hold pos correct?
+    if (/*!gbIsVisible*/false ||
+        (!stateValid && _local_state == LOCAL_STATE::RECOVER))
+    {
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE,this, cmd_);
+        stateValid = false;
+    }
+
+    //Unsure if this way of handling states is efficient.
+    switch(_local_state)
+    {
+        case LOCAL_STATE::IDLE:
+        stateValid = idleStateHandler()
+        break;
+        
+        case LOCAL_STATE::LAND:
+        //Chris' landing algorithm?
+        stateValid = landStateHandler()
+        break;
+
+        case LOCAL_STATE::RECOVER:
+        stateValid = recoverStateHandler()
+        break;
+
+        default:
+        stateValid = false;
+        break;
+    }
+
 }
 
 const mavros_msgs::PositionTarget* InteractGBState::getSetpointPtr() {
