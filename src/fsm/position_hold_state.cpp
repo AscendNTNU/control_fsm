@@ -35,8 +35,12 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 break;
         }
     } else if(event.isValidCMD()) {
-        //All valid command needs to go via the GOTO state
-        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+        if(event.command_type == CommandType::TAKEOFF) {
+            event.finishCMD();
+        } else {
+            //All other command needs to go via the GOTO state
+            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+        }
     }
 }
 
