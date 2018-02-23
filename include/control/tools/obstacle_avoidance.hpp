@@ -37,6 +37,25 @@ public:
     bool isReady() { return true; }
 
 };
+
+// Only do this for unit testing
+#ifdef CONTROL_FSM_UNIT_TEST
+#include <geometry_msgs/Vector3.h>
+
+float angleWrapper(const float angle);
+
+template<typename T, typename K>
+inline geometry_msgs::Vector3 calcVectorBetweenPoints(const T& point_A, const K& point_B);
+
+template<typename T, typename K>
+inline float calcDistanceToObstacle(const T& point, const K& obstacle_position);
+
+template<typename T, typename K>
+inline float calcAngleToObstacle(const T& point, const K& obstacle_position, const float obstacle_direction);
+
+template<typename T>
+inline geometry_msgs::Vector3 rotateXY(const T& point, const float angle);
+#endif
 }
 
 #endif
