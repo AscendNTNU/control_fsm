@@ -5,52 +5,74 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
+//Should this be here?
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
+
 //Struct for controlling local state.
+//Maybe add a method for doing state validation
 struct{
     LOCAL_STATE state;
     bool valid = false;
 }_local_state;
 
-bool
-idleStateHandler()
+void
+idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
 {
+    
+    double distance_to_gb = math::sqrt(math::pow((gb_pose.position.x - drone_pose.position.x),2)
+                            + math::pow((gb_pose.position.y - drone_pose.position.y),2));
     //Do checks here and transition to land
-
-    if (/*Success*/true)
+    if (distance_to_gb > THRESHOLD && drone_pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
+    {
+        _local_state.state = LOCAL_STATE::RECOVER;
+        _local_state.valid = false;
+    }
+    else
     {
         _local_state.state = LOCAL_STATE::LAND;
-        return true;
+        _local_state.valid = true;
     }
 }
 
-bool
+void
 landStateHandler()
 {
     if (/*!checks*/ false)
     {
         //Failure
         _local_state.state = LOCAL_STATE::RECOVER;
-        return false;
+        _local_state.valid = false;
     }
 
     if(/*has landed*/true)
     {
         //Success
         _local_state.state = LOCAL_STATE::RECOVER;
-        return true;
+        _local_state.valid = true;
     }
 }
 
-bool
-recoverStateHandler()
+void
+recoverStateHandler(geometry_msgs::PoseStamped& drone_pose)
 {
-    if (/*!checks*/ false)
+    if (!_local_state.valid)
+    {
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event)
+        _local_state.valid = false;
+    }
+    if (drone_pose.position.y < HEIGHT_THRESHOLD)
     {
 
-        return false;
     }
-
+    if (/*Drone has landed*/)
+    {
+        RequestEvent takeoff_request(RequestType::TAKEOFF);
+        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, takeoff_request)
+    }
+    //This should be the natural transition after a successfull land and recover.
+    RequestEvent transition_event(RequestType::POSHOLD);
+    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition_event);
 }
 
 InteractGBState::InteractGBState() {
@@ -101,33 +123,32 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 void InteractGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
     //TODO Remove thought comments
+    auto& drone_pose = control::DroneHandler::getCurrentPose.pose;
 
     //Checks if we still have visible ground robots to interact with
     //Is the transition to hold pos correct?
-    if (/*!gbIsVisible*/false ||
-        (!_local_state.valid && _local_state.state == LOCAL_STATE::RECOVER))
+    if (/*!gbIsVisible*/false)
     {
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE,this, cmd_);
+        _local_state.state = LOCAL_STATE::RECOVER;
         _local_state.valid = false;
     }
 
-    //Unsure if this way of handling states is efficient.
     switch(_local_state.state)
     {
         case LOCAL_STATE::IDLE:
-        _local_state.valid = idleStateHandler()
+        idleStateHandler()
         break;
 
         case LOCAL_STATE::LAND:
-        //Chris' landing algorithm?
-        _local_state.valid = landStateHandler()
+        landStateHandler()
         break;
 
         case LOCAL_STATE::RECOVER:
-        _local_state.valid = recoverStateHandler()
+        recoverStateHandler()
         break;
 
         default:
+        // Should never happen.
         _local_state.valid = false;
         break;
     }
