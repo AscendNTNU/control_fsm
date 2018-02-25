@@ -21,8 +21,9 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
     
     double distance_to_gb = math::sqrt(math::pow((gb_pose.position.x - drone_pose.position.x),2)
                             + math::pow((gb_pose.position.y - drone_pose.position.y),2));
+    
     //Do checks here and transition to land
-    if (distance_to_gb > THRESHOLD && drone_pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
+    if (distance_to_gb > THRESHOLD || drone_pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
     {
         _local_state.state = LOCAL_STATE::RECOVER;
         _local_state.valid = false;
@@ -37,12 +38,8 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 void
 landStateHandler()
 {
-    if (/*!checks*/ false)
-    {
-        //Failure
-        _local_state.state = LOCAL_STATE::RECOVER;
-        _local_state.valid = false;
-    }
+    //TODO add Chris' algorithm here.
+
 
     if(/*has landed*/true)
     {
@@ -67,6 +64,7 @@ recoverStateHandler(geometry_msgs::PoseStamped& drone_pose)
     }
     if (/*Drone has landed*/)
     {
+        //Maybe transition to idle instead and let that take care of pre takeoff checks?
         RequestEvent takeoff_request(RequestType::TAKEOFF);
         fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, takeoff_request)
     }
