@@ -10,6 +10,7 @@
 #include <control/tools/target_tools.hpp>
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/config.hpp>
+#include <control/planner/path_planner.hpp>
 #include "gtest/gtest.h"
 #include <sstream>
 
@@ -75,9 +76,25 @@ TEST(ControlTest, quatConversionTest) {
 
 }
 
+TEST(PathPlannerTest, coordToIndexTest) {
+    control::pathplanner::PathPlanner obj1(1,0.4);
+    EXPECT_EQ(obj1.coordToIndex(0.0), 0);
+    EXPECT_EQ(obj1.coordToIndex(0.9), 2);
+    EXPECT_EQ(obj1.coordToIndex(0.7999), 2);
+    EXPECT_EQ(obj1.coordToIndex(0.5999), 1);
+    EXPECT_EQ(obj1.coordToIndex(0.6), 2);
+
+    control::pathplanner::PathPlanner obj2(1, 0.5);
+    EXPECT_EQ(obj2.coordToIndex(0.0), 0);
+    EXPECT_EQ(obj2.coordToIndex(0.5), 1);
+    EXPECT_EQ(obj2.coordToIndex(0.2499), 0);
+    EXPECT_EQ(obj2.coordToIndex(10), 20);
+    EXPECT_EQ(obj2.coordToIndex(0.4999), 1);
+
+}
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "control_fsm_unit_test");
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
