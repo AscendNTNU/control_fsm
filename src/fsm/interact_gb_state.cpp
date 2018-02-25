@@ -7,7 +7,9 @@
 
 //Should this be here?
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
-
+//Just dummys
+const double THRESHOLD = 0.5;
+const double HEIGHT_THRESHOLD = 3;
 //Struct for controlling local state.
 //Maybe add a method for doing state validation
 struct{
@@ -16,14 +18,14 @@ struct{
 }_local_state;
 
 void
-idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
+idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm)
 {
     
-    double distance_to_gb = sqrt(pow((gb_pose.position.x - drone_pose.position.x),2)
-                            + pow((gb_pose.position.y - drone_pose.position.y),2));
+    double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
+                            + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
     
     //Do checks here and transition to land
-    if (distance_to_gb > THRESHOLD || drone_pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
+    if (distance_to_gb > THRESHOLD || drone_pose.pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
     {
         _local_state.state = LOCAL_STATE::RECOVER;
         _local_state.valid = false;
@@ -37,7 +39,7 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-landStateHandler()
+landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm)
 {
     //TODO add Chris' algorithm here.
 
@@ -51,7 +53,7 @@ landStateHandler()
 }
 
 void
-recoverStateHandler(geometry_msgs::PoseStamped& drone_pose)
+recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm)
 {
     if (!_local_state.valid)
     {
@@ -59,7 +61,7 @@ recoverStateHandler(geometry_msgs::PoseStamped& drone_pose)
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event)
         _local_state.valid = false;
     }
-    if (drone_pose.position.y < HEIGHT_THRESHOLD)
+    if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
 
     }
@@ -114,8 +116,8 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
 
-    //Sets the local state to tracking, awaiting clearance for landing.
-    _local_state.state = LOCAL_STATE::TRACK;
+    //Sets the local state to idle, awaiting clearance for landing.
+    _local_state.state = LOCAL_STATE::IDLE;
     _local_state.valid = true;
 }
 
@@ -135,15 +137,15 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     switch(_local_state.state)
     {
         case LOCAL_STATE::IDLE:
-        idleStateHandler()
+        idleStateHandler(gb_pose, drone_pose, ControlFSM& fsm)
         break;
 
         case LOCAL_STATE::LAND:
-        landStateHandler()
+        landStateHandler(gb_pose, drone_pose, ControlFSM& fsm)
         break;
 
         case LOCAL_STATE::RECOVER:
-        recoverStateHandler()
+        recoverStateHandler(drone_pose, ControlFSM& fsm)
         break;
 
         default:
