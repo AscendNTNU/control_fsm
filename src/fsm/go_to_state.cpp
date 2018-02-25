@@ -17,7 +17,7 @@ ros::NodeHandle& GoToState::getNodeHandler() {
 
 GoToState::GoToState() : StateInterface::StateInterface()  {
     using ascend_msgs::PointArrayStamped;
-    last_plan_ = ascend_msgs::PointArrayStamped::ConstPtr(new ascend_msgs::PointArrayStamped);;
+    last_plan_ = ascend_msgs::PointArrayStamped::ConstPtr(new ascend_msgs::PointArrayStamped);
     setpoint_.type_mask = default_mask;
 }
 
