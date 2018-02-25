@@ -16,8 +16,9 @@ ros::NodeHandle& GoToState::getNodeHandler() {
 }
 
 GoToState::GoToState() : StateInterface::StateInterface()  {
-        last_plan_ = boost::make_shared<ascend_msgs::PointArray>();
-        setpoint_.type_mask = default_mask;
+    using ascend_msgs::PointArrayStamped;
+    last_plan_ = ascend_msgs::PointArrayStamped::ConstPtr(new ascend_msgs::PointArrayStamped);;
+    setpoint_.type_mask = default_mask;
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -88,11 +89,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
     //Request new plan
-    using PathRequest = ascend_msgs::PathPlanner::Request;
-    Request req;
-    req.cmd = Request::MAKE_PLAN;
-    req.x = cmd_.position_goal.x;
-    req.y = cmd_.position_goal.y;
+    using PathService = ascend_msgs::PathPlanner;
+    PathService req;
+    req.request.cmd = PathService::Request::MAKE_PLAN;
+    req.request.goal_x = cmd_.position_goal.x;
+    req.request.goal_y = cmd_.position_goal.y;
     
     if(!path_planner_client_.call(req)) {
         control::handleErrorMsg("Couldn't request path plan");
@@ -124,9 +125,9 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    using Request = ascend_msgs::PathPlanner::Request;
+    using Request = ascend_msgs::PathPlanner;
     Request req;
-    req.cmd = Request::ABORT;
+    req.request.cmd = Request::Request::ABORT;
     if(!path_planner_client_.call(req)) {
         control::handleErrorMsg("Failed to call path planner service");
     }
@@ -139,13 +140,13 @@ void GoToState::loopState(ControlFSM& fsm) {
             throw control::PoseNotValidException();
         }
         
-        bool last_plan_timeout = ros::Time::now() - last_plan_.header.stamp > ros::Duration(control::Config::path_plan_timeout);
-        bool plan_requested_timeout = ros::Time::now() - last_plan_.header.stamp > ros::Duration(control::Config::path_plan_timeout);
+        bool last_plan_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
+        bool plan_requested_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
 
         //No new valid plan recieved
-        if(last_plan_timeout || last_plan_.points.empty()) {
+        if(last_plan_timeout || last_plan_->points.empty()) {
             if(plan_requested_timeout) {
-                handleErrorMsg("Missing valid path plan!");
+                control::handleErrorMsg("Missing valid path plan!");
                 RequestEvent abort_event(RequestType::ABORT);
                 if(cmd_.isValidCMD()) {
                     cmd_.eventError("ABORT");
@@ -156,7 +157,7 @@ void GoToState::loopState(ControlFSM& fsm) {
             return;
         }
         
-        auto& target_point = last_plan_.points[0];
+        auto& target_point = last_plan_->points[0];
         setpoint_.position.x = target_point.x;
         setpoint_.position.y = target_point.y;
         
@@ -203,17 +204,20 @@ const mavros_msgs::PositionTarget* GoToState::getSetpointPtr() {
     return &setpoint_;
 }
 
+void GoToState::planCB(ascend_msgs::PointArrayStamped::ConstPtr msg_p) {
+    last_plan_ = msg_p;
+}
+
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
     using control::Config;
     using ascend_msgs::PointArrayStamped;
-    //TODO Uneccesary variables - Config can be used directly
-    //Set state variables
+    using ascend_msgs::PathPlanner;
     auto& pc_topic = Config::path_planner_client_topic;
     auto& ps_topic = Config::path_planner_plan_topic;
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
-    path_planner_client = getNodeHandler().serviceClienti<PointArrayStamped>(pc_topic); 
-    path_planner_sub_ = getNodeHandler().subscribe(ps_topic, 1, GoToState::planCB, this);
+    path_planner_client_ = getNodeHandler().serviceClient<PathPlanner>(pc_topic); 
+    path_planner_sub_ = getNodeHandler().subscribe(ps_topic, 1, &GoToState::planCB, this);
     control::handleInfoMsg("GoTo init completed!");
 }
 
@@ -296,17 +300,16 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                     if(!delay_transition_.enabled) {
                         delay_transition_.started = ros::Time::now();
                         delay_transition_.enabled = true;
-
                         if(cmd_.isValidCMD()) {
                             cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-                        
+                        }
+                        //Delay transition
+                        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+                            return;
+                        }
+                        //If all checks passed - land!
+                        fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                     }
-                    //Delay transition
-                    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-                        return;
-                    }
-                    //If all checks passed - land!
-                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                 } else {
                     //If drone is moving, reset delayed transition
                     delay_transition_.enabled = false;

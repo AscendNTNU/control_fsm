@@ -32,6 +32,8 @@ std::string Config::mavros_local_pos_topic = "mavros/local_position/pose";
 std::string Config::mavros_state_changed_topic = "mavros/state";
 std::string Config::land_detector_topic = "/landdetector";
 std::string Config::obstacle_state_topic = "/perception_obstacle_states";
+std::string Config::path_planner_plan_topic = "/control/planner/plan";
+std::string Config::path_planner_client_topic = "/control/planner/client";
 int Config::fsm_status_buffer_size = 10;
 double Config::go_to_hold_dest_time = 0.5;
 double Config::safe_hover_altitude = 2.0;
@@ -39,6 +41,7 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
+double Config::path_plan_timeout = 1.0;
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -138,6 +141,10 @@ void Config::loadParams() {
     getStringParam("land_detector_topic", land_detector_topic);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
+    //Path planner
+    getDoubleParam("path_plan_timeout", path_plan_timeout, 0.0, 5.0);
+    getStringParam("path_planner_client_topic", path_planner_client_topic);
+    getStringParam("path_planner_plan_topic", path_planner_plan_topic);
 
 }
 
