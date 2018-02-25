@@ -27,22 +27,30 @@ using Response = ascend_msgs::PathPlanner::Response;
 
 bool newPlanCB(Request &req, Response &res, PlannerState* planner_state){
 
-	ROS_INFO("newPlanCB");
+	if(req.cmd == Request::ABORT){
+		ROS_INFO("Service callback: abort");
+		planner_state->make_plan = false;
+	}
+	else if(req.cmd == Request::MAKE_PLAN){
+		ROS_INFO("Service callback: make new plan");
 
-	planner_state->make_plan = true;
+		planner_state->make_plan = true;
 
-	// Update planner state
-	geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();
-	auto& position = current_pose.pose.position;
-	planner_state->current_x = position.x;
-	planner_state->current_y = position.y;
+		// Update planner state
+		geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();
+		auto& position = current_pose.pose.position;
+		planner_state->current_x = position.x;
+		planner_state->current_y = position.y;
 
-	//Accept the new goal
-	planner_state->new_goal = true;
+		//Accept the new goal
+		planner_state->new_goal = true;
 
-	planner_state->goal_x = req.goal_x;
-	planner_state->goal_y = req.goal_y;
-
+		planner_state->goal_x = req.goal_x;
+		planner_state->goal_y = req.goal_y;
+	}
+	else{
+		ROS_INFO("Service callback: not relevant");
+	}
 	return true;
 }
 
