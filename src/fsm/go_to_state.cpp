@@ -5,11 +5,19 @@
 #include <control/fsm/go_to_state.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
+#include <ascend_msgs/PathPlanner.h>
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
+//Gurantees construction on first use!
+ros::NodeHandle& GoToState::getNodeHandler() {
+    static ros::NodeHandle n;
+    return n;
+}
 
-GoToState::GoToState() : StateInterface::StateInterface() {
+GoToState::GoToState() : StateInterface::StateInterface()  {
+    using ascend_msgs::PointArrayStamped;
+    last_plan_ = ascend_msgs::PointArrayStamped::ConstPtr(new ascend_msgs::PointArrayStamped);
     setpoint_.type_mask = default_mask;
 }
 
@@ -80,17 +88,33 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
-    // Set setpoint
-    setpoint_.position.x = cmd_.position_goal.x;
-    setpoint_.position.y = cmd_.position_goal.y;
-    setpoint_.position.z = cmd_.position_goal.z;
+    //Request new plan
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
+    req.request.goal_x = static_cast<float>(cmd_.position_goal.x);
+    req.request.goal_y = static_cast<float>(cmd_.position_goal.y);
+    
+    if(!path_planner_client_.call(req)) {
+        control::handleErrorMsg("Couldn't request path plan");
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        return;
+    }
+    //Change stamp
+    path_requested_stamp_ = ros::Time::now();
+    
     try {
         ///Calculate yaw setpoint
         using control::pose::quat2yaw;
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
-        auto quat = DroneHandler::getCurrentPose().pose.orientation;
-        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+        auto pose = DroneHandler::getCurrentPose().pose;
+        //Hold position while waiting for new plan!
+        setpoint_.position.x = pose.position.x;
+        setpoint_.position.y = pose.position.y;
+        setpoint_.position.z = pose.position.z;
+        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(pose.orientation)));
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -101,6 +125,12 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::ABORT;
+    if(!path_planner_client_.call(req)) {
+        control::handleErrorMsg("Failed to call path planner service");
+    }
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -109,7 +139,28 @@ void GoToState::loopState(ControlFSM& fsm) {
         if(!control::DroneHandler::isPoseValid()) {
             throw control::PoseNotValidException();
         }
+        
+        bool last_plan_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
+        bool plan_requested_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
 
+        //No new valid plan recieved
+        if(last_plan_timeout || last_plan_->points.empty()) {
+            if(plan_requested_timeout) {
+                control::handleErrorMsg("Missing valid path plan!");
+                RequestEvent abort_event(RequestType::ABORT);
+                if(cmd_.isValidCMD()) {
+                    cmd_.eventError("ABORT");
+                    cmd_ = EventData();
+                }
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            }
+            return;
+        }
+        
+        auto& target_point = last_plan_->points[0];
+        setpoint_.position.x = target_point.x;
+        setpoint_.position.y = target_point.y;
+        
         using control::pose::quat2mavrosyaw;
         //Get pose
         auto pose_stamped = control::DroneHandler::getCurrentPose();
@@ -153,13 +204,20 @@ const mavros_msgs::PositionTarget* GoToState::getSetpointPtr() {
     return &setpoint_;
 }
 
+void GoToState::planCB(ascend_msgs::PointArrayStamped::ConstPtr msg_p) {
+    last_plan_ = msg_p;
+}
+
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
     using control::Config;
-    //TODO Uneccesary variables - Config can be used directly
-    //Set state variables
+    using ascend_msgs::PointArrayStamped;
+    using ascend_msgs::PathPlanner;
+    auto& pc_topic = Config::path_planner_client_topic;
+    auto& ps_topic = Config::path_planner_plan_topic;
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
-
+    path_planner_client_ = getNodeHandler().serviceClient<PathPlanner>(pc_topic); 
+    path_planner_sub_ = getNodeHandler().subscribe(ps_topic, 1, &GoToState::planCB, this);
     control::handleInfoMsg("GoTo init completed!");
 }
 
@@ -242,17 +300,16 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                     if(!delay_transition_.enabled) {
                         delay_transition_.started = ros::Time::now();
                         delay_transition_.enabled = true;
-
                         if(cmd_.isValidCMD()) {
                             cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
                         }
+                        //Delay transition
+                        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+                            return;
+                        }
+                        //If all checks passed - land!
+                        fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                     }
-                    //Delay transition
-                    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-                        return;
-                    }
-                    //If all checks passed - land!
-                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                 } else {
                     //If drone is moving, reset delayed transition
                     delay_transition_.enabled = false;
