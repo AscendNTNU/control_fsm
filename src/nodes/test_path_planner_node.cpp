@@ -5,6 +5,8 @@
 int main(int argc, char** argv){
 
 	ROS_INFO("Test path planner node started");
+
+	using Request = ascend_msgs::PathPlanner::Request;
 	
 	ros::init(argc, argv, "path_planner_test");
     ros::NodeHandle n;
@@ -14,6 +16,7 @@ int main(int argc, char** argv){
 
     ascend_msgs::PathPlanner clientCall;
 
+    clientCall.request.cmd = Request::MAKE_PLAN;
     clientCall.request.goal_x = 1;
 	clientCall.request.goal_y = 1;
 
