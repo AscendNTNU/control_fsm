@@ -58,7 +58,7 @@ recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, Int
     if (!_local_state.valid)
     {
         RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, self, abort_event)
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, self, abort_event);
         _local_state.valid = false;
     }
     if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
@@ -69,7 +69,7 @@ recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, Int
     {
         //Maybe transition to idle instead and let that take care of pre takeoff checks?
         RequestEvent takeoff_request(RequestType::TAKEOFF);
-        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, self, takeoff_request)
+        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, self, takeoff_request);
     }
     //This should be the natural transition after a successfull land and recover.
     RequestEvent transition_event(RequestType::POSHOLD);
@@ -124,7 +124,8 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 void InteractGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
     //TODO Remove thought comments
-    auto& drone_pose = control::DroneHandler::getCurrentPose.pose;
+    auto& drone_pose = control::DroneHandler::getCurrentPose().pose;
+    geometry_msgs::PoseStamped& gb_pose{};
 
     //Checks if we still have visible ground robots to interact with
     //Is the transition to hold pos correct?
