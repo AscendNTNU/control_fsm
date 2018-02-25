@@ -69,11 +69,11 @@ recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, Int
     {
         //Maybe transition to idle instead and let that take care of pre takeoff checks?
         RequestEvent takeoff_request(RequestType::TAKEOFF);
-        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, takeoff_request)
+        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, self, takeoff_request)
     }
     //This should be the natural transition after a successfull land and recover.
     RequestEvent transition_event(RequestType::POSHOLD);
-    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition_event);
+    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, self, transition_event);
 }
 
 InteractGBState::InteractGBState() {
