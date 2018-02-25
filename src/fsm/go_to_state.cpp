@@ -89,11 +89,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
     //Request new plan
-    using PathService = ascend_msgs::PathPlanner;
-    PathService req;
-    req.request.cmd = PathService::Request::MAKE_PLAN;
-    req.request.goal_x = cmd_.position_goal.x;
-    req.request.goal_y = cmd_.position_goal.y;
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
+    req.request.goal_x = static_cast<float>(cmd_.position_goal.x);
+    req.request.goal_y = static_cast<float>(cmd_.position_goal.y);
     
     if(!path_planner_client_.call(req)) {
         control::handleErrorMsg("Couldn't request path plan");
@@ -125,9 +125,9 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    using Request = ascend_msgs::PathPlanner;
-    Request req;
-    req.request.cmd = Request::Request::ABORT;
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::ABORT;
     if(!path_planner_client_.call(req)) {
         control::handleErrorMsg("Failed to call path planner service");
     }
