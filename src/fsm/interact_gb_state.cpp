@@ -18,14 +18,14 @@ struct{
 }_local_state;
 
 void
-idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm)
+idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
 {
     
     double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
                             + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
     
     //Do checks here and transition to land
-    if (distance_to_gb > THRESHOLD || drone_pose.pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
+    if (distance_to_gb > THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
     {
         _local_state.state = LOCAL_STATE::RECOVER;
         _local_state.valid = false;
@@ -39,7 +39,7 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm)
+landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
 {
     //TODO add Chris' algorithm here.
 
@@ -53,19 +53,19 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm)
+recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
 {
     if (!_local_state.valid)
     {
         RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event)
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, self, abort_event)
         _local_state.valid = false;
     }
     if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
 
     }
-    if (/*Drone has landed*/)
+    if (/*Drone has landed*/true)
     {
         //Maybe transition to idle instead and let that take care of pre takeoff checks?
         RequestEvent takeoff_request(RequestType::TAKEOFF);
@@ -137,15 +137,15 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     switch(_local_state.state)
     {
         case LOCAL_STATE::IDLE:
-        idleStateHandler(gb_pose, drone_pose, ControlFSM& fsm)
+        idleStateHandler(gb_pose, drone_pose, fsm, this)
         break;
 
         case LOCAL_STATE::LAND:
-        landStateHandler(gb_pose, drone_pose, ControlFSM& fsm)
+        landStateHandler(gb_pose, drone_pose,fsm, this)
         break;
 
         case LOCAL_STATE::RECOVER:
-        recoverStateHandler(drone_pose, ControlFSM& fsm)
+        recoverStateHandler(drone_pose, fsm, this)
         break;
 
         default:
