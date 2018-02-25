@@ -31,6 +31,11 @@ public:
     static std::string obstacle_state_topic;
     static std::string mavros_setpoint_topic;
     static std::string plan_points_topic;
+
+    // for path planner constructor
+    static double obstacle_radius;
+    static double node_distance;
+
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */

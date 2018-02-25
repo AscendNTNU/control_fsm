@@ -58,16 +58,16 @@ void updateObstaclesCB(ascend_msgs::GRStateArray::ConstPtr msg_p){
 
 int main(int argc, char** argv){
 
+	ros::init(argc, argv, "path_planner_server");
+	ros::NodeHandle n;
+    ros::Rate rate(1);
+
 	ROS_INFO("Path planner node started");
 
-	PlannerState planner_state;
-	PathPlanner plan(1.0, 0.4);
+	control::PlannerConfig::loadParams();
 
-    ros::init(argc, argv, "path_planner_server");
-    ros::NodeHandle n;
-    ros::Rate rate(1);
- 
-    control::PlannerConfig::loadParams();
+	PlannerState planner_state;
+	PathPlanner plan(control::PlannerConfig::obstacle_radius, control::PlannerConfig::node_distance);
 
 
     //ros::Subscriber sub_obstacles = n.subscribe(control::PlannerConfig::obstacle_state_topic, 1, updateObstaclesCB);

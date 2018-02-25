@@ -16,6 +16,9 @@ std::string PlannerConfig::obstacle_state_topic = "/perception_obstacle_states";
 std::string PlannerConfig::mavros_setpoint_topic = "/mavros/setpoint_raw/local";
 std::string PlannerConfig::plan_points_topic = "/control/planner/plan";
 
+double PlannerConfig::obstacle_radius = 1.0;
+double PlannerConfig::node_distance = 0.4;
+
 void PlannerConfig::loadParams() {
     if(!ros::isInitialized()) {
         throw ROSNotInitializedException();
@@ -86,6 +89,9 @@ void PlannerConfig::loadParams() {
     getStringParam("obstacle_state_topic", obstacle_state_topic);
     getStringParam("mavros_setpoint_topic", mavros_setpoint_topic);
     getStringParam("plan_points_topic", plan_points_topic);
+
+    getDoubleParam("obstacle_radius", obstacle_radius,0,3);
+    getDoubleParam("node_distance", node_distance,0,1);
 
 }
 
