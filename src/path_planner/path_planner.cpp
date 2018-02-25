@@ -228,11 +228,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     int x_index = coordToIndex(x);
     int y_index = coordToIndex(y);
 
-    if(graph[x_index][y_index].obstacle){
-        plan.push_front(start_node);
-        return;
-    }
-
     // Calculate all f values and set the parents
     relaxGraph();
 
@@ -312,15 +307,6 @@ void PathPlanner::simplifyPlan() {
 bool PathPlanner::isPlanSafe(float current_x, float current_y) {
     if(simple_plan.empty()){
         return false;
-    }
-
-    // Check if current point is the first point of the plan
-    float margin = node_distance;
-
-    if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY()) < margin){
-        std::cout << "Remove " << simple_plan.begin()->getX() << ", "
-            << simple_plan.begin()->getY() << std::endl;
-        simple_plan.pop_front();
     }
 
     std::list<Node>::iterator current = simple_plan.begin();
