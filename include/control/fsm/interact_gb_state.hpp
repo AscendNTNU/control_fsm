@@ -13,6 +13,7 @@ public:
     void loopState(ControlFSM& fsm) override;
     std::string getStateName() const override { return "InteractWithGroundRobot"; }
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
+    ascend_msgs::ControlFSMState getStateMsg() override;
     void handleManual(ControlFSM &fsm) override;
 };
 
