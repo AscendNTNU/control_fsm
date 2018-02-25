@@ -8,7 +8,7 @@
 #include "ascend_msgs/GRStateArray.h"
 #include <mavros_msgs/PositionTarget.h>
 #include "control/tools/planner_config.hpp"
-#include "ascend_msgs/PointArray.h"
+#include "ascend_msgs/PointArrayStamped.h"
 #include "ascend_msgs/PathPlanner.h"
 
 using control::pathplanner::PathPlanner;
@@ -81,7 +81,8 @@ int main(int argc, char** argv){
 
     ros::ServiceServer server = n.advertiseService<Request, Response>("path_planner_service", boost::bind(&newPlanCB, _1, _2, &planner_state));
 
-    ascend_msgs::PointArray points_in_plan;
+    ascend_msgs::PointArrayStamped msg;
+    geometry_msgs::Point points_in_plan;
 
     while(ros::ok()){
 
@@ -119,7 +120,10 @@ int main(int argc, char** argv){
         		std::cout << point.x << ", " << point.y << "\t";
         	
     		}
-    		pub_plan.publish(points_in_plan);
+    		msg.points = points_in_plan;
+    		msg.header = ros::Time::now();
+    		pub_plan.publish(msg);
+
     		std::cout << std::endl;
     	}
     
