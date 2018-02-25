@@ -18,20 +18,21 @@
 namespace control{
 namespace pathplanner{
 
-constexpr float OBSTACLE_RADIUS = 1.0; //meters
-constexpr float NODE_DISTANCE = 0.4; // meters
-constexpr float DIAGONAL_NODE_DISTANCE = sqrt(2*NODE_DISTANCE*NODE_DISTANCE); // meters
-
-constexpr int GRAPH_SIZE = FIELD_LENGTH/NODE_DISTANCE+1.5; // number of nodes in one direction
+#define FIELD_LENGTH 20.0
 
 
 class PathPlanner;
 class PathPlanner{
 private:
-    std::array<std::array<Node, GRAPH_SIZE>, GRAPH_SIZE> graph;
+    float obstacle_radius; //meters
+    float node_distance; //meters
+    float diagonal_node_distance; //meters
+    int graph_size; //number of nodes in one direction
+
+    std::vector<std::vector<Node>> graph;
 
     std::priority_queue<Node> open_list;
-    std::array<std::array<bool, GRAPH_SIZE>, GRAPH_SIZE> closed_list;
+    //std::array<std::array<bool, graph_size>, graph_size> closed_list;
 
     std::list<Node> plan;
     std::list<Node> simple_plan;
@@ -49,8 +50,11 @@ private:
     float destination_found_x;
     float destination_found_y;
 
+    PathPlanner() = delete;
 public:
-    PathPlanner();
+    PathPlanner(float obstacle_radius, float node_distance);
+
+    int coordToIndex(float coord);
 
     void initializeGraph();
 
@@ -64,7 +68,7 @@ public:
     float calculateEuclidianHeuristic(float x, float y);
 
     // Print the f-value of each node
-    void printGraph();
+    //void printGraph();
     void relaxGraph();
 
     //
@@ -88,7 +92,7 @@ public:
     void removeOldPoints(float current_x, float current_y);
 
     // These functions are mainly for the visualization
-    std::array<std::array<Node, GRAPH_SIZE>, GRAPH_SIZE> getGraph(){return graph;}
+    std::vector<std::vector<Node>> getGraph(){return graph;}
     std::list<Node> getPlan(){return plan;}
     std::list<Node> getSimplePlan(){return simple_plan;}
     // For the colors in the visualization

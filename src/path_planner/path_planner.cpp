@@ -3,17 +3,24 @@
 
 using namespace control::pathplanner;
 
-int coordToIndex(float k) {
-    int index = round(k/NODE_DISTANCE);
+
+PathPlanner::PathPlanner(float obstacle_radius, float node_distance)
+    : obstacle_radius(obstacle_radius), node_distance(node_distance){
+    diagonal_node_distance = sqrt(2*node_distance*node_distance);
+    // plus 1 to include both 0 and the last node
+    graph_size = round(FIELD_LENGTH/node_distance+1);
+
+    graph.resize(graph_size, std::vector<Node>(graph_size));
+}
+
+int PathPlanner::coordToIndex(float coord) {
+    int index = round(coord/node_distance);
     return (index);
 }
 
-
-PathPlanner::PathPlanner(){}
-
 void PathPlanner::initializeGraph(){
-    for (float x = 0; x < FIELD_LENGTH; x += NODE_DISTANCE){
-        for (float y = 0; y < FIELD_LENGTH; y += NODE_DISTANCE){
+    for (float x = 0; x < FIELD_LENGTH; x += node_distance){
+        for (float y = 0; y < FIELD_LENGTH; y += node_distance){
             if(isStart(x,y)){
                 graph[coordToIndex(x)][coordToIndex(y)] = start_node;
                 // Push the start node to the open list so that the search starts from the start
@@ -27,13 +34,12 @@ void PathPlanner::initializeGraph(){
     }
 }
 
-
 void PathPlanner::addObstacle(float center_x, float center_y) {
     // Find the y value for each x in the circle
-    for (float x = center_x-OBSTACLE_RADIUS; x <= center_x+OBSTACLE_RADIUS; x+=NODE_DISTANCE) {
-        float y = sqrt(OBSTACLE_RADIUS*OBSTACLE_RADIUS-(x-center_x)*(x-center_x));
+    for (float x = center_x-obstacle_radius; x <= center_x+obstacle_radius; x+=node_distance) {
+        float y = sqrt(obstacle_radius*obstacle_radius-(x-center_x)*(x-center_x));
         // Do this to fill the circle
-        for(float i = center_y-y; i<=center_y+y; i+= NODE_DISTANCE) {
+        for(float i = center_y-y; i<=center_y+y; i+= node_distance) {
             if (isValidCoordinate(x, i)) {
                 graph[coordToIndex(x)][coordToIndex(i)].closed = true;
                 graph[coordToIndex(x)][coordToIndex(i)].obstacle = true;
@@ -42,9 +48,9 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
 
     }
     // Do the same as over, just switch x and y
-    for (float y = center_y-OBSTACLE_RADIUS; y <= center_y+OBSTACLE_RADIUS; y+=NODE_DISTANCE) {
-        float x = sqrt(OBSTACLE_RADIUS*OBSTACLE_RADIUS-(y-center_y)*(y-center_y));
-        for(float i = center_x-x; i<=center_x+x; i+= NODE_DISTANCE) {
+    for (float y = center_y-obstacle_radius; y <= center_y+obstacle_radius; y+=node_distance) {
+        float x = sqrt(obstacle_radius*obstacle_radius-(y-center_y)*(y-center_y));
+        for(float i = center_x-x; i<=center_x+x; i+= node_distance) {
             if (isValidCoordinate(i, y)) {
                 graph[coordToIndex(i)][coordToIndex(y)].closed = true;
                 graph[coordToIndex(i)][coordToIndex(y)].obstacle = true;
@@ -59,8 +65,7 @@ void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
         return;
     }
     std::list<float>::iterator x = obstacle_coordinates.begin();
-    std::list<float>::iterator y = x;
-    y++;
+    std::list<float>::iterator y = ++(obstacle_coordinates.begin());
     while(y != obstacle_coordinates.end()){
         std::cout << "adding obstacle" << std::endl;
         addObstacle(*x, *y);
@@ -81,16 +86,16 @@ float PathPlanner::calculateEuclidianHeuristic(float x, float y) {
     return(sqrt((x-end_node.getX())*(x-end_node.getX())+(y-end_node.getY())*(y-end_node.getY())));
 }
 
-void PathPlanner::printGraph(){
-    for(int i = 0; i < GRAPH_SIZE; i++){
-        for(int j = 0; j < GRAPH_SIZE; j++){
+/*void PathPlanner::printGraph(){
+    for(int i = 0; i < graph_size; i++){
+        for(int j = 0; j < graph_size; j++){
             std::cout << std::fixed;
             std::cout << std::setprecision(2);
             std::cout << graph[i][j].getF() << "  ";
         }
         std::cout << std::endl;
     }
-}
+}*/
 
 void PathPlanner::relaxGraph(){
     Node current_node;
@@ -143,31 +148,31 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 }
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
-    handleSuccessor(x+NODE_DISTANCE,y, x, y, NODE_DISTANCE);
+    handleSuccessor(x+node_distance,y, x, y, node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x+NODE_DISTANCE, y+NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
+    handleSuccessor(x+node_distance, y+node_distance, x, y, diagonal_node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x+NODE_DISTANCE, y-NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
+    handleSuccessor(x+node_distance, y-node_distance, x, y, diagonal_node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x, y+NODE_DISTANCE, x, y, NODE_DISTANCE);
+    handleSuccessor(x, y+node_distance, x, y, node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x, y-NODE_DISTANCE, x, y, NODE_DISTANCE);
+    handleSuccessor(x, y-node_distance, x, y, node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x-NODE_DISTANCE, y, x, y, NODE_DISTANCE);
+    handleSuccessor(x-node_distance, y, x, y, node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x-NODE_DISTANCE, y+NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
+    handleSuccessor(x-node_distance, y+node_distance, x, y, diagonal_node_distance);
     if(destination_reached){return;}
-    handleSuccessor(x-NODE_DISTANCE, y-NODE_DISTANCE, x, y, DIAGONAL_NODE_DISTANCE);
+    handleSuccessor(x-node_distance, y-node_distance, x, y, diagonal_node_distance);
 }
 
 bool PathPlanner::isDestination(float x, float y) {
-    float margin = NODE_DISTANCE/2;
+    float margin = node_distance/2;
     return ((x < end_node.getX()+margin && x>end_node.getX()-margin)
             && (y < end_node.getY()+margin && y > end_node.getY()-margin));
 }
 
 bool PathPlanner::isStart(float x, float y) {
-    float margin = NODE_DISTANCE/1.5;
+    float margin = node_distance/1.5;
     return ((x < start_node.getX()+margin && x>start_node.getX()-margin)
             && (y < start_node.getY()+margin && y > start_node.getY()-margin));
 }
@@ -310,7 +315,7 @@ bool PathPlanner::isPlanSafe(float current_x, float current_y) {
     }
 
     // Check if current point is the first point of the plan
-    float margin = NODE_DISTANCE;
+    float margin = node_distance;
 
     if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY()) < margin){
         std::cout << "Remove " << simple_plan.begin()->getX() << ", "
@@ -348,7 +353,7 @@ void PathPlanner::resetParameters() {
 
 void PathPlanner::removeOldPoints(float current_x, float current_y){
     // Check if current point is the first point of the plan
-    float margin = NODE_DISTANCE;
+    float margin = node_distance;
 
     if(simple_plan.empty()){
         return;
