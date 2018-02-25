@@ -4,7 +4,6 @@
 #include "control/tools/drone_handler.hpp"
 #include <list>
 #include <vector>
-#include "ascend_msgs/PathPlannerAction.h"
 #include "ascend_msgs/GRStateArray.h"
 #include <mavros_msgs/PositionTarget.h>
 #include "control/tools/planner_config.hpp"
@@ -13,16 +12,12 @@
 
 using control::pathplanner::PathPlanner;
 
-// typedefs
-
-using ActionServerType = actionlib::SimpleActionServer<ascend_msgs::PathPlannerAction>;
-
 std::list<float> obstacle_coordinates;
 
 struct PlannerState{
 	float current_x, current_y, goal_x, goal_y;
-	bool make_plan;
-	bool new_goal;
+	bool make_plan = false;
+	bool new_goal = false;
 };
 
 
@@ -66,7 +61,7 @@ int main(int argc, char** argv){
 	ROS_INFO("Path planner node started");
 
 	PlannerState planner_state;
-	PathPlanner plan;
+	PathPlanner plan(1.0, 0.4);
 
     ros::init(argc, argv, "path_planner_server");
     ros::NodeHandle n;
@@ -77,12 +72,14 @@ int main(int argc, char** argv){
 
     //ros::Subscriber sub_obstacles = n.subscribe(control::PlannerConfig::obstacle_state_topic, 1, updateObstaclesCB);
 
-    ros::Publisher pub_plan = n.advertise<ascend_msgs::PointArray>(control::PlannerConfig::plan_points_topic, 1);
+    ros::Publisher pub_plan = n.advertise<ascend_msgs::PointArrayStamped>(control::PlannerConfig::plan_points_topic, 1);
 
     ros::ServiceServer server = n.advertiseService<Request, Response>("path_planner_service", boost::bind(&newPlanCB, _1, _2, &planner_state));
 
     ascend_msgs::PointArrayStamped msg;
-    geometry_msgs::Point points_in_plan;
+    auto& points_in_plan = msg.points;
+    // For saving memory
+	points_in_plan.reserve(20);
 
     while(ros::ok()){
 
@@ -100,11 +97,10 @@ int main(int argc, char** argv){
 		    std::list<Node> simple_plan = plan.getSimplePlan();
 
 		    geometry_msgs::Point point;
-		    // Iterate through the points in the plan and publish to pathplanner-action
-		    ascend_msgs::PathPlannerFeedback feedback;
-		    // For saving memory
-		    feedback.points_in_plan.reserve(20);
-		    points_in_plan.points.reserve(20);
+		    
+		    // Removing old plan
+		    points_in_plan.clear();
+		    
 		    
 		    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
 		    std::list<Node>::iterator second_point = ++(simple_plan.begin());
@@ -115,12 +111,11 @@ int main(int argc, char** argv){
         		point.x = it->getX();
         		point.y = it->getY();
         		
-        		points_in_plan.points.push_back(point);
+        		points_in_plan.push_back(point);
 
         		std::cout << point.x << ", " << point.y << "\t";
         	
     		}
-    		msg.points = points_in_plan;
     		msg.header.stamp = ros::Time::now();
     		pub_plan.publish(msg);
 
@@ -130,10 +125,10 @@ int main(int argc, char** argv){
     	// Publish plan as long as a plan is requested
     	if(planner_state.make_plan){
     		std::cout << "Published points:\t";
-    		for(auto it = points_in_plan.points.begin(); it != points_in_plan.points.end(); it++){
+    		for(auto it = points_in_plan.begin(); it != points_in_plan.end(); it++){
     			std::cout << it->x << ", " << it->y << "\t" << std::endl;
     		}
-    		pub_plan.publish(points_in_plan);
+    		pub_plan.publish(msg);
     		std::cout << std::endl;
     	}
 
