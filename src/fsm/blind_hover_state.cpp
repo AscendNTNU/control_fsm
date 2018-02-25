@@ -108,3 +108,13 @@ void BlindHoverState::handleManual(ControlFSM &fsm) {
     RequestEvent manual_event(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
+
+
+
+ascend_msgs::ControlFSMState BlindHoverState::getStateMsg() {
+    using ascend_msgs::ControlFSMState;
+    ControlFSMState msg;
+    msg.name = getStateName();
+    msg.state_id = ControlFSMState::BLIND_HOVER_STATE;
+    return msg;
+}

@@ -121,3 +121,10 @@ void TakeoffState::handleManual(ControlFSM &fsm) {
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
 
+ascend_msgs::ControlFSMState TakeoffState::getStateMsg() {
+    using ascend_msgs::ControlFSMState;
+    ControlFSMState msg;
+    msg.name = getStateName();
+    msg.state_id = ControlFSMState::TAKEOFF_STATE;
+    return msg;
+}

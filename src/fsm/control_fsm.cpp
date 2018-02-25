@@ -30,10 +30,10 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
         //Set the current state pointer
         state_vault_.current_state_p_ = &state;
         control::handleInfoMsg("Current state: " + getState()->getStateName());
-        //Pass event to new current state
-        getState()->stateBegin(*this, event);
         //Notify state has changed
         on_state_changed_();
+        //Pass event to new current state
+        getState()->stateBegin(*this, event);
     } else {
         control::handleErrorMsg("Transition request made by not active state");
     }
