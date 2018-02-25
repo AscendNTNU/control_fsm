@@ -121,7 +121,7 @@ int main(int argc, char** argv){
         	
     		}
     		msg.points = points_in_plan;
-    		msg.header = ros::Time::now();
+    		msg.header.stamp = ros::Time::now();
     		pub_plan.publish(msg);
 
     		std::cout << std::endl;
