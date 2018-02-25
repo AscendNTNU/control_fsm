@@ -19,8 +19,8 @@ void
 idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
 {
     
-    double distance_to_gb = math::sqrt(math::pow((gb_pose.position.x - drone_pose.position.x),2)
-                            + math::pow((gb_pose.position.y - drone_pose.position.y),2));
+    double distance_to_gb = sqrt(pow((gb_pose.position.x - drone_pose.position.x),2)
+                            + pow((gb_pose.position.y - drone_pose.position.y),2));
     
     //Do checks here and transition to land
     if (distance_to_gb > THRESHOLD || drone_pose.position.y < HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
@@ -33,6 +33,7 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
         _local_state.state = LOCAL_STATE::LAND;
         _local_state.valid = true;
     }
+
 }
 
 void
