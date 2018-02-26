@@ -19,7 +19,7 @@ struct{
 }_local_state;
 
 void
-idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
+idleStateHandler(geometry_msgs::PoseStamped& gb_pose,const geometry_msgs::PoseStamped& drone_pose)
 {
     double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
                             + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
@@ -38,7 +38,7 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
+landStateHandler(geometry_msgs::PoseStamped& gb_pose, const geometry_msgs::PoseStamped& drone_pose)
 {
     //TODO add Chris' algorithm here.
 
@@ -56,7 +56,7 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-recoverStateHandler(geometry_msgs::PoseStamped& drone_pose)
+recoverStateHandler(const geometry_msgs::PoseStamped& drone_pose)
 {
     if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
@@ -121,8 +121,8 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 void InteractGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
     //TODO Remove thought comments
-    auto& drone_pose = control::DroneHandler::getCurrentPose().pose;
-    geometry_msgs::PoseStamped& gb_pose{};
+    auto& drone_pose = control::DroneHandler::getCurrentPose();
+    geometry_msgs::PoseStamped gb_pose = {};
 
     //Checks if we still have visible ground robots to interact with
     //Is the transition to hold pos correct?
