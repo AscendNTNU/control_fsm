@@ -7,7 +7,7 @@
 
 //Should this be here?
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
-//Just dummys
+//Just dummies
 const double THRESHOLD = 0.5;
 const double HEIGHT_THRESHOLD = 3;
 //Struct for controlling local state.
@@ -15,12 +15,12 @@ const double HEIGHT_THRESHOLD = 3;
 struct{
     LOCAL_STATE state;
     bool valid = false;
+    bool transition_valid = false;
 }_local_state;
 
 void
 idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
 {
-    
     double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
                             + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
     
@@ -35,7 +35,6 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
         _local_state.state = LOCAL_STATE::LAND;
         _local_state.valid = true;
     }
-
 }
 
 void
@@ -49,6 +48,11 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
         _local_state.state = LOCAL_STATE::RECOVER;
         _local_state.valid = true;
     }
+    else if(/*Failed*/false)
+    {
+        _local_state.state = LOCAL_STATE::RECOVER;
+        _local_state.valid = false;
+    }
 }
 
 void
@@ -56,7 +60,16 @@ recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, Int
 {
     if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
-        // Setpoint to a higher altitude
+        // Setpoint to a higher altitude?
+        if (!control::DroneHandler::isPoseValid())
+        {
+            
+        }
+        else
+        {
+            _local_state.valid = true;
+            _local_state.transition_valid = true;
+        }
     }
 }
 
@@ -139,7 +152,7 @@ void InteractGBState::loopState(ControlFSM& fsm) {
         break;
     }
     
-    if (_local_state.state == LOCAL_STATE::RECOVER)
+    if (_local_state.state == LOCAL_STATE::RECOVER && _local_state.transition_valid)
     {
         if (_local_state.valid)
         {
