@@ -154,6 +154,12 @@ void InteractGBState::loopState(ControlFSM& fsm) {
         _local_state.valid = false;
         break;
     }
+    
+    if (_local_state.state == LOCAL_STATE::RECOVER && _local_state.valid == true)
+    {
+        RequestEvent transition(RequestType::POSHOLD);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
+    }
 
 }
 
