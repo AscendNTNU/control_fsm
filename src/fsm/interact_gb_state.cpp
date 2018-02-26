@@ -19,7 +19,7 @@ struct{
 }_local_state;
 
 void
-idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
+idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
 {
     double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
                             + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
@@ -38,7 +38,7 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
+landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped& drone_pose)
 {
     //TODO add Chris' algorithm here.
 
@@ -56,7 +56,7 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 }
 
 void
-recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
+recoverStateHandler(geometry_msgs::PoseStamped& drone_pose)
 {
     if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
@@ -135,15 +135,15 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     switch(_local_state.state)
     {
         case LOCAL_STATE::IDLE:
-        idleStateHandler(gb_pose, drone_pose, fsm, this)
+        idleStateHandler(gb_pose, drone_pose);
         break;
 
         case LOCAL_STATE::LAND:
-        landStateHandler(gb_pose, drone_pose,fsm, this)
+        landStateHandler(gb_pose, drone_pose);
         break;
 
         case LOCAL_STATE::RECOVER:
-        recoverStateHandler(drone_pose, fsm, this)
+        recoverStateHandler(drone_pose);
         break;
 
         default:
