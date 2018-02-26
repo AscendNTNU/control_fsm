@@ -43,7 +43,6 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 {
     //TODO add Chris' algorithm here.
 
-
     if(/*has landed*/true)
     {
         //Success
@@ -55,25 +54,10 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
 void
 recoverStateHandler(geometry_msgs::PoseStamped& drone_pose, ControlFSM& fsm, InteractGBState* self)
 {
-    if (!_local_state.valid)
-    {
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, self, abort_event);
-        _local_state.valid = false;
-    }
     if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
-
+        // Setpoint to a higher altitude
     }
-    if (/*Drone has landed*/true)
-    {
-        //Maybe transition to idle instead and let that take care of pre takeoff checks?
-        RequestEvent takeoff_request(RequestType::TAKEOFF);
-        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, self, takeoff_request);
-    }
-    //This should be the natural transition after a successfull land and recover.
-    RequestEvent transition_event(RequestType::POSHOLD);
-    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, self, transition_event);
 }
 
 InteractGBState::InteractGBState() {
@@ -155,10 +139,17 @@ void InteractGBState::loopState(ControlFSM& fsm) {
         break;
     }
     
-    if (_local_state.state == LOCAL_STATE::RECOVER && _local_state.valid == true)
+    if (_local_state.state == LOCAL_STATE::RECOVER)
     {
-        RequestEvent transition(RequestType::POSHOLD);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
+        if (_local_state.valid)
+        {
+            RequestEvent transition(RequestType::POSHOLD);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
+        }
+        else{
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        }
     }
 
 }
