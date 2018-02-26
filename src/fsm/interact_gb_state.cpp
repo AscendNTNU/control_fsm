@@ -8,8 +8,8 @@
 //Should this be here?
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
 //Just dummies
-const double THRESHOLD = 0.5;
-const double HEIGHT_THRESHOLD = 3;
+const double DISTANCE_THRESHOLD = 0.5;
+const double HEIGHT_THRESHOLD = 0.5;
 //Struct for controlling local state.
 //Maybe add a method for doing state validation
 struct{
@@ -25,7 +25,7 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose, geometry_msgs::PoseStamped
                             + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
     
     //Do checks here and transition to land
-    if (distance_to_gb > THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
+    if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
     {
         _local_state.state = LOCAL_STATE::RECOVER;
         _local_state.valid = false;
