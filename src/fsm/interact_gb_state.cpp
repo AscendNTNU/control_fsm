@@ -11,6 +11,33 @@ InteractGBState::InteractGBState() {
 
 void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //TODO Handle all transition requests
+    if(event.isValidRequest()) {
+        if(event.request == RequestType::ABORT) {
+            //TODO Blindhover or position hold?
+            if(cmd_.isValidCMD()) {
+                cmd_.abort();    
+            }
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+        } else if(event.request == RequestType::POSHOLD) {
+            if(cmd_.isValidCMD()) {
+                control::handleWarnMsg("CMD still active, abort first!");
+            } else {
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            }
+        }
+    } else if(event.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
+            control::handleWarnMsg("CMD still active, abort first!");
+        } else {
+            if(event.command_type == CommandType::TAKEOFF) {
+                //Drone already in air, nothing else to do!
+                event.finishCMD(); 
+            } else {
+                //Transition to poshold to execute new cmd
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            }
+        }
+    }
 }
 
 void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
@@ -31,7 +58,7 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         if(cmd_.gb_id < 0 || static_cast<size_t>(cmd_.gb_id) >= gb_state.size()) {
             if(cmd_.isValidCMD()) {
                 cmd_.eventError("Invalid GB id!");
-                cmd_ = EventData();
+                cmd_.clear();
                 RequestEvent abort_event(RequestType::ABORT);
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
                 return;
