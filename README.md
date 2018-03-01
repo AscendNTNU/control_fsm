@@ -22,8 +22,9 @@ can therefore "ripple" through the fsm to reach the target state. See RequestsVs
 **Coordinate frames: **
 The statemachine assumes these frames are set correctly:
 - map = Global position, not allowed to drift over time
-- odom = local drone position, allowed to drift over time
+- odom = local drone position, allowed to drift over time (used by drone, mavros)
 - base_link = Body frame fixed to drone
+
 **Startup procedure**
 1. Launch FSM from launchfile
 ```
@@ -136,7 +137,13 @@ Name: "land_xy_goto_altitude", Description: Decides what altitude to use before 
 Name: "min_in_air_altitude", Description: Minimum altitude drone is allowed to fly (except when landing) 
 ```
 ```
-Name: "velocity_reached_margin", "Description: Allowed deviation from target velocity
+Name: "velocity_reached_margin", Description: Allowed deviation from target velocity
+```
+```
+Name: "global_frame_id", Description: Frame id for global frame, Default: map
+```
+```
+Name: "local_frame_id", Description: Frame id for local frame, Default: odom
 ```
 
 *Drone have to wait to allow the drone to slow down before doing a transition

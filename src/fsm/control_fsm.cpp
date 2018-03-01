@@ -109,8 +109,8 @@ bool ControlFSM::isReady() {
     //Some checks can be skipped for debugging purposes
     if(control::Config::require_all_data_streams) {
         try {
-            //Check that we're recieving position
-            if(!control::DroneHandler::isPoseValid()) {
+            //Check that we're recieving position - both local and global
+            if(!control::DroneHandler::isGlobalPoseValid()) {
                 control::handleWarnMsg("Preflight Check: No valid pose data");
                 return false;
             }

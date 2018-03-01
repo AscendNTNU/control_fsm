@@ -80,16 +80,19 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
-    // Set setpoint
-    setpoint_.position.x = cmd_.position_goal.x;
-    setpoint_.position.y = cmd_.position_goal.y;
-    setpoint_.position.z = cmd_.position_goal.z;
+
+    auto tf = control::DroneHandler::getGlobal2LocalTf();
+
+    // Set setpoint in local frame
+    setpoint_.position.x = cmd_.position_goal.x + tf.transform.translation.x;
+    setpoint_.position.y = cmd_.position_goal.y + tf.transform.translation.y;
+    setpoint_.position.z = cmd_.position_goal.z + tf.transform.translation.z;
     try {
         ///Calculate yaw setpoint
         using control::pose::quat2yaw;
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
-        auto quat = DroneHandler::getCurrentPose().pose.orientation;
+        auto& quat = DroneHandler::getCurrentLocalPose().pose.orientation;
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
     } catch(const std::exception& e) {
         //Critical bug - no recovery
@@ -106,21 +109,21 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 void GoToState::loopState(ControlFSM& fsm) {
     try {
         //Check that position data is valid
-        if(!control::DroneHandler::isPoseValid()) {
+        if(!control::DroneHandler::isGlobalPoseValid()) {
             throw control::PoseNotValidException();
         }
 
         using control::pose::quat2mavrosyaw;
         //Get pose
-        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto global_pose = control::DroneHandler::getCurrentGlobalPose();
         //Get reference to position in pose
-        auto& current_position = pose_stamped.pose.position;
+        auto& global_position = global_pose.pose.position;
         //Get reference to orientation in pose
-        auto& quat = pose_stamped.pose.orientation;
+        auto& quat = global_pose.pose.orientation;
         //Calculate distance to target
-        double delta_x = current_position.x - cmd_.position_goal.x;
-        double delta_y = current_position.y - cmd_.position_goal.y;
-        double delta_z = current_position.z - cmd_.position_goal.z;
+        double delta_x = global_position.x - cmd_.position_goal.x;
+        double delta_y = global_position.y - cmd_.position_goal.y;
+        double delta_z = global_position.z - cmd_.position_goal.z;
         //Check if we're close enough
         using std::pow;
         using std::fabs;

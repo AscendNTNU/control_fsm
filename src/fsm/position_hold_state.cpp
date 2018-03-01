@@ -52,12 +52,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
     try {
-        if(!control::DroneHandler::isPoseValid()) {
+        if(!control::DroneHandler::isLocalPoseValid()) {
             //Error if pose is not valid
             throw control::PoseNotValidException();
         }
         //Get pose - and position
-        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
         //Set setpoint to current position
         setpoint_.position.x = position.x;

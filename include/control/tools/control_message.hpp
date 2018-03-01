@@ -19,7 +19,7 @@ template<typename T> bool hasTimedOut(const T& msg) {
     return hasTimedOut(msg, ros::Duration(Config::valid_data_timeout));
 }
 
-template<typename T> bool hasWrongFrame(const T& msg, cont T& frame_id) {
+template<typename T> bool hasWrongFrame(const T& msg, const std::string& frame_id) {
     return msg.header.frame_id != frame_id;
 }
 

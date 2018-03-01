@@ -33,7 +33,7 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
     try {
-        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto &position = pose_stamped.pose.position;
         auto land_detector = LandDetector::getSharedInstancePtr();
 

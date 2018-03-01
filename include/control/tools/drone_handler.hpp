@@ -37,31 +37,32 @@ private:
     void onPoseRecievedCB(geometry_msgs::PoseStamped::ConstPtr msg_p) { last_pose_ = msg_p; }
     ///On new twist recieved
     void onTwistRecievedCB(geometry_msgs::TwistStamped::ConstPtr msg_p) { last_twist_ = msg_p;}
-public:
-    ///Returns pointer to shared instance
-    static const DroneHandler* getSharedInstancePtr();
-    ///Returns last local pose from shared instance
-    static const geometry_msgs::PoseStamped& getSharedLocalPose();
-    ///Returns last global pose from shared instance
-    static const geometry_msgs::PoseStamped& getSharedGlobalPose();
-    ///Returns last twist from shared instance
-    static const geometry_msgs::TwistStamped& getSharedLocalTwist();
     ///Get latest local pose
     const geometry_msgs::PoseStamped& getLocalPose() const;
     ///Get latest global pose
-    const geometry_msgs::PoseStamped& getGlobalPose() const;
+    geometry_msgs::PoseStamped getGlobalPose() const;
     ///Get latest twist
     const geometry_msgs::TwistStamped& getLocalTwist() const;
-    ///Is pose data valid?
-    static bool isSharedLocalPoseValid();
-    ///Is twist data valid?
-    static bool isSharedLocalTwistValid();
-    ///Is pose data and transform valid
-    static bool isSharedGlobalPoseValid();
     ///Is transform valid
     bool isTransformValid() const;
-    ///Is local pose valid
-    bool isLocalPoseValid() const;
+    ///Returns pointer to shared instance
+    static const DroneHandler* getSharedInstancePtr();
+
+public:
+    ///Returns last local pose from shared instance
+    static const geometry_msgs::PoseStamped& getCurrentLocalPose();
+    ///Returns last global pose from shared instance
+    static geometry_msgs::PoseStamped getCurrentGlobalPose();
+    ///Returns last twist from shared instance
+    static const geometry_msgs::TwistStamped& getCurrentTwist();
+    ///Is pose data valid?
+    static bool isLocalPoseValid();
+    ///Is twist data valid?
+    static bool isTwistValid();
+    ///Is pose data and transform valid
+    static bool isGlobalPoseValid();
+    ///Get transformation
+    static geometry_msgs::TransformStamped getGlobal2LocalTf();
 };
 }
 #endif

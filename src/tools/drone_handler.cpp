@@ -6,12 +6,13 @@
 #include <mavros_msgs/State.h>
 #include <control/tools/control_message.hpp>
 #include <control/exceptions/ros_not_initialized_exception.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using control::DroneHandler;
 
 std::unique_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 
-DroneHandler::DroneHandler() {
+DroneHandler::DroneHandler() :tf_listener_(tf_buffer_) {
     using control::Config;
     using geometry_msgs::PoseStamped;
     using geometry_msgs::TwistStamped;
@@ -20,9 +21,6 @@ DroneHandler::DroneHandler() {
     //Init default, empty value
     last_pose_ = PoseStamped::ConstPtr(new PoseStamped);
     last_twist_ = TwistStamped::ConstPtr(new TwistStamped);
-
-    //Set up tf2 listener
-    tf_listener_ = tf2_ros::TransformListener(tf_buffer_);
 }
 
 const DroneHandler* DroneHandler::getSharedInstancePtr() {
@@ -35,10 +33,13 @@ const DroneHandler* DroneHandler::getSharedInstancePtr() {
     return shared_instance_p_.get();
 }
 
-const geometry_msgs::PoseStamped& DroneHandler::getSharedLocalPose() {
+const geometry_msgs::PoseStamped& DroneHandler::getCurrentLocalPose() {
     return getSharedInstancePtr()->getLocalPose();
 }
 
+geometry_msgs::PoseStamped DroneHandler::getCurrentGlobalPose() {
+    return getSharedInstancePtr()->getGlobalPose();
+}
 
 const geometry_msgs::PoseStamped& DroneHandler::getLocalPose() const {
     if(control::message::hasTimedOut(*last_pose_)) {
@@ -54,7 +55,7 @@ const geometry_msgs::TwistStamped& DroneHandler::getLocalTwist() const {
     return *last_twist_;
 }
 
-const geometry_msgs::PoseStamped& DroneHandler::getGlobalPose() const {
+geometry_msgs::PoseStamped DroneHandler::getGlobalPose() const {
     using control::Config;
     auto& local_pose = getLocalPose();
     geometry_msgs::PoseStamped global_pose = local_pose;
@@ -71,19 +72,15 @@ const geometry_msgs::PoseStamped& DroneHandler::getGlobalPose() const {
     }
 }
 
-bool DroneHandler::isSharedLocalPoseValid() {
-    return !control::message::hasTimedOut(getCurrentLocalPose());
-}
-
-bool DroneHandler::isSharedLocalTwistValid() {
+bool DroneHandler::isTwistValid() {
     return !getSharedInstancePtr()->isLocalPoseValid();
 }
 
-bool DroneHandler::isSharedGlobalPoseValid() {
+bool DroneHandler::isGlobalPoseValid() {
     return isLocalPoseValid() && getSharedInstancePtr()->isTransformValid();
 }
 
-const geometry_msgs::TwistStamped &control::DroneHandler::getSharedLocalTwist() {
+const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
     return getSharedInstancePtr()->getLocalTwist();
 }
 
@@ -91,9 +88,20 @@ bool control::DroneHandler::isTransformValid() const {
     return tf_buffer_.canTransform(Config::global_frame_id, getLocalPose().header.frame_id, ros::Time(0));
 }
 
-bool control::DroneHandler::isLocalPoseValid() const {
-    auto& pose = getLocalPose();
+bool control::DroneHandler::isLocalPoseValid() {
+    auto& pose = getCurrentLocalPose();
     if(control::message::hasTimedOut(pose)) return false;
-    if(control::message::hasWrongLocalFrame(pose)) return false;
-    return true;
+    return !control::message::hasWrongLocalFrame(pose);
+}
+
+
+geometry_msgs::TransformStamped control::DroneHandler::getGlobal2LocalTf() {
+    try {
+        //Get transform
+        auto& buffer = getSharedInstancePtr()->tf_buffer_;
+        return buffer.lookupTransform(Config::local_frame_id, Config::global_frame_id, ros::Time(0));
+    } catch (const tf2::TransformException& e) {
+        control::handleErrorMsg(e.what());
+        return geometry_msgs::TransformStamped();
+    }
 }
