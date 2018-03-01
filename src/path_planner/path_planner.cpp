@@ -291,8 +291,7 @@ void PathPlanner::simplifyPlan() {
             // (no use in going through it when we can go in a straight line)
             // The search continues with same starting point, but the second and third point is changed
         else{
-            simple_plan.erase(second);
-            second = third;
+            second = simple_plan.erase(second);
             third++;
         }
     }
