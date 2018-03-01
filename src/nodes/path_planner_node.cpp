@@ -130,9 +130,6 @@ int main(int argc, char** argv){
 	        		std::cout << point.x << ", " << point.y << "\t";
 	        	
 	    		}
-	    		msg.header.stamp = ros::Time::now();
-	    		pub_plan.publish(msg);
-
 	    		std::cout << std::endl;
     		}
     	}
