@@ -7,4 +7,5 @@ latex/
 cmake-build-debug/
 *.out
 tags
+.vscode
 
