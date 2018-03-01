@@ -205,11 +205,11 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
     // If start or end point is not valid, a plan is not created
     if(!isValidCoordinate(current_x,current_y)){
-        // send error to fsm
+        ROS_INFO("Current point invalid!");
         return;
     }
     if(!isValidCoordinate(target_x,target_y)){
-        // send error to fsm
+        ROS_INFO("Target point invalid!");
         return;
     }
 
@@ -228,6 +228,11 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
     int x_index = coordToIndex(x);
     int y_index = coordToIndex(y);
+
+    if(graph[x_index][y_index].obstacle || graph[coordToIndex(current_x)][coordToIndex(current_y)].obstacle){
+        std::cout << "Start or end on obstacle, invalid!" << std::endl;
+        return;
+    }
 
     // Calculate all f values and set the parents
     relaxGraph();
