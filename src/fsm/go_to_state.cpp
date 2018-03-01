@@ -141,7 +141,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         }
         
         bool last_plan_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
-        bool plan_requested_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
+        bool plan_requested_timeout = ros::Time::now() - path_requested_stamp_ > ros::Duration(control::Config::path_plan_timeout);
 
         //No new valid plan recieved
         if(last_plan_timeout || last_plan_->points.empty()) {
@@ -160,6 +160,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         auto& target_point = last_plan_->points[0];
         setpoint_.position.x = target_point.x;
         setpoint_.position.y = target_point.y;
+        setpoint_.position.z = cmd_.position_goal.z;
         
         using control::pose::quat2mavrosyaw;
         //Get pose
