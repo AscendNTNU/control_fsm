@@ -20,6 +20,9 @@ DroneHandler::DroneHandler() {
     //Init default, empty value
     last_pose_ = PoseStamped::ConstPtr(new PoseStamped);
     last_twist_ = TwistStamped::ConstPtr(new TwistStamped);
+
+    //Set up tf2 listener
+    tf_listener_ = tf2_ros::TransformListener(tf_buffer_);
 }
 
 const DroneHandler* DroneHandler::getSharedInstancePtr() {
@@ -32,33 +35,65 @@ const DroneHandler* DroneHandler::getSharedInstancePtr() {
     return shared_instance_p_.get();
 }
 
-const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
-    return getSharedInstancePtr()->getPose(); 
+const geometry_msgs::PoseStamped& DroneHandler::getSharedLocalPose() {
+    return getSharedInstancePtr()->getLocalPose();
 }
 
 
-const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
+const geometry_msgs::PoseStamped& DroneHandler::getLocalPose() const {
     if(control::message::hasTimedOut(*last_pose_)) {
         control::handleErrorMsg("DroneHandler: Using old pose");
     }
     return *last_pose_;
 }
 
-const geometry_msgs::TwistStamped& DroneHandler::getTwist() const {
+const geometry_msgs::TwistStamped& DroneHandler::getLocalTwist() const {
     if(control::message::hasTimedOut(*last_twist_)) {
         control::handleErrorMsg("DroneHandler: Using old twist");
     }
     return *last_twist_;
 }
 
-bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(getCurrentPose());
+const geometry_msgs::PoseStamped& DroneHandler::getGlobalPose() const {
+    using control::Config;
+    auto& local_pose = getLocalPose();
+    geometry_msgs::PoseStamped global_pose = local_pose;
+    try {
+        //Get transform
+        auto tf = tf_buffer_.lookupTransform(Config::global_frame_id, local_pose.header.frame_id, ros::Time(0));
+        //Apply transform
+        tf2::doTransform(local_pose, global_pose, tf);
+        //Return global
+        return global_pose;
+    } catch (const tf2::TransformException& e) {
+        control::handleErrorMsg(e.what());
+        return local_pose;
+    }
 }
 
-bool DroneHandler::isTwistValid() {
-    return !control::message::hasTimedOut(getCurrentTwist());
+bool DroneHandler::isSharedLocalPoseValid() {
+    return !control::message::hasTimedOut(getCurrentLocalPose());
 }
 
-const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
-    return getSharedInstancePtr()->getTwist();
+bool DroneHandler::isSharedLocalTwistValid() {
+    return !getSharedInstancePtr()->isLocalPoseValid();
+}
+
+bool DroneHandler::isSharedGlobalPoseValid() {
+    return isLocalPoseValid() && getSharedInstancePtr()->isTransformValid();
+}
+
+const geometry_msgs::TwistStamped &control::DroneHandler::getSharedLocalTwist() {
+    return getSharedInstancePtr()->getLocalTwist();
+}
+
+bool control::DroneHandler::isTransformValid() const {
+    return tf_buffer_.canTransform(Config::global_frame_id, getLocalPose().header.frame_id, ros::Time(0));
+}
+
+bool control::DroneHandler::isLocalPoseValid() const {
+    auto& pose = getLocalPose();
+    if(control::message::hasTimedOut(pose)) return false;
+    if(control::message::hasWrongLocalFrame(pose)) return false;
+    return true;
 }

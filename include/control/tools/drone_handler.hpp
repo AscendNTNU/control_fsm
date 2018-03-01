@@ -5,6 +5,7 @@
 #include <mavros_msgs/State.h>
 #include <memory>
 #include <ros/ros.h>
+#include <tf2_ros/transform_listener.h>
 namespace control {
 /** Handles state information recieved from the drone
  * Singleton pattern gurantees one, and only one instance
@@ -15,6 +16,11 @@ class DroneHandler {
 private:
     ///Shared instance - will always exist after created!
     static std::unique_ptr<DroneHandler> shared_instance_p_;
+
+    ///Transform buffer
+    tf2_ros::Buffer tf_buffer_;
+    ///Transform listener
+    tf2_ros::TransformListener tf_listener_;
     ///Nodehandler
     ros::NodeHandle n_;
     ///Subscriber recieving pose
@@ -34,18 +40,28 @@ private:
 public:
     ///Returns pointer to shared instance
     static const DroneHandler* getSharedInstancePtr();
-    ///Returns last pose from shared instance
-    static const geometry_msgs::PoseStamped& getCurrentPose();
+    ///Returns last local pose from shared instance
+    static const geometry_msgs::PoseStamped& getSharedLocalPose();
+    ///Returns last global pose from shared instance
+    static const geometry_msgs::PoseStamped& getSharedGlobalPose();
     ///Returns last twist from shared instance
-    static const geometry_msgs::TwistStamped& getCurrentTwist();
-    ///Get latest pose
-    const geometry_msgs::PoseStamped& getPose() const;
+    static const geometry_msgs::TwistStamped& getSharedLocalTwist();
+    ///Get latest local pose
+    const geometry_msgs::PoseStamped& getLocalPose() const;
+    ///Get latest global pose
+    const geometry_msgs::PoseStamped& getGlobalPose() const;
     ///Get latest twist
-    const geometry_msgs::TwistStamped& getTwist() const;
+    const geometry_msgs::TwistStamped& getLocalTwist() const;
     ///Is pose data valid?
-    static bool isPoseValid();
+    static bool isSharedLocalPoseValid();
     ///Is twist data valid?
-    static bool isTwistValid();
+    static bool isSharedLocalTwistValid();
+    ///Is pose data and transform valid
+    static bool isSharedGlobalPoseValid();
+    ///Is transform valid
+    bool isTransformValid() const;
+    ///Is local pose valid
+    bool isLocalPoseValid() const;
 };
 }
 #endif

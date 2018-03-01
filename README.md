@@ -19,6 +19,11 @@ can therefore "ripple" through the fsm to reach the target state. See RequestsVs
 - Tracking and interacting with groundrobots is not yet implemented
 - Altitude restrictions is implemented. Drone will not attempt to fly below min_in_air_altitude!
 
+**Coordinate frames: **
+The statemachine assumes these frames are set correctly:
+- map = Global position, not allowed to drift over time
+- odom = local drone position, allowed to drift over time
+- base_link = Body frame fixed to drone
 **Startup procedure**
 1. Launch FSM from launchfile
 ```

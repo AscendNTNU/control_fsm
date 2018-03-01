@@ -39,6 +39,8 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
+std::string Config::global_frame_id = "global_frame";
+std::string Config::local_frame_id = "odom";
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -138,6 +140,9 @@ void Config::loadParams() {
     getStringParam("land_detector_topic", land_detector_topic);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
+    //Frame id
+    getStringParam("global_frame_id", global_frame_id);
+    getStringParam("local_frame_id", local_frame_id);
 
 }
 

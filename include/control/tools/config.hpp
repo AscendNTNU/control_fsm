@@ -83,6 +83,10 @@ public:
     static bool require_obstacle_detection;
     /// \fsmparam When is data considered old?
     static double valid_data_timeout;
+    /// \fsmparam Frame id for global frame
+    static std::string global_frame_id;
+    /// \fsmparam Frame id for local frame
+    static std::string local_frame_id;
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */
