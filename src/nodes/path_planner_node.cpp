@@ -114,25 +114,27 @@ int main(int argc, char** argv){
 		    // Removing old plan
 		    points_in_plan.clear();
 		    
-		    
-		    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
-		    std::list<Node>::iterator second_point = ++(simple_plan.begin());
+		    if(!simple_plan.empty()){
+			    
+			    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
+			    std::list<Node>::iterator second_point = ++(simple_plan.begin());
 
-		    std::cout << "Published points:\t";
-		    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
+			    std::cout << "Published points:\t";
+			    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
 
-        		point.x = it->getX();
-        		point.y = it->getY();
-        		
-        		points_in_plan.push_back(point);
+	        		point.x = it->getX();
+	        		point.y = it->getY();
+	        		
+	        		points_in_plan.push_back(point);
 
-        		std::cout << point.x << ", " << point.y << "\t";
-        	
+	        		std::cout << point.x << ", " << point.y << "\t";
+	        	
+	    		}
+	    		msg.header.stamp = ros::Time::now();
+	    		pub_plan.publish(msg);
+
+	    		std::cout << std::endl;
     		}
-    		msg.header.stamp = ros::Time::now();
-    		pub_plan.publish(msg);
-
-    		std::cout << std::endl;
     	}
     
     	// Publish plan as long as a plan is requested
