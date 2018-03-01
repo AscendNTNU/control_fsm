@@ -143,6 +143,7 @@ int main(int argc, char** argv){
     		for(auto it = points_in_plan.begin(); it != points_in_plan.end(); it++){
     			std::cout << it->x << ", " << it->y << "\t" << std::endl;
     		}
+    		msg.header.stamp = ros::Time::now();
     		pub_plan.publish(msg);
     		std::cout << std::endl;
     	}
