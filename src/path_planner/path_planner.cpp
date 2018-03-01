@@ -8,7 +8,7 @@ PathPlanner::PathPlanner(float obstacle_radius, float node_distance)
     : obstacle_radius(obstacle_radius), node_distance(node_distance){
     diagonal_node_distance = sqrt(2*node_distance*node_distance);
     // plus 1 to include both 0 and the last node
-    graph_size = round(FIELD_LENGTH/node_distance+1);
+    graph_size = ceil(FIELD_LENGTH/node_distance+1);
 
     graph.resize(graph_size, std::vector<Node>(graph_size));
 }
@@ -167,15 +167,13 @@ void PathPlanner::handleAllSuccessors(float x, float y) {
 }
 
 bool PathPlanner::isDestination(float x, float y) {
-    float margin = node_distance/2;
-    return ((x < end_node.getX()+margin && x>end_node.getX()-margin)
-            && (y < end_node.getY()+margin && y > end_node.getY()-margin));
+    return (coordToIndex(x) == coordToIndex(end_node.getX()) && coordToIndex(y) == coordToIndex(end_node.getY()));
+
 }
 
 bool PathPlanner::isStart(float x, float y) {
-    float margin = node_distance/1.5;
-    return ((x < start_node.getX()+margin && x>start_node.getX()-margin)
-            && (y < start_node.getY()+margin && y > start_node.getY()-margin));
+    return (coordToIndex(x) == coordToIndex(start_node.getX()) && coordToIndex(y) == coordToIndex(start_node.getY()));
+
 }
 
 bool PathPlanner::isValidCoordinate(float x, float y) {
