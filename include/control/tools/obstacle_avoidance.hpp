@@ -37,6 +37,7 @@ public:
     bool isReady() { return true; }
 
 };
+}
 
 // Only do this for unit testing
 #ifdef CONTROL_FSM_UNIT_TEST
@@ -56,6 +57,5 @@ inline float calcAngleToObstacle(const T& point, const K& obstacle_position, con
 template<typename T>
 inline geometry_msgs::Vector3 rotateXY(const T& point, const float angle);
 #endif
-}
 
 #endif
