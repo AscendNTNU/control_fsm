@@ -2,7 +2,6 @@
 #define PATH_PLANNER_HPP
 
 #include <ros/ros.h>
-#include <ascend_msgs/PathPlannerPlan.h>
 #include "control/planner/node.hpp"
 #include "control/tools/control_pose.hpp"
 #include <list>
