@@ -126,7 +126,8 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             graph[x_index][y_index].setParentY(parent_y);
             destination_reached = true;
             std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
-            std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX() << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
+            std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX()
+                << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
         }
             // If node is not destination and hasn't been searched yet
         else if(!graph[x_index][y_index].closed){
@@ -265,11 +266,15 @@ void PathPlanner::simplifyPlan() {
     simple_plan = plan;
     // Pointing at the three first elements
     std::list<Node>::iterator first = simple_plan.begin();
-    std::list<Node>::iterator second = simple_plan.begin();
-    std::list<Node>::iterator third = simple_plan.begin();
-    second++;
+    std::list<Node>::iterator second = ++(simple_plan.begin());
+    std::list<Node>::iterator third = ++(simple_plan.begin());
     third++;
-    third++;
+
+    if(first == simple_plan.end()){
+        return;
+    } else if(second == simple_plan.end()){
+        return;
+    }
 
     float x1, x2, y1, y2;
 
