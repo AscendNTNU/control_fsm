@@ -89,6 +89,11 @@ int main(int argc, char** argv){
     // For saving memory
 	points_in_plan.reserve(20);
 
+	while(!control::DroneHandler::isPoseValid() && ros::ok()){
+		ros::spinOnce();
+		ros::Duration(1.0).sleep();
+	}
+
     while(ros::ok()){
 
     	ros::spinOnce();
