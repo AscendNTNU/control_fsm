@@ -5,7 +5,7 @@
 #include "control/tools/setpoint_msg_defines.h"
 #include "control/tools/drone_handler.hpp"
 #include "control/tools/ground_robot_handler.hpp"
-
+#include "control/tools/intercept_groundbot.hpp"
 
 
 constexpr float PI_HALF = 1.570796; 
@@ -21,16 +21,11 @@ uint16_t velocity_control = IGNORE_PX | IGNORE_PY | IGNORE_PZ |
 	                    IGNORE_YAW_RATE;
 
 
-typedef struct point{
-	float x; 
-	float y; 
-	float z; 
-} point;
 
 
 point roomba_velocity(float roomba_x, float roomba_y, float roomba_z){
 	static auto last_time_stamp = ros::Time::now(); // Should probably get the timestamp from the message, if possible
-	static point last_roomba_pos = {roomba_x,rooomba_y,rooomba_z};
+	static point last_roomba_pos = {roomba_x,roomba_y,roomba_z};
 	static point velocity = {0.0, 0.0, 0.0}; 
 	ros::Duration delta_t = ros::Time::now() - last_time_stamp;
 	point temp; 
@@ -54,7 +49,7 @@ mavros_msgs::PositionTarget InterceptGB(){
  
 	
 	//Get reference to all the position data
-	auto& quad_pose = DroneHandler::getPose().pose.position; 
+	auto& quad_pose = control::DroneHandler::getPose().pose.position; 
 	auto& roomba_pose = GroundRobotHandler::getGroundRobots(); 
 
 	static point roomba_velocity = roomba_velocity(roomba_pose.x, roomba_pose.y, roomba_pose.z); 
@@ -79,7 +74,7 @@ mavros_msgs::PositionTarget InterceptGB(){
 	setpoint.velocity.y = interception_gain * distance.y + roomba_velocity.y;
 	setpoint.velocity.z = interception_gain_z * distance.z + roomba_velocity.z; 
 
-	return setpoint; 
+	return setpoint;
 }
 
 
