@@ -8,9 +8,9 @@ typedef struct point{
 } point;
 
 
-point roomba_velocity(float roomba_x, float roomba_y, float roomba_z);
+point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp);
 
-mavros_msgs::PositionTarget InterceptGB(); 
+mavros_msgs::PositionTarget InterceptGB(geometry_msgs::PoseStamped quad_position, geometry_msgs::PoseStamped roomba_position); 
 
 
 
