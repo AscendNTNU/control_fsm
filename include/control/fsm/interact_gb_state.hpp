@@ -4,6 +4,8 @@
 
 ///Interacts with a ground robot
 class InteractGBState : public StateInterface {
+private:
+    EventData cmd_;
 public:
     InteractGBState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
