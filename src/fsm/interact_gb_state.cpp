@@ -45,13 +45,13 @@ void
 landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint)
 {
     //TODO add Chris' algorithm here.
-    if(/*has landed*/true)
+    if(LandDetector::isOnGround())
     {
         //Success
         local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = true;
     }
-    else if(/*Failed*/false)
+    else if(false)
     {
         local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = false;
