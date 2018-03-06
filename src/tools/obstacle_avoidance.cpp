@@ -133,7 +133,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
 
             // magic numbers are minimum clearance no matter what. Turn into parameters and include
             // this logic in the avoidZone function
-            ROS_INFO_THROTTLE("Drone speed ratio: %.3f", drone_speed_ratio);
+            ROS_INFO_THROTTLE(1, "Drone speed ratio: %.3f", drone_speed_ratio);
             const auto clearance_front = std::max((float)Config::obstacle_clearance_front*drone_speed_ratio, 1.f);
             const auto clearance_back  = std::max((float)Config::obstacle_clearance_back*drone_speed_ratio, 1.f);
             const auto clearance_side  = std::max((float)Config::obstacle_clearance_side*drone_speed_ratio, 1.f);
@@ -195,11 +195,19 @@ void control::ObstacleAvoidance::onModified() {
     }
 }
 
+void control::ObstacleAvoidance::onWarn() {
+    //Run all callbacks
+    for(auto& cb_p : on_warn_cb_set_ ) {
+        (*cb_p)();
+    }
+}
+
 mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::PositionTarget setpoint) {
     //If obstacle avoidance has altered the setpoint
     if(doObstacleAvoidance(&setpoint)) {
         //Notify states
         onModified();
+        onWarn();
     }
     return setpoint;
 }
@@ -208,6 +216,13 @@ void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std
     const auto it = on_modified_cb_set_.find(cb_p);
     if (it != on_modified_cb_set_.cend()){
         on_modified_cb_set_.erase(it);
+    }
+}
+
+void control::ObstacleAvoidance::removeOnWarnCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {
+    const auto it = on_warn_cb_set_.find(cb_p);
+    if (it != on_warn_cb_set_.cend()) {
+        on_warn_cb_set_.erase(it);
     }
 }
 
