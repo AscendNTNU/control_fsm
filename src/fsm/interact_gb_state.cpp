@@ -5,6 +5,9 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
+typedef ascend_msgs::GRState GRstate;
+typedef geometry_msgs::PoseStamped PoseStamped;
+
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
 //Just dummies
 const double DISTANCE_THRESHOLD = 0.5;
@@ -18,12 +21,14 @@ struct{
 }local_state;
 
 void
-idleStateHandler(const auto& gb_pose, const auto& drone_pose) {
-    double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
-                            + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
+idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
+    auto& gb_pos = gb_pose.pose.position;
+    auto& drone_pos = drone_pose.pose.position;
+
+    double distance_to_gb = sqrt(pow((gb_pos.x - drone_pos.x),2) + pow((gb_pos.y - drone_pos.y),2));
     
     //Do checks here and transition to land
-    if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
+    if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD)
     {
         local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = false;
@@ -36,7 +41,7 @@ idleStateHandler(const auto& gb_pose, const auto& drone_pose) {
 }
 
 void
-landStateHandler(const auto& gb_pose, const auto& drone_pose)
+landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose)
 {
     //TODO add Chris' algorithm here.
 
@@ -54,7 +59,7 @@ landStateHandler(const auto& gb_pose, const auto& drone_pose)
 }
 
 void
-recoverStateHandler(const geometry_msgs::PoseStamped& drone_pose)
+recoverStateHandler(const PoseStamped& drone_pose)
 {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD)
     {
@@ -155,6 +160,7 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     {
         if (local_state.valid)
         {
+
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
         }
