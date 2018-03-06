@@ -92,7 +92,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         using control::pose::quat2yaw;
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
-        auto& quat = DroneHandler::getCurrentLocalPose().pose.orientation;
+        auto quat = DroneHandler::getCurrentLocalPose().pose.orientation;
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
     } catch(const std::exception& e) {
         //Critical bug - no recovery

@@ -58,5 +58,7 @@
     #Frame ID for global frame
     global_frame_id: map,
     #Frame ID for local frame
-    local_frame_id: odom
+    local_frame_id: odom,
+    #Use global to local transforms
+    use_global_transforms: true
 }

@@ -41,6 +41,7 @@ bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
 std::string Config::global_frame_id = "global_frame";
 std::string Config::local_frame_id = "odom";
+bool Config::use_global_transforms = true;
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -143,6 +144,7 @@ void Config::loadParams() {
     //Frame id
     getStringParam("global_frame_id", global_frame_id);
     getStringParam("local_frame_id", local_frame_id);
+    getBoolParam("use_global_transforms", use_global_transforms);
 
 }
 

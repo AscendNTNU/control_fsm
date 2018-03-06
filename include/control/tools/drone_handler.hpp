@@ -39,30 +39,30 @@ private:
     void onTwistRecievedCB(geometry_msgs::TwistStamped::ConstPtr msg_p) { last_twist_ = msg_p;}
     ///Get latest local pose
     const geometry_msgs::PoseStamped& getLocalPose() const;
-    ///Get latest global pose
-    geometry_msgs::PoseStamped getGlobalPose() const;
     ///Get latest twist
-    const geometry_msgs::TwistStamped& getLocalTwist() const;
+    const geometry_msgs::TwistStamped& getTwist() const;
     ///Is transform valid
-    bool isTransformValid() const;
+    bool isTransformsValid() const;
     ///Returns pointer to shared instance
     static const DroneHandler* getSharedInstancePtr();
 
 public:
     ///Returns last local pose from shared instance
-    static const geometry_msgs::PoseStamped& getCurrentLocalPose();
+    static geometry_msgs::PoseStamped getCurrentLocalPose();
     ///Returns last global pose from shared instance
     static geometry_msgs::PoseStamped getCurrentGlobalPose();
     ///Returns last twist from shared instance
-    static const geometry_msgs::TwistStamped& getCurrentTwist();
+    static geometry_msgs::TwistStamped getCurrentTwist();
     ///Is pose data valid?
     static bool isLocalPoseValid();
     ///Is twist data valid?
     static bool isTwistValid();
     ///Is pose data and transform valid
     static bool isGlobalPoseValid();
-    ///Get transformation
+    ///Get transform from global to local frame
     static geometry_msgs::TransformStamped getGlobal2LocalTf();
+    ///Get transform from local to global frame
+    static geometry_msgs::TransformStamped getLocal2GlobalTf();
 };
 }
 #endif

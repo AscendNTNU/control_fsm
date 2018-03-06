@@ -87,6 +87,8 @@ public:
     static std::string global_frame_id;
     /// \fsmparam Frame id for local frame
     static std::string local_frame_id;
+    /// \fsmparam Use transform for global position
+    static bool use_global_transforms;
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */
