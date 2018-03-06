@@ -18,45 +18,46 @@ struct{
 }local_state;
 
 void
-idleStateHandler(const geometry_msgs::PoseStamped& gb_pose,const geometry_msgs::PoseStamped& drone_pose) {
+idleStateHandler(geometry_msgs::PoseStamped& gb_pose,const geometry_msgs::PoseStamped& drone_pose)
+{
     double distance_to_gb = sqrt(pow((gb_pose.pose.position.x - drone_pose.pose.position.x),2)
                             + pow((gb_pose.pose.position.y - drone_pose.pose.position.y),2));
     
     //Do checks here and transition to land
     if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
     {
-        local_state.state = LOCAL_STATE::RECOVERconst ;
-        local_stateconst .valid = false;
+        local_state.state = LOCAL_STATE::RECOVER;
+        local_state.valid = false;
     }
     else
-{
-     local_state.state =const  LOCAL_STATE::LANDconst ;
+    {
+        local_state.state = LOCAL_STATE::LAND;
         local_state.valid = true;
     }
 }
 
-
 void
-landStateHandler(const geometry_msgs::PoseStamped& gb_pose, const geometry_msgs::PoseStamped& drone_pose){
+landStateHandler(geometry_msgs::PoseStamped& gb_pose, const geometry_msgs::PoseStamped& drone_pose)
+{
     //TODO add Chris' algorithm here.
 
     if(/*has landed*/true)
     {
         //Success
         local_state.state = LOCAL_STATE::RECOVER;
-        local_state.validconst  = true;const 
+        local_state.valid = true;
     }
     else if(/*Failed*/false)
-{
-     local_state.state =const  LOCAL_STATE::RECOVERconst ;
+    {
+        local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = false;
     }
 }
 
-
 void
-recoverStateHandler(const geometry_msgs::PoseStamped& drone_pose) {
-    if (drone_pose.pose.position.z < HEIGHT_THRESHOLD)
+recoverStateHandler(const geometry_msgs::PoseStamped& drone_pose)
+{
+    if (drone_pose.pose.position.y < HEIGHT_THRESHOLD)
     {
         // Setpoint to a higher altitude?
         if (!control::DroneHandler::isPoseValid())
@@ -65,7 +66,7 @@ recoverStateHandler(const geometry_msgs::PoseStamped& drone_pose) {
         }
         else
         {
-            local_state.valid =const  true;
+            local_state.valid = true;
             local_state.transition_valid = true;
         }
     }
@@ -112,12 +113,12 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Sets the local state to idle, awaiting clearance for landing.
-    local_state.state = LOCAL_STATEconst ::IDLE;
-    local_state.valid = trueconst ;
+    local_state.state = LOCAL_STATE::IDLE;
+    local_state.valid = true;
 }
 
-vod InteractGBState::loopState(ControlFSM& fsm) {
- //TODO Run Chris's algorithm
+void InteractGBState::loopState(ControlFSM& fsm) {
+    //TODO Run Chris's algorithm
     //TODO Remove thought comments
     auto& drone_pose = control::DroneHandler::getCurrentPose();
     geometry_msgs::PoseStamped gb_pose = {};
@@ -126,15 +127,15 @@ vod InteractGBState::loopState(ControlFSM& fsm) {
     //Is the transition to hold pos correct?
     if (/*!gbIsVisible*/false)
     {
-        local_state.state = LOCAL_STATE::RECOVERconst ;
-        local_state.validconst  = false;
+        local_state.state = LOCAL_STATE::RECOVER;
+        local_state.valid = false;
     }
 
-    swtch(local_state.state)
-{
-        caseconst  LOCAL_STATE::IDLE:
+    switch(local_state.state)
+    {
+        case LOCAL_STATE::IDLE:
         idleStateHandler(gb_pose, drone_pose);
-        beak;
+        break;
 
         case LOCAL_STATE::LAND:
         landStateHandler(gb_pose, drone_pose);
@@ -146,17 +147,17 @@ vod InteractGBState::loopState(ControlFSM& fsm) {
 
         default:
         // Should never happen.
-        local_stateconst .valid = false;
+        local_state.valid = false;
         break;
     }
     
-    if(local_state.state == LOCAL_STATE::RECOVER && local_state.transition_valid)const 
+    if (local_state.state == LOCAL_STATE::RECOVER && local_state.transition_valid)
     {
         if (local_state.valid)
         {
-         RequestEvent transition(RequestType::POSHOLD);
-            fsmconst .transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
-    }
+            RequestEvent transition(RequestType::POSHOLD);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
+        }
         else{
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
