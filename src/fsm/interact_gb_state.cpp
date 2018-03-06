@@ -25,8 +25,8 @@ void
 idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
     auto& drone_pos = drone_pose.pose.position;
 
-    double distance_to_gb = sqrt(pow((gb_pos.x - drone_pos.x),2)
-                                + pow((gb_pos.y - drone_pos.y),2));
+    double distance_to_gb = sqrt(pow((gb_pose.x - drone_pos.x),2)
+                                + pow((gb_pose.y - drone_pos.y),2));
     
     //Do checks here and transition to land
     if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD)
@@ -42,7 +42,7 @@ idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
 }
 
 void
-landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint)
+landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint)
 {
     //TODO add Chris' algorithm here.
     if(/*has landed*/true)
@@ -126,6 +126,7 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     //TODO Remove thought comments
     auto& drone_pose = control::DroneHandler::getCurrentPose();
     ascend_msgs::GRState gb_pose = {};
+    auto* setpoint = this->getSetpointPtr();
 
     //Checks if we still have visible ground robots to interact with
     if (gb_pose.downward_tracked)
@@ -141,7 +142,7 @@ void InteractGBState::loopState(ControlFSM& fsm) {
         break;
 
         case LOCAL_STATE::LAND:
-        landStateHandler(gb_pose, drone_pose);
+        landStateHandler(gb_pose, drone_pose, setpoint);
         break;
 
         case LOCAL_STATE::RECOVER:
@@ -150,7 +151,7 @@ void InteractGBState::loopState(ControlFSM& fsm) {
 
         default:
         local_state.valid = false;
-        control::handleErrorMsg("Local interact gb state failure!")
+        control::handleErrorMsg("Local interact gb state failure!");
         break;
     }
     
