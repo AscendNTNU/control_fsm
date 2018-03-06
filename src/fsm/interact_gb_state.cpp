@@ -7,6 +7,7 @@
 
 typedef ascend_msgs::GRState GRstate;
 typedef geometry_msgs::PoseStamped PoseStamped;
+typedef mavros_msgs::PositionTarget PosTarget;
 
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
 //Just dummies
@@ -42,10 +43,9 @@ idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
 }
 
 void
-landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose)
+landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint)
 {
     //TODO add Chris' algorithm here.
-
     if(/*has landed*/true)
     {
         //Success
@@ -65,7 +65,7 @@ recoverStateHandler(const PoseStamped& drone_pose)
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD)
     {
         // Setpoint to a higher altitude?
-        if (!control::DroneHandler::isPoseValid())
+        if (/**/false)
         {
             
         }
@@ -129,7 +129,6 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     ascend_msgs::GRState gb_pose = {};
 
     //Checks if we still have visible ground robots to interact with
-    //Is the transition to hold pos correct?
     if (gb_pose.downward_tracked)
     {
         local_state.state = LOCAL_STATE::RECOVER;
@@ -151,7 +150,6 @@ void InteractGBState::loopState(ControlFSM& fsm) {
         break;
 
         default:
-        // Should never happen.
         local_state.valid = false;
         control::handleErrorMsg("Local interact gb state failure!")
         break;
@@ -161,7 +159,7 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     {
         if (local_state.valid)
         {
-
+            cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
         }
