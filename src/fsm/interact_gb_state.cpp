@@ -5,18 +5,17 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
-//Should this be here?
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
 //Just dummies
 const double DISTANCE_THRESHOLD = 0.5;
 const double HEIGHT_THRESHOLD = 0.5;
+
 //Struct for controlling local state.
-//Maybe add a method for doing state validation
 struct{
     LOCAL_STATE state;
     bool valid = false;
     bool transition_valid = false;
-}_local_state;
+}local_state;
 
 void
 idleStateHandler(geometry_msgs::PoseStamped& gb_pose,const geometry_msgs::PoseStamped& drone_pose)
@@ -27,13 +26,13 @@ idleStateHandler(geometry_msgs::PoseStamped& gb_pose,const geometry_msgs::PoseSt
     //Do checks here and transition to land
     if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD || !control::DroneHandler::isPoseValid())
     {
-        _local_state.state = LOCAL_STATE::RECOVER;
-        _local_state.valid = false;
+        local_state.state = LOCAL_STATE::RECOVER;
+        local_state.valid = false;
     }
     else
     {
-        _local_state.state = LOCAL_STATE::LAND;
-        _local_state.valid = true;
+        local_state.state = LOCAL_STATE::LAND;
+        local_state.valid = true;
     }
 }
 
@@ -45,13 +44,13 @@ landStateHandler(geometry_msgs::PoseStamped& gb_pose, const geometry_msgs::PoseS
     if(/*has landed*/true)
     {
         //Success
-        _local_state.state = LOCAL_STATE::RECOVER;
-        _local_state.valid = true;
+        local_state.state = LOCAL_STATE::RECOVER;
+        local_state.valid = true;
     }
     else if(/*Failed*/false)
     {
-        _local_state.state = LOCAL_STATE::RECOVER;
-        _local_state.valid = false;
+        local_state.state = LOCAL_STATE::RECOVER;
+        local_state.valid = false;
     }
 }
 
@@ -67,8 +66,8 @@ recoverStateHandler(const geometry_msgs::PoseStamped& drone_pose)
         }
         else
         {
-            _local_state.valid = true;
-            _local_state.transition_valid = true;
+            local_state.valid = true;
+            local_state.transition_valid = true;
         }
     }
 }
@@ -114,8 +113,8 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 
     //Sets the local state to idle, awaiting clearance for landing.
-    _local_state.state = LOCAL_STATE::IDLE;
-    _local_state.valid = true;
+    local_state.state = LOCAL_STATE::IDLE;
+    local_state.valid = true;
 }
 
 void InteractGBState::loopState(ControlFSM& fsm) {
@@ -128,11 +127,11 @@ void InteractGBState::loopState(ControlFSM& fsm) {
     //Is the transition to hold pos correct?
     if (/*!gbIsVisible*/false)
     {
-        _local_state.state = LOCAL_STATE::RECOVER;
-        _local_state.valid = false;
+        local_state.state = LOCAL_STATE::RECOVER;
+        local_state.valid = false;
     }
 
-    switch(_local_state.state)
+    switch(local_state.state)
     {
         case LOCAL_STATE::IDLE:
         idleStateHandler(gb_pose, drone_pose);
@@ -148,13 +147,13 @@ void InteractGBState::loopState(ControlFSM& fsm) {
 
         default:
         // Should never happen.
-        _local_state.valid = false;
+        local_state.valid = false;
         break;
     }
     
-    if (_local_state.state == LOCAL_STATE::RECOVER && _local_state.transition_valid)
+    if (local_state.state == LOCAL_STATE::RECOVER && local_state.transition_valid)
     {
-        if (_local_state.valid)
+        if (local_state.valid)
         {
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
