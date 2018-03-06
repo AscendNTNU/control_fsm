@@ -5,9 +5,9 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
-typedef ascend_msgs::GRState GRstate;
-typedef geometry_msgs::PoseStamped PoseStamped;
-typedef mavros_msgs::PositionTarget PosTarget;
+using GRstate = ascend_msgs::GRState;
+using PoseStamped = geometry_msgs::PoseStamped;
+using PosTarget = mavros_msgs::PositionTarget;
 
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
 //Just dummies
