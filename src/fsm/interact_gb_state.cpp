@@ -25,7 +25,8 @@ idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
     auto& gb_pos = gb_pose.pose.position;
     auto& drone_pos = drone_pose.pose.position;
 
-    double distance_to_gb = sqrt(pow((gb_pos.x - drone_pos.x),2) + pow((gb_pos.y - drone_pos.y),2));
+    double distance_to_gb = sqrt(pow((gb_pos.x - drone_pos.x),2)
+                                + pow((gb_pos.y - drone_pos.y),2));
     
     //Do checks here and transition to land
     if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD)
