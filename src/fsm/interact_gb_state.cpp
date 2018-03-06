@@ -179,3 +179,12 @@ void InteractGBState::handleManual(ControlFSM &fsm) {
     RequestEvent manual_event(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
+
+
+ascend_msgs::ControlFSMState InteractGBState::getStateMsg() {
+    using ascend_msgs::ControlFSMState;
+    ControlFSMState msg;
+    msg.name = getStateName();
+    msg.state_id = ControlFSMState::INTERACT_GB_STATE;
+    return msg;
+}
