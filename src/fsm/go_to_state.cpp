@@ -286,3 +286,14 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
 
     delay_transition_.enabled = false;
 }
+
+
+
+ascend_msgs::ControlFSMState GoToState::getStateMsg() {
+    using ascend_msgs::ControlFSMState;
+    ControlFSMState msg;
+    msg.name = getStateName();
+    msg.state_id = ControlFSMState::GO_TO_STATE;
+    return msg;
+}
+

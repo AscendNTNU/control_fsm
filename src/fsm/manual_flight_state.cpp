@@ -62,3 +62,13 @@ const mavros_msgs::PositionTarget* ManualFlightState::getSetpointPtr() {
 void ManualFlightState::handleManual(ControlFSM &fsm) {
     //Already in manual, nothing to do
 }
+
+
+
+ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() {
+    using ascend_msgs::ControlFSMState;
+    ControlFSMState msg;
+    msg.name = getStateName();
+    msg.state_id = ControlFSMState::MANUAL_FLIGHT_STATE;
+    return msg;
+}
