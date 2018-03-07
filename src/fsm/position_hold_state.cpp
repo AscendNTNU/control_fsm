@@ -113,3 +113,15 @@ void PositionHoldState::handleManual(ControlFSM &fsm) {
     RequestEvent manual_event(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
 }
+
+
+ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() {
+    using ascend_msgs::ControlFSMState;
+    ControlFSMState msg;
+    msg.name = getStateName();
+    msg.state_id = ControlFSMState::POS_HOLD_STATE;
+    return msg;
+}
+
+
+
