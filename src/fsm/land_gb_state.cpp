@@ -92,7 +92,7 @@ void LandGBState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState InteractGBState::getStateMsg() {
+ascend_msgs::ControlFSMState LandGBState::getStateMsg() {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
