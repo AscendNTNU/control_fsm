@@ -1,15 +1,15 @@
-#include "control/fsm/interact_gb_state.hpp"
+#include "control/fsm/land_gb_state.hpp"
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
-InteractGBState::InteractGBState() {
+LandGBState::LandGBState() {
     setpoint_.type_mask = default_mask;
 }
 
-void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
+void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //TODO Handle all transition requests
     if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT) {
@@ -40,7 +40,7 @@ void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
-void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
+void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     using control::DroneHandler;
     using control::GroundRobotHandler;
     //Store event
@@ -73,16 +73,16 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 }
 
-void InteractGBState::loopState(ControlFSM& fsm) {
+void LandGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
 }
 
-const mavros_msgs::PositionTarget* InteractGBState::getSetpointPtr() {
+const mavros_msgs::PositionTarget* LandGBState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }
 
-void InteractGBState::handleManual(ControlFSM &fsm) {
+void LandGBState::handleManual(ControlFSM &fsm) {
     if(cmd_.isValidCMD()) {
         cmd_.eventError("OFFBOARD lost");
         cmd_ = EventData();
