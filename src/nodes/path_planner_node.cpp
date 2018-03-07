@@ -137,7 +137,7 @@ int main(int argc, char** argv){
     		}*/
     		msg.header.stamp = ros::Time::now();
     		pub_plan.publish(msg);
-    		std::cout << std::endl;
+    		//std::cout << std::endl;
     	}
 
     	rate.sleep();
