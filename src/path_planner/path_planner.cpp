@@ -132,9 +132,9 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             graph[x_index][y_index].setParentX(parent_x);
             graph[x_index][y_index].setParentY(parent_y);
             destination_reached = true;
-            std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
+            /*std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
             std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX()
-                << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
+                << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;*/
         }
             // If node is not destination and hasn't been searched yet
         else if(!graph[x_index][y_index].closed){
@@ -316,10 +316,10 @@ void PathPlanner::simplifyPlan() {
     }
 
     // Print the remaining points
-    std::cout << "Simple plan: " << std::endl;
+    /*std::cout << "Simple plan: " << std::endl;
     for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
         std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
-    }
+    }*/
 }
 
 bool PathPlanner::isPlanSafe(float current_x, float current_y) {
