@@ -97,7 +97,6 @@ int main(int argc, char** argv){
 		}
 
     	bool is_plan_updated = plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
-    	// !!!!! points blir fjernet fra planen men publishes fortsatt!!!!!!!!!!!!!!!!!!!!!
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(planner_state.current_x,planner_state.current_y) || planner_state.new_goal)){
@@ -124,7 +123,7 @@ int main(int argc, char** argv){
 	        		
 	        		points_in_plan.push_back(point);
 
-	        		std::cout << point.x << ", " << point.y << "\t";
+	        		std::cout << point.x << ", " << point.y << "         ";
 	        	
 	    		}
 	    		std::cout << std::endl;
@@ -137,19 +136,16 @@ int main(int argc, char** argv){
     			// Removing old plan
 		    	points_in_plan.clear();
     			if(!simple_plan.empty()){
-			    
-				    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
-				    std::list<Node>::iterator second_point = ++(simple_plan.begin());
 
 				    std::cout << "Published points:\t";
-				    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
+				    for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
 
 		        		point.x = it->getX();
 		        		point.y = it->getY();
 		        		
 		        		points_in_plan.push_back(point);
 
-		        		std::cout << point.x << ", " << point.y << "\t";
+		        		std::cout << point.x << ", " << point.y << "         ";
 		        	
 		    		}
 		    		std::cout << std::endl;
