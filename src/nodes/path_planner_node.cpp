@@ -91,8 +91,8 @@ int main(int argc, char** argv){
 			// Update planner state
 			geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();
 			auto& position = current_pose.pose.position;
-			planner_state->current_x = position.x;
-			planner_state->current_y = position.y;
+			planner_state.current_x = position.x;
+			planner_state.current_y = position.y;
 		}
 
     	plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
