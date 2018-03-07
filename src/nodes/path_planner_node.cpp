@@ -115,7 +115,7 @@ int main(int argc, char** argv){
 			    std::list<Node>::iterator second_point = ++(simple_plan.begin());
 
 			    std::cout << "Published points:\t";
-			    for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
+			    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
 
 	        		point.x = it->getX();
 	        		point.y = it->getY();
