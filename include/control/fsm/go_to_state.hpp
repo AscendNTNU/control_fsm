@@ -21,6 +21,9 @@ private:
     
     ///Is state active flag
     bool is_active_ = false;
+
+    ///Obstacle avoidance kicked in flag
+    bool obstacle_avoidance_kicked_in_ = false;
 public:
     GoToState();
     void stateInit(ControlFSM& fsm) override;
@@ -38,6 +41,9 @@ public:
 
     ///Handles delayed transition when position is reached
     void destinationReached(ControlFSM &fsm);
+
+    ///Callback for obstacle avoidance
+    void obstacleAvoidanceCB();
 };
 
 //Only make these available for unit testing

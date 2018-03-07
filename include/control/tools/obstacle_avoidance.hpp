@@ -16,17 +16,32 @@ private:
      */
     std::set< std::shared_ptr< std::function<void() > > > on_modified_cb_set_;
 
+    /**Set of callback method pointers registered by states
+     * Pointers are used to allow comparison as std::function can't be compared
+     */
+    std::set< std::shared_ptr< std::function<void() > > > on_warn_cb_set_;
+
     ///Notify states the setpoint has been changed
     void onModified();
 
+    ///Notify states the setpoint should be changed
+    void onWarn();
+
     ///Runs obstacle avoidance, and modifies setpoint (and notifies)
     virtual bool doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint);
+
+    ///Publisher for avoid zone information
+    //ros::Publisher zone_pub_;
 
 public:
     ///Default constructor
     ObstacleAvoidance() = default;
     ///Default copy constructor
     ObstacleAvoidance(const ObstacleAvoidance&) = default;
+    ///Add new callback to warning set
+    void registerOnWarnCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) { on_warn_cb_set_.insert(cb_p); }
+    ///Remove a callback from warning set
+    void removeOnWarnCBPtr(const std::shared_ptr<std::function<void()> >& cb_p);
     ///Add new callback
     void registerOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) { on_modified_cb_set_.insert(cb_p); }
     ///Remove a callback

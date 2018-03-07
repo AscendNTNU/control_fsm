@@ -62,5 +62,5 @@
     #Obstacle avoidance clearance in back
     obstacle_clearance_back: 2.0,
     #Obstacle avoidance checkradius
-    obstacle_clearance_checkradius: 5.0
+    obstacle_clearance_checkradius: 10.0
 }

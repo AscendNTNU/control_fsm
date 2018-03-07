@@ -118,7 +118,6 @@ private:
     ///All states needs access to obstacle avoidance
     control::ObstacleAvoidance obstacle_avoidance_;
 
-
 protected:
     /**
      * @brief Changes the current running state
@@ -128,6 +127,8 @@ protected:
      * @param event Which event triggered the transition request
      */
     void transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event);
+
+
     
 public:
     ///Constructor sets default/starting state

@@ -1,16 +1,25 @@
 #include "control/fsm/go_to_state.hpp"
 #include "control/fsm/control_fsm.hpp"
 #include <control/tools/logger.hpp>
+#include <control/tools/obstacle_avoidance.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
 #include <control/fsm/go_to_state.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
 
 constexpr double PI = 3.14159265359;
-constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = PI / 2.0;
 
 GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
+}
+
+
+/**
+ * @brief Callback for obstacle avoidance
+ */
+void GoToState::obstacleAvoidanceCB(){
+    obstacle_avoidance_kicked_in_  = true;
 }
 
 /**
@@ -116,6 +125,10 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
+
+    // Set obstacle avoidance flag
+    obstacle_avoidance_kicked_in_  = false;
+
     // Set setpoint
     setpoint_.position.x = cmd_.position_goal.x;
     setpoint_.position.y = cmd_.position_goal.y;
@@ -132,8 +145,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 	auto dx = setpoint_.position.x - pos.x;
 	auto dy = setpoint_.position.y - pos.y;
 
-            setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
-	    /*
+        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+        /*
 	if (std::fabs(dx*dx + dy*dy) < 0.01){
 	    // assume drone is stationary and dont change orientation
 	} else{
@@ -151,6 +164,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
+    // Set obstacle avoidance flag
+    obstacle_avoidance_kicked_in_ = false;
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -158,6 +173,11 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Check that position data is valid
         if(!control::DroneHandler::isPoseValid()) {
             throw control::PoseNotValidException();
+        }
+
+        if (obstacle_avoidance_kicked_in_){
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         }
 
         using control::pose::quat2mavrosyaw;
@@ -177,7 +197,7 @@ void GoToState::loopState(ControlFSM& fsm) {
         using control::Config;
         bool xy_reached = (pow(delta_x, 2) + pow(delta_y, 2)) <= pow(Config::dest_reached_margin, 2);
         bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
-        bool yaw_reached = (fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= Config::yaw_reached_margin);
+        bool yaw_reached = fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= Config::yaw_reached_margin;
         //If destination is reached, begin transition to another state
         if(xy_reached && z_reached && yaw_reached) {
             destinationReached(fsm);
@@ -209,6 +229,8 @@ void GoToState::stateInit(ControlFSM& fsm) {
     //TODO Uneccesary variables - Config can be used directly
     //Set state variables
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
+
+    //fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(this->obstacleAvoidanceCB));
 
     control::handleInfoMsg("GoTo init completed!");
 }
