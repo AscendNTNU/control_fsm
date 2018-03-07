@@ -64,7 +64,7 @@
   <run_depend>vrpn_client_ros</run_depend>
   <run_depend>mavros_extras</run_depend>
   <run_depend>mavros</run_depend>
-  <run_depend>ascend_utilities</ascend_utilities>
+  <run_depend>ascend_utilities</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
