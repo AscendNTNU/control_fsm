@@ -110,8 +110,14 @@ bool ControlFSM::isReady() {
     if(control::Config::require_all_data_streams) {
         try {
             //Check that we're recieving position - both local and global
+            //Global pose use local pose
             if(!control::DroneHandler::isGlobalPoseValid()) {
                 control::handleWarnMsg("Preflight Check: No valid pose data");
+                return false;
+            }
+            //Check that we're recieving velocity
+            if(!control::DroneHandler::isTwistValid()) {
+                control::handleWarnMsg("Preflight Check: No valid twist data");
                 return false;
             }
             //Mavros must publish state data
