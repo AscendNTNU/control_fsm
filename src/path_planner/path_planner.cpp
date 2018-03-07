@@ -374,12 +374,6 @@ bool PathPlanner::removeOldPoints(float current_x, float current_y){
                   << simple_plan.begin()->getY() << std::endl;
         simple_plan.pop_front();
         removed = true;
-
-        std::cout << "Updated plan: ";
-        for(auto it = simple_plan.begin(); it != simple_plan.end(); it++){
-            std::cout << it->getX() << ", " << it->getY() << "      ";
-        }
-        std::cout << std::endl;
     }
     return removed;
 }

@@ -135,6 +135,7 @@ int main(int argc, char** argv){
     		if(is_plan_updated){
     			// Removing old plan
 		    	points_in_plan.clear();
+		    	simple_plan = plan.getSimplePlan();
     			if(!simple_plan.empty()){
 
 				    std::cout << "Published points:\t";
