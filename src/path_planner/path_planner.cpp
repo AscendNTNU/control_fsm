@@ -64,6 +64,14 @@ void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
     if(no_plan){
         return;
     }
+
+    // delete all old obstacles
+    for (float x = 0; x < FIELD_LENGTH; x += node_distance){
+        for (float y = 0; y < FIELD_LENGTH; y += node_distance){
+                graph[coordToIndex(x)][coordToIndex(y)].obstacle = false;
+        }
+    }
+    
     std::list<float>::iterator x = obstacle_coordinates.begin();
     std::list<float>::iterator y = ++(obstacle_coordinates.begin());
     while(y != obstacle_coordinates.end()){
