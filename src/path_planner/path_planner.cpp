@@ -363,6 +363,11 @@ void PathPlanner::removeOldPoints(float current_x, float current_y){
         return;
     }
 
+    // Do not remove end point from plan
+    if(++simple_plan.begin() == simple_plan.end()){
+        return;
+    }
+
     if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY())<margin){
         std::cout << "Remove " << simple_plan.begin()->getX() << ", "
                   << simple_plan.begin()->getY() << std::endl;
