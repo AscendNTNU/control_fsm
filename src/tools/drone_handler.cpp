@@ -97,8 +97,8 @@ geometry_msgs::TransformStamped control::DroneHandler::getGlobal2LocalTf() {
     if(!Config::use_global_transforms) {
         auto tf = geometry_msgs::TransformStamped();
         tf.header.stamp = ros::Time::now();
-        tf.header.frame_id = Config::local_frame_id;
-        tf.child_frame_id = Config::global_frame_id;
+        tf.header.frame_id = Config::global_frame_id;
+        tf.child_frame_id = Config::local_frame_id;
         //The transform should be empty; local = global
         return tf;
     }
@@ -117,8 +117,8 @@ geometry_msgs::TransformStamped control::DroneHandler::getLocal2GlobalTf() {
     if(!Config::use_global_transforms) {
         auto tf = geometry_msgs::TransformStamped();
         tf.header.stamp = ros::Time::now();
-        tf.header.frame_id = Config::global_frame_id;
-        tf.child_frame_id = Config::local_frame_id;
+        tf.header.frame_id = Config::local_frame_id;
+        tf.child_frame_id = Config::global_frame_id;
         //The transform should be empty; local = global
         return tf;
     }

@@ -9,6 +9,9 @@
     	<param name="$(arg fsm_name)/require_obs_detection" value="false"/>
     	<param name="$(arg fsm_name)/land_xy_goto_altitude" value="2.0"/>
     	<param name="$(arg fsm_name)/takeoff_altitude" value="2.0"/>
-
 	<param name="/mavros/local_position/frame_id" value="odom"/>
+    <include file="$(find ascend_utilities)/launch/static_tf_repeater.launch">
+        <arg name="frame_id" value="odom"/>
+        <arg name="child_frame_id" value="map"/>
+    </include>
 </launch>
