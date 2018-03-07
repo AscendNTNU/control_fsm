@@ -1,5 +1,5 @@
-#ifndef FSM_CONFIG_HPP
-#define FSM_CONFIG_HPP
+#ifndef FSM_PLANNER_CONFIG_HPP
+#define FSM_PLANNER_CONFIG_HPP
 #include <iostream>
 #include <ros/ros.h>
 #include <set>
