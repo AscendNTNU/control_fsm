@@ -99,7 +99,7 @@ int main(int argc, char** argv){
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(planner_state.current_x,planner_state.current_y) || planner_state.new_goal)){
-    		//ROS_INFO("Make new plan.");
+    		ROS_INFO("Make new plan.");
     		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
 		    std::list<Node> simple_plan = plan.getSimplePlan();
