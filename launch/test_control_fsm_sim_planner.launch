@@ -1,0 +1,13 @@
+<launch>
+	<arg name="fsm_name" default="control_fsm_node"/>
+    	<include file="$(find mavros)/launch/px4.launch">
+        	<arg name="fcu_url" value="udp://:14540@127.0.0.1:14557"/>
+    	</include>
+    	<include file="$(find control_fsm)/launch/control_fsm.launch">
+		  <arg name="node_name" value="$(arg fsm_name)"/>
+        </include>
+        <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
+    	<param name="$(arg fsm_name)/land_xy_goto_altitude" value="2.0"/>
+    	<param name="$(arg fsm_name)/takeoff_altitude" value="2.0"/>
+        <include file="$(find control_fsm)/launch/path_planner.launch"/>
+</launch>
