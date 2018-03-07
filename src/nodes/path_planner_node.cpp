@@ -9,10 +9,9 @@
 #include "control/tools/planner_config.hpp"
 #include "ascend_msgs/PointArrayStamped.h"
 #include "ascend_msgs/PathPlanner.h"
+#include "control/tools/obstacle_state_handler.hpp"
 
 using control::pathplanner::PathPlanner;
-
-std::list<float> obstacle_coordinates;
 
 struct PlannerState{
 	float current_x, current_y, goal_x, goal_y;
@@ -77,6 +76,7 @@ int main(int argc, char** argv){
 	PlannerState planner_state;
 	PathPlanner plan(control::PlannerConfig::obstacle_radius, control::PlannerConfig::node_distance);
 
+	std::list<float> obstacle_coordinates;
 
     //ros::Subscriber sub_obstacles = n.subscribe(control::PlannerConfig::obstacle_state_topic, 1, updateObstaclesCB);
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv){
     // For saving memory
 	points_in_plan.reserve(20);
 
-	while(!control::DroneHandler::isPoseValid() && ros::ok()){
+	while(!control::DroneHandler::isPoseValid() && !control::ObstacleStateHandler::isInstanceReady() && ros::ok()){
 		ros::spinOnce();
 		ros::Duration(1.0).sleep();
 	}
@@ -98,6 +98,12 @@ int main(int argc, char** argv){
 
     	ros::spinOnce();
     	
+    	auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
+    	obstacle_coordinates.clear();
+		for(auto it = obstacles.global_robot_position.begin(); it != obstacles.global_robot_position.end(); ++it) {
+	    	obstacle_coordinates.push_back(it->x);
+	    	obstacle_coordinates.push_back(it->y);
+		}
 
     	//plan.refreshObstacles(obstacle_coordinates);
     	plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
