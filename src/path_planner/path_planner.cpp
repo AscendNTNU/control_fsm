@@ -234,8 +234,8 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     int x_index = coordToIndex(x);
     int y_index = coordToIndex(y);
 
-    if(graph[x_index][y_index].obstacle || graph[coordToIndex(current_x)][coordToIndex(current_y)].obstacle){
-        std::cout << "Start or end on obstacle, invalid!" << std::endl;
+    if(graph[x_index][y_index].obstacle){
+        std::cout << "End point on obstacle, invalid!" << std::endl;
         return;
     }
 
