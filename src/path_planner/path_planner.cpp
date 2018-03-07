@@ -355,22 +355,25 @@ void PathPlanner::resetParameters() {
     destination_reached = false;
 }
 
-void PathPlanner::removeOldPoints(float current_x, float current_y){
+bool PathPlanner::removeOldPoints(float current_x, float current_y){
     // Check if current point is the first point of the plan
     float margin = node_distance;
 
     if(simple_plan.empty()){
-        return;
+        return false;
     }
 
     // Do not remove end point from plan
     if(++simple_plan.begin() == simple_plan.end()){
-        return;
+        return false;
     }
 
+    bool removed = false;
     if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY())<margin){
         std::cout << "Remove " << simple_plan.begin()->getX() << ", "
                   << simple_plan.begin()->getY() << std::endl;
         simple_plan.pop_front();
+        removed = true;
     }
+    return removed;
 }

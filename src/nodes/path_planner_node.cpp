@@ -60,7 +60,8 @@ int main(int argc, char** argv){
 
 	PlannerState planner_state;
 	PathPlanner plan(control::PlannerConfig::obstacle_radius, control::PlannerConfig::node_distance);
-
+	std::list<Node> simple_plan;
+	geometry_msgs::Point point;
 	std::list<float> obstacle_coordinates;
 
     ros::Publisher pub_plan = n.advertise<ascend_msgs::PointArrayStamped>(control::PlannerConfig::plan_points_topic, 1);
@@ -95,16 +96,17 @@ int main(int argc, char** argv){
 			planner_state.current_y = position.y;
 		}
 
-    	plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
+    	bool is_plan_updated = plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
+    	// !!!!! points blir fjernet fra planen men publishes fortsatt!!!!!!!!!!!!!!!!!!!!!
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(planner_state.current_x,planner_state.current_y) || planner_state.new_goal)){
     		ROS_INFO("Make new plan.");
     		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
-		    std::list<Node> simple_plan = plan.getSimplePlan();
+		    simple_plan = plan.getSimplePlan();
 
-		    geometry_msgs::Point point;
+		    
 		    
 		    // Removing old plan
 		    points_in_plan.clear();
@@ -131,6 +133,28 @@ int main(int argc, char** argv){
     
     	// Publish plan as long as a plan is requested
     	if(planner_state.make_plan){
+    		if(is_plan_updated){
+    			// Removing old plan
+		    	points_in_plan.clear();
+    			if(!simple_plan.empty()){
+			    
+				    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
+				    std::list<Node>::iterator second_point = ++(simple_plan.begin());
+
+				    std::cout << "Published points:\t";
+				    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
+
+		        		point.x = it->getX();
+		        		point.y = it->getY();
+		        		
+		        		points_in_plan.push_back(point);
+
+		        		std::cout << point.x << ", " << point.y << "\t";
+		        	
+		    		}
+		    		std::cout << std::endl;
+		    	}
+    		}
     		/*std::cout << "Published points:\t";
     		for(auto it = points_in_plan.begin(); it != points_in_plan.end(); it++){
     			std::cout << it->x << ", " << it->y << "\t" << std::endl;
