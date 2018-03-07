@@ -35,12 +35,6 @@ bool newPlanCB(Request &req, Response &res, PlannerState* planner_state){
 
 		planner_state->make_plan = true;
 
-		// Update planner state
-		geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();
-		auto& position = current_pose.pose.position;
-		planner_state->current_x = position.x;
-		planner_state->current_y = position.y;
-
 		//Accept the new goal
 		planner_state->new_goal = true;
 
@@ -93,6 +87,12 @@ int main(int argc, char** argv){
 		    	obstacle_coordinates.push_back(it->y);
 			}
 			plan.refreshObstacles(obstacle_coordinates);
+
+			// Update planner state
+			geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();
+			auto& position = current_pose.pose.position;
+			planner_state->current_x = position.x;
+			planner_state->current_y = position.y;
 		}
 
     	plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
