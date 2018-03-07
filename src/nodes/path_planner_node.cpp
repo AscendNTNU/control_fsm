@@ -85,14 +85,15 @@ int main(int argc, char** argv){
     while(ros::ok()){
 
     	ros::spinOnce();
-
-    	auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
-    	obstacle_coordinates.clear();
-		for(auto it = obstacles.global_robot_position.begin(); it != obstacles.global_robot_position.end(); ++it) {
-	    	obstacle_coordinates.push_back(it->x);
-	    	obstacle_coordinates.push_back(it->y);
+    	if(planner_state.make_plan){
+	    	auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
+	    	obstacle_coordinates.clear();
+			for(auto it = obstacles.global_robot_position.begin(); it != obstacles.global_robot_position.end(); ++it) {
+		    	obstacle_coordinates.push_back(it->x);
+		    	obstacle_coordinates.push_back(it->y);
+			}
+			plan.refreshObstacles(obstacle_coordinates);
 		}
-		plan.refreshObstacles(obstacle_coordinates);
 
     	plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
 
