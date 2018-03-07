@@ -71,11 +71,10 @@ void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
                 graph[coordToIndex(x)][coordToIndex(y)].obstacle = false;
         }
     }
-    
+
     std::list<float>::iterator x = obstacle_coordinates.begin();
     std::list<float>::iterator y = ++(obstacle_coordinates.begin());
     while(y != obstacle_coordinates.end()){
-        std::cout << "adding obstacle" << std::endl;
         addObstacle(*x, *y);
         x++;
         y++;
