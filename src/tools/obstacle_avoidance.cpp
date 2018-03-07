@@ -242,6 +242,7 @@ mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::Positio
     if(doObstacleAvoidance(&setpoint)) {
         //Notify states
         onModified();
+        onWarn();
     }
     return setpoint;
 }
@@ -253,10 +254,9 @@ void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std
     }
 }
 
-
 void control::ObstacleAvoidance::removeOnWarnCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {
     const auto it = on_warn_cb_set_.find(cb_p);
-    if (it != on_warn_cb_set_.cend()){
+    if (it != on_warn_cb_set_.cend()) {
         on_warn_cb_set_.erase(it);
     }
 }
