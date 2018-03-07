@@ -240,8 +240,12 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     // Go through the graph from end to start through the parents of each node
     // Add nodes to the plan
 
+    // Actual endpoint
+    plan.push_front(end_node);
+
     while(!isStart(x, y)){
-        plan.push_front(graph[x_index][y_index]);
+        // parent is calculated from the endpoint index, this node might have a different
+        // coordinate (depending on the grid size)
         float x_temp = graph[x_index][y_index].getParentX();
         float y_temp = graph[x_index][y_index].getParentY();
         x = x_temp;
@@ -252,9 +256,9 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
         counter ++;
         if(counter >200){break;}
+        plan.push_front(graph[x_index][y_index]);
     }
-    // Add start node to the plan (might not be necessary)
-    plan.push_front(graph[x_index][y_index]);
+
     // Print the plan - can be removed
     /*std::cout << std::endl << "Whole plan:" << std::endl;
     for (std::list<Node>::iterator it = plan.begin(); it!= plan.end(); ++it){
