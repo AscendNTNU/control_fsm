@@ -393,9 +393,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         plan.push_front(graph[x_index][y_index]);
     }
 
-    if(escape_from_obstacle) {
-        plan.push_front(graph[current_x][current_y]);
-    }
+    
 
     // Print the plan - can be removed
     /*std::cout << std::endl << "Whole plan:" << std::endl;
@@ -405,6 +403,9 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
     // Delete unnecessary points
     simplifyPlan();
+    if(escape_from_obstacle) {
+        simple_plan.push_front(graph[current_x][current_y]);
+    }
 }
 
 void PathPlanner::simplifyPlan() {
