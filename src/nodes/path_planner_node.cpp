@@ -4,7 +4,6 @@
 #include "control/tools/drone_handler.hpp"
 #include <list>
 #include <vector>
-#include "ascend_msgs/GRStateArray.h"
 #include <mavros_msgs/PositionTarget.h>
 #include "control/tools/planner_config.hpp"
 #include "ascend_msgs/PointArrayStamped.h"
