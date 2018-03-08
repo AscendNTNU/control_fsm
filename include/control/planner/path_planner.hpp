@@ -20,6 +20,12 @@ namespace pathplanner{
 #define FIELD_LENGTH 20.0
 
 
+struct Obstacle {
+    float x;
+    float y;
+    float dir;
+};
+
 class PathPlanner;
 class PathPlanner{
 private:
@@ -36,7 +42,7 @@ private:
     std::list<Node> plan;
     std::list<Node> simple_plan;
 
-    std::list<float> obstacle_coordinates;
+    std::list<Obstacle> obstacle_coordinates;
 
     Node end_node;
     Node start_node;
@@ -57,7 +63,7 @@ public:
 
     void initializeGraph();
 
-    void setObstacleCoordinates(std::list<float> &obstacle_coordinates);
+    void setObstacleCoordinates(std::list<Obstacle> &obstacle_coordinates);
 
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);

@@ -62,7 +62,7 @@ int main(int argc, char** argv){
 	PathPlanner plan(control::PlannerConfig::obstacle_radius, control::PlannerConfig::node_distance);
 	std::list<Node> simple_plan;
 	geometry_msgs::Point point;
-	std::list<float> obstacle_coordinates;
+	std::list<control::pathplanner::Obstacle> obstacle_coordinates;
 
     ros::Publisher pub_plan = n.advertise<ascend_msgs::PointArrayStamped>(control::PlannerConfig::plan_points_topic, 1);
     ros::ServiceServer server = n.advertiseService<Request, Response>("path_planner_service", boost::bind(&newPlanCB, _1, _2, &planner_state));
@@ -81,11 +81,10 @@ int main(int argc, char** argv){
 
     	ros::spinOnce();
     	if(planner_state.make_plan){
-	    	auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
+	    	auto obstacles_msg = control::ObstacleStateHandler::getCurrentObstacles();
 	    	obstacle_coordinates.clear();
-			for(auto it = obstacles.global_robot_position.begin(); it != obstacles.global_robot_position.end(); ++it) {
-		    	obstacle_coordinates.push_back(it->x);
-		    	obstacle_coordinates.push_back(it->y);
+			for(auto it = obstacles_msg.global_robot_position.begin(); it != obstacles_msg.global_robot_position.end(); ++it) {
+		    	obstacle_coordinates.push_back(control::pathplanner::Obstacle{it->x, it->y,0});
 			}
 			plan.setObstacleCoordinates(obstacle_coordinates);
 			plan.refreshObstacles();
