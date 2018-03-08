@@ -13,6 +13,7 @@
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/config.hpp>
 #include <control/tools/obstacle_avoidance.hpp>
+#include <control/tools/obstacle_math.hpp>
 #include "gtest/gtest.h"
 #include <sstream>
 
@@ -78,7 +79,9 @@ TEST(ControlTest, quatConversionTest) {
 }
 
 TEST(ControlTest, obstacleAvoidanceHelpers) {
-
+    
+    using obstacle_math::angleWrapper;
+    using obstacle_math::rotateXY;
     // angleWrapper
     EXPECT_NEAR(0.f, angleWrapper(0.f), 0.001);
     EXPECT_NEAR(2.f, angleWrapper(2.f), 0.001);
@@ -92,6 +95,7 @@ TEST(ControlTest, obstacleAvoidanceHelpers) {
     geometry_msgs::Vector3 zero =  {};
     geometry_msgs::Vector3 unitx; unitx.x=1.0; unitx.y=0.0; unitx.z=0.0; 
     geometry_msgs::Vector3 unity; unity.x=0.0; unity.y=1.0; unity.z=0.0; 
+    
     geometry_msgs::Vector3 unitz; unitz.x=0.0; unitz.y=0.0; unitz.z=1.0; 
 
     // rotateXY
