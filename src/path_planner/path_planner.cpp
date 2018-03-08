@@ -34,6 +34,10 @@ void PathPlanner::initializeGraph(){
     }
 }
 
+void PathPlanner::setObstacleCoordinates(std::list<float> &obstacle_coordinates) {
+    this->obstacle_coordinates = obstacle_coordinates;
+}
+
 void PathPlanner::addObstacle(float center_x, float center_y) {
     // Find the y value for each x in the circle
     for (float x = center_x-obstacle_radius; x <= center_x+obstacle_radius; x+=node_distance) {
@@ -59,8 +63,7 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
     }
 }
 
-void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
-    this->obstacle_coordinates = obstacle_coordinates;
+void PathPlanner::refreshObstacles() {
     if(no_plan){
         return;
     }

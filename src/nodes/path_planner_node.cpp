@@ -87,7 +87,9 @@ int main(int argc, char** argv){
 		    	obstacle_coordinates.push_back(it->x);
 		    	obstacle_coordinates.push_back(it->y);
 			}
-			plan.refreshObstacles(obstacle_coordinates);
+			plan.setObstacleCoordinates(obstacle_coordinates);
+			plan.refreshObstacles();
+			plan.refreshUnsafeZones();
 
 			// Update planner state
 			geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentPose();

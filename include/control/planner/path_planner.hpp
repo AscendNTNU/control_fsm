@@ -57,9 +57,11 @@ public:
 
     void initializeGraph();
 
+    void setObstacleCoordinates(std::list<float> &obstacle_coordinates);
+
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);
-    void refreshObstacles(std::list<float> obstacle_coordinates);
+    void refreshObstacles();
 
     // Adds unsafe zone around obstacles, the plan cannot be made here
     void addUnsafeZone(float center_x, float center_y);
