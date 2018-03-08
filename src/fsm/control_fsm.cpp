@@ -118,7 +118,7 @@ bool ControlFSM::isReady() {
             if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
                 control::handleWarnMsg("Preflight Check: No valid mavros state data!");
                 return false;
-            } 
+            }
             //Land detector must be ready
             if (!LandDetector::getSharedInstancePtr()->isReady()) {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");
