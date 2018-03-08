@@ -4,6 +4,7 @@
 #include <functional>
 #include <mavros_msgs/PositionTarget.h>
 #include <memory>
+#include <ros/ros.h>
 
 namespace control {
 
@@ -30,12 +31,15 @@ private:
     ///Runs obstacle avoidance, and modifies setpoint (and notifies)
     virtual bool doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint);
 
+    ///Node handle
+    ros::NodeHandle nh_;
+
     ///Publisher for avoid zone information
-    //ros::Publisher zone_pub_;
+    ros::Publisher zone_pub_;
 
 public:
     ///Default constructor
-    ObstacleAvoidance() = default;
+    ObstacleAvoidance();
     ///Default copy constructor
     ObstacleAvoidance(const ObstacleAvoidance&) = default;
 

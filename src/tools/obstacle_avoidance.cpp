@@ -122,8 +122,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     const auto drone_speed = std::sqrt(std::pow(drone_vel.x,2) + std::pow(drone_vel.y,2));
     const float drone_speed_ratio = std::min((float)std::sqrt(drone_speed/3.f), 1.f); // 3.f m/s is assumed drone max speed
 
-    ascend_msgs::PolygonArray polygon_array;
-
+    ascend_msgs::PolygonArray zone_msg;
 
     for (int i = 0; i < obstacles.count; i++){
         const auto obstacle_position = obstacles.global_robot_position[i];
@@ -173,15 +172,13 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             point_left = rotateXY(point_left, obstacle_direction);
             point_right = rotateXY(point_right, obstacle_direction);
 
-            //ROS_INFO("Point front: %.2f\t%.2f", obstacle_position.x + point_front.x, obstacle_position.y + point_front.y);
-            //ROS_INFO("Point left: %.2f\t%.2f", obstacle_position.x + point_left.x, obstacle_position.y + point_left.y);
-            //ROS_INFO("Point right: %.2f\t%.2f", obstacle_position.x + point_right.x, obstacle_position.y + point_right.y);
-            //ROS_INFO("Point back: %.2f\t%.2f", obstacle_position.x + point_back.x, obstacle_position.y + point_back.y);
-	    std::vector<geometry_msgs::Point32> polygon;
-	    polygon.push_back(point_front);
-	    polygon.push_back(point_left);
-	    polygon.push_back(point_back);
-	    polygon.push_back(point_right);
+	    geometry_msgs::Polygon polygon;
+	    polygon.points.push_back(point_front);
+	    polygon.points.push_back(point_left);
+	    polygon.points.push_back(point_back);
+	    polygon.points.push_back(point_right);
+
+	    zone_msg.polygons.push_back(polygon);
 
             if (drone_distance_to_obstacle < minimum_distance){
                 if (setpoint_reachable
@@ -219,6 +216,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             //ROS_INFO_THROTTLE(1, "Distance improvement %.3f to %.3f", drone_distance_to_obstacle, new_distance_to_obstacle);
         }
     }
+
+    zone_pub_.publish(zone_msg);
 
     return setpoint_modified;
 }
@@ -259,5 +258,10 @@ void control::ObstacleAvoidance::removeOnWarnCBPtr(const std::shared_ptr<std::fu
     if (it != on_warn_cb_set_.cend()) {
         on_warn_cb_set_.erase(it);
     }
+}
+
+
+control::ObstacleAvoidance::ObstacleAvoidance(){
+    zone_pub_ = nh_.advertise<ascend_msgs::PolygonArray>("/control/obstacle_avoidance/polygons", 10);    
 }
 
