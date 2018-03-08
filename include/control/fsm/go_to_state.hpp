@@ -43,8 +43,6 @@ public:
     ///Handles delayed transition when position is reached
     void destinationReached(ControlFSM &fsm);
 
-    ///Callback for obstacle avoidance
-    void obstacleAvoidanceCB();
 };
 
 //Only make these available for unit testing

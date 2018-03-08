@@ -14,6 +14,7 @@
 //Constructor sets default setpoint type mask
 PositionHoldState::PositionHoldState() {
     setpoint_.type_mask = default_mask;
+
 }
 
 //Handles incoming events
@@ -56,6 +57,11 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             //Error if pose is not valid
             throw control::PoseNotValidException();
         }
+
+        // Set flag for obstacle avoidance
+        obstacle_avoidance_kicked_in_ = false;
+
+
         //Get pose - and position
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
@@ -103,6 +109,25 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+
+
+void PositionHoldState::stateInit(ControlFSM& fsm) {
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        this->obstacle_avoidance_kicked_in_ = true;
+    };
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
+
+
+    // Set flag for obstacle avoidance
+    obstacle_avoidance_kicked_in_ = false;
+}
+
+void PositionHoldState::stateEnd(ControlFSM& fsm, const EventData& event) {
+    // Set flag for obstacle avoidance
+    obstacle_avoidance_kicked_in_ = false;
+}
+
+
 //Returns setpoint
 const mavros_msgs::PositionTarget* PositionHoldState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
@@ -122,6 +147,5 @@ ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() {
     msg.state_id = ControlFSMState::POS_HOLD_STATE;
     return msg;
 }
-
 
 

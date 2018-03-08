@@ -16,13 +16,6 @@ GoToState::GoToState() : StateInterface::StateInterface() {
 
 
 /**
- * @brief Callback for obstacle avoidance
- */
-void GoToState::obstacleAvoidanceCB(){
-    obstacle_avoidance_kicked_in_  = true;
-}
-
-/**
  * @brief Returns a yaw that is a multiple of 90 degrees
  * @details Drone should fly as straight forward as possible
  * , but yaw should be a multiple of 90 degrees.
