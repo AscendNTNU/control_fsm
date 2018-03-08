@@ -1,7 +1,7 @@
-#include <control/tools/math.hpp>
 #include <cmath>
 
 namespace ObstacleMath {
+
 constexpr double PI{3.14159265358979323846264338327950288419};
 
 // wrap any angle to range [0, 2pi)
