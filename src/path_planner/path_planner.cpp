@@ -34,8 +34,8 @@ void PathPlanner::initializeGraph(){
     }
 }
 
-void PathPlanner::setObstacleCoordinates(std::list<Obstacle> &obstacle_coordinates) {
-    this->obstacle_coordinates = obstacle_coordinates;
+void PathPlanner::setObstacles(std::list<Obstacle> &obstacles) {
+    this->obstacles = obstacles;
 }
 
 void PathPlanner::addObstacle(float center_x, float center_y) {
@@ -75,7 +75,7 @@ void PathPlanner::refreshObstacles() {
         }
     }
 
-    for(auto current = obstacle_coordinates.begin(); current != obstacle_coordinates.end(); current++){
+    for(auto current = obstacles.begin(); current != obstacles.end(); current++){
         addObstacle(current->x, current->y);
     }
 }
@@ -119,7 +119,7 @@ void PathPlanner::refreshUnsafeZones(){
     }
 
 
-    for(auto current = obstacle_coordinates.begin(); current != obstacle_coordinates.end(); current++){
+    for(auto current = obstacles.begin(); current != obstacles.end(); current++){
         addObstacle(current->x, current->y);
     }
 }

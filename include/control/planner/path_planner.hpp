@@ -42,7 +42,7 @@ private:
     std::list<Node> plan;
     std::list<Node> simple_plan;
 
-    std::list<Obstacle> obstacle_coordinates;
+    std::list<Obstacle> obstacles;
 
     Node end_node;
     Node start_node;
@@ -63,7 +63,7 @@ public:
 
     void initializeGraph();
 
-    void setObstacleCoordinates(std::list<Obstacle> &obstacle_coordinates);
+    void setObstacles(std::list<Obstacle> &obstacles);
 
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);
