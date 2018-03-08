@@ -126,7 +126,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
-    // Set obstacle avoidance flag
+    // Set obstacle avoidance flag on entry
     obstacle_avoidance_kicked_in_  = false;
 
     // Set setpoint
@@ -164,7 +164,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    // Set obstacle avoidance flag
+    // Set obstacle avoidance flag on exit
     obstacle_avoidance_kicked_in_ = false;
 }
 
