@@ -1,4 +1,4 @@
-#include "control/fsm/interact_gb_state.hpp"
+#include "control/fsm/land_gb_state.hpp"
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 #include <control/fsm/control_fsm.hpp>
@@ -76,15 +76,42 @@ recoverStateHandler(const PoseStamped& drone_pose)
     }
 }
 
-InteractGBState::InteractGBState() {
+LandGBState::LandGBState() {
     setpoint_.type_mask = default_mask;
 }
 
-void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
+void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     //TODO Handle all transition requests
+    if(event.isValidRequest()) {
+        if(event.request == RequestType::ABORT) {
+            //TODO Blindhover or position hold?
+            if(cmd_.isValidCMD()) {
+                cmd_.abort();    
+            }
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+        } else if(event.request == RequestType::POSHOLD) {
+            if(cmd_.isValidCMD()) {
+                control::handleWarnMsg("CMD still active, abort first!");
+            } else {
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            }
+        }
+    } else if(event.isValidCMD()) {
+        if(cmd_.isValidCMD()) {
+            control::handleWarnMsg("CMD still active, abort first!");
+        } else {
+            if(event.command_type == CommandType::TAKEOFF) {
+                //Drone already in air, nothing else to do!
+                event.finishCMD(); 
+            } else {
+                //Transition to poshold to execute new cmd
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
+            }
+        }
+    }
 }
 
-void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
+void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     using control::DroneHandler;
     using control::GroundRobotHandler;
     //Store event
@@ -102,7 +129,7 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         if(cmd_.gb_id < 0 || static_cast<size_t>(cmd_.gb_id) >= gb_state.size()) {
             if(cmd_.isValidCMD()) {
                 cmd_.eventError("Invalid GB id!");
-                cmd_ = EventData();
+                cmd_.clear();
                 RequestEvent abort_event(RequestType::ABORT);
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
                 return;
@@ -121,7 +148,7 @@ void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     local_state.valid = true;
 }
 
-void InteractGBState::loopState(ControlFSM& fsm) {
+void LandGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
     //TODO Remove thought comments
     auto& drone_pose = control::DroneHandler::getCurrentPose();
@@ -171,12 +198,12 @@ void InteractGBState::loopState(ControlFSM& fsm) {
 
 }
 
-const mavros_msgs::PositionTarget* InteractGBState::getSetpointPtr() {
+const mavros_msgs::PositionTarget* LandGBState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
     return &setpoint_;
 }
 
-void InteractGBState::handleManual(ControlFSM &fsm) {
+void LandGBState::handleManual(ControlFSM &fsm) {
     if(cmd_.isValidCMD()) {
         cmd_.eventError("OFFBOARD lost");
         cmd_ = EventData();
@@ -186,7 +213,7 @@ void InteractGBState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState InteractGBState::getStateMsg() {
+ascend_msgs::ControlFSMState LandGBState::getStateMsg() {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
