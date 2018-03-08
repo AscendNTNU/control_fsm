@@ -278,7 +278,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     end_node = Node(target_x,target_y, std::numeric_limits<float>::infinity(), 0);
     initializeGraph();
 
-    refreshObstacles(obstacle_coordinates);
+    refreshObstacles();
     refreshUnsafeZones();
 
     float x = end_node.getX();
@@ -287,8 +287,12 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     int x_index = coordToIndex(x);
     int y_index = coordToIndex(y);
 
-    if(graph[x_index][y_index].obstacle){
-        std::cout << "End point on obstacle, invalid!" << std::endl;
+    if(graph[x_index][y_index].unsafe){
+        std::cout << "End point unsafe, invalid!" << std::endl;
+        return;
+    }
+    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
+        std::cout << "\n GET OOOOOUT!!! \n\n";
         return;
     }
 
