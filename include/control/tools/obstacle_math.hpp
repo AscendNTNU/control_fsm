@@ -1,6 +1,6 @@
 #include <cmath>
 
-namespace ObstacleMath {
+namespace obstacle_math {
 
 constexpr double PI{3.14159265358979323846264338327950288419};
 
