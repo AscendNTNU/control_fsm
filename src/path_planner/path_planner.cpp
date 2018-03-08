@@ -1,4 +1,5 @@
 #include "control/planner/path_planner.hpp"
+#include "control/tools/obstacle_math.hpp"
 
 
 using namespace control::pathplanner;
@@ -318,10 +319,11 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         // Find the direction of the obstacle
         float obstacle_dir = blocking_obstacle->dir;
         
-
-        // Figure out what direction drone should move in
-        float drone_dir /* = Rendell sin funksjon :) */;
-
+        // Find desired direction of the drone
+        struct Point {float x,y;};
+        Point current_point{current_x, current_y};
+        float drone_dir = obstacle_math::calcAngleToObstacle(current_point, *blocking_obstacle, obstacle_dir);
+       
         // Find setpoint in right direction outside unsafe zone
         // The safe zone is obstacle_radius*2, but to ensure that
         // the new point is outside the safe zone, 2.5 is used here
