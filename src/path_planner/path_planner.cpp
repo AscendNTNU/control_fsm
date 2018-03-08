@@ -81,6 +81,55 @@ void PathPlanner::refreshObstacles(std::list<float> obstacle_coordinates) {
     }
 }
 
+void PathPlanner::addUnsafeZone(float center_x, float center_y) {
+    // Same logic as adding obstacles, only difference is the radius
+    float unsafe_radius = obstacle_radius*2;
+    // Find the y value for each x in the circle
+    for (float x = center_x-unsafe_radius; x <= center_x+unsafe_radius; x+=node_distance) {
+        float y = sqrt(unsafe_radius*unsafe_radius-(x-center_x)*(x-center_x));
+        // Do this to fill the circle
+        for(float i = center_y-y; i<=center_y+y; i+= node_distance) {
+            if (isValidCoordinate(x, i)) {
+                graph[coordToIndex(x)][coordToIndex(i)].closed = true;
+                graph[coordToIndex(x)][coordToIndex(i)].unsafe = true;
+            }
+        }
+
+    }
+    // Do the same as over, just switch x and y
+    for (float y = center_y-unsafe_radius; y <= center_y+unsafe_radius; y+=node_distance) {
+        float x = sqrt(unsafe_radius*unsafe_radius-(y-center_y)*(y-center_y));
+        for(float i = center_x-x; i<=center_x+x; i+= node_distance) {
+            if (isValidCoordinate(i, y)) {
+                graph[coordToIndex(i)][coordToIndex(y)].closed = true;
+                graph[coordToIndex(i)][coordToIndex(y)].unsafe = true;
+            }
+        }
+    }
+
+}
+void PathPlanner::refreshUnsafeZones(){
+    if(no_plan){
+        return;
+    }
+    // delete all old unsafe zones
+    for (float x = 0; x < FIELD_LENGTH; x += node_distance){
+        for (float y = 0; y < FIELD_LENGTH; y += node_distance){
+            graph[coordToIndex(x)][coordToIndex(y)].unsafe = false;
+        }
+    }
+
+
+    std::list<float>::iterator x = obstacle_coordinates.begin();
+    std::list<float>::iterator y = ++(obstacle_coordinates.begin());
+    while(y != obstacle_coordinates.end()){
+        std::cout << "adding unsafe zone" << std::endl;
+        addUnsafeZone(*x, *y);
+        x++;
+        y++;
+    }
+}
+
 float PathPlanner::calculateDiagonalHeuristic(float x, float y) {
     return (std::max(abs(x-end_node.getX()), abs(y-end_node.getY())));
 }
@@ -227,6 +276,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     initializeGraph();
 
     refreshObstacles(obstacle_coordinates);
+    refreshUnsafeZones();
 
     float x = end_node.getX();
     float y = end_node.getY();

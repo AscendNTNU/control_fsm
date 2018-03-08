@@ -61,6 +61,10 @@ public:
     void addObstacle(float center_x, float center_y);
     void refreshObstacles(std::list<float> obstacle_coordinates);
 
+    // Adds unsafe zone around obstacles, the plan cannot be made here
+    void addUnsafeZone(float center_x, float center_y);
+    void refreshUnsafeZones();
+
     // Diagonal heuristic - can move in 8 directions from current point
     float calculateDiagonalHeuristic(float x, float y);
     float calculateManhattanHeuristic(float x, float y);

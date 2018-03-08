@@ -32,6 +32,7 @@ public:
 
     bool obstacle = false;
     bool closed = false;
+    bool unsafe = false;
 
     // Implemented only for the closed list priority queue
     friend bool operator< (const Node &lhs, const Node &rhs);
