@@ -230,7 +230,11 @@ void GoToState::stateInit(ControlFSM& fsm) {
     //Set state variables
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
 
-    //fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(this->obstacleAvoidanceCB));
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        this->obstacle_avoidance_kicked_in_  = true;
+    };
+
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
 
     control::handleInfoMsg("GoTo init completed!");
 }
