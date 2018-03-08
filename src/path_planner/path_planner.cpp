@@ -264,9 +264,21 @@ bool PathPlanner::canSimplifyLine(float x1, float y1, float x2, float y2) {
     return true;
 }
 
+Obstacle* PathPlanner::findBlockingObstacle(float current_x, float current_y) {
+    for (auto it = obstacles.begin(); it != obstacles.end(); it++) {
+        if(abs(current_x-it->x) <= obstacle_radius*2 && abs(current_y-it->y) <= obstacle_radius*2) {
+            std::cout << "Found blocking obstacle" << std::endl;
+            return &(*it);
+        }
+    }
+    std::cout << "Could not find blocking obstacle!!" << std::endl;
+    return nullptr;
+}
+
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
 
     no_plan = false;
+    bool escape_from_obstacle = false;
 
     // If start or end point is not valid, a plan is not created
     if(!isValidCoordinate(current_x,current_y)){
@@ -289,7 +301,51 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     refreshObstacles();
     refreshUnsafeZones();
 
-    float x = end_node.getX();
+
+    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
+        std::cout << "\n GET OOOOOUT!!! \n\n";
+        escape_from_obstacle = true;
+
+        // ---- make this a function ----
+
+        // Figure out which obstacle is blocking
+        Obstacle* blocking_obstacle = findBlockingObstacle(current_x, current_y);
+        if (!blocking_obstacle) {
+            std::cout << "Unable to solve problem!" << std::endl;
+            return;
+        }
+
+        // Find the direction of the obstacle
+        float obstacle_dir = blocking_obstacle->dir;
+        
+
+        // Figure out what direction drone should move in
+        float drone_dir /* = Rendell sin funksjon :) */;
+
+        // Find setpoint in right direction outside unsafe zone
+        // The safe zone is obstacle_radius*2, but to ensure that
+        // the new point is outside the safe zone, 2.5 is used here
+        float safe_radius = obstacle_radius*2.5;
+        float safe_x = safe_radius*cos(drone_dir)+blocking_obstacle->x;
+        float safe_y = safe_radius*sin(drone_dir)+blocking_obstacle->y;
+
+        if(!isValidCoordinate(safe_x, safe_y)) {
+            std::cout << "Cannot find safe point!" << std::endl;
+            return;
+        }
+
+        // Add starting point to plan and plan a new plan from the
+        // setpoint to target
+        resetParameters();
+        start_node = Node(safe_x, safe_y, 0, 0);
+        start_node.setParentX(0);
+        start_node.setParentY(0);
+        initializeGraph();
+        refreshObstacles();
+        refreshUnsafeZones();
+    }
+
+    float x = end_node.getX(); 
     float y = end_node.getY();
 
     int x_index = coordToIndex(x);
@@ -299,10 +355,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         std::cout << "End point unsafe, invalid!" << std::endl;
         return;
     }
-    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
-        std::cout << "\n GET OOOOOUT!!! \n\n";
-        return;
-    }
+
 
     // Calculate all f values and set the parents
     relaxGraph();
@@ -329,6 +382,10 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         counter ++;
         if(counter >200){break;}
         plan.push_front(graph[x_index][y_index]);
+    }
+
+    if(escape_from_obstacle) {
+        plan.push_front(graph[current_x][current_y]);
     }
 
     // Print the plan - can be removed

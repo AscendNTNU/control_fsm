@@ -68,6 +68,7 @@ public:
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);
     void refreshObstacles();
+    Obstacle* findBlockingObstacle(float current_x, float current_y);
 
     // Adds unsafe zone around obstacles, the plan cannot be made here
     void addUnsafeZone(float center_x, float center_y);
