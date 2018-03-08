@@ -93,7 +93,8 @@ public:
     static double interception_param_xy;
     //Variable that control the change of the speed when intercepting, z-direction   
     static double interception_param_z;
-
+    // Maximal distance away from the roomba to run interception algorithm
+    static double max_distance;
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */

@@ -4,7 +4,7 @@
 #include "control/tools/intercept_groundbot.hpp"
 
 
-mavros_msgs::PositionTarget InterceptGB(geometry_msgs::PoseStamped quad_position, ascend_msgs::GRState roomba_position); 
+bool InterceptGB(geometry_msgs::PoseStamped quad_position, ascend_msgs::GRState roomba_position, mavros_msgs::PositionTarget& setpoint); 
 
 
 

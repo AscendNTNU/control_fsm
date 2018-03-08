@@ -10,6 +10,10 @@
 #include "control/tools/ground_robot_handler.hpp"
 #include "control/tools/intercept_groundbot.hpp"
 
+using control::Config;
+using geometry_msgs::PoseStamped;
+using ascend_msgs::GRState;
+using mavros_msgs::PositionTarget;
 
 constexpr float PI_HALF = 1.570796; 
 constexpr float roomba_speed = 0.35; 
@@ -24,14 +28,14 @@ typedef struct point{
 	float z; 
 } point;
 
-point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp);
-
+point calculateRoombaVelocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp, int& wrong_measurements);
+//mavros_msgs::PositionTarget failsafe(mavros_msgs::PositionTarget setpoint);
 
 /* Will return the a struct with the velocity (x,y,z) of the roomba in question. If the speed of the roomba
 is greater than 0.35, the function will return the last velocity that was within
 this bound. point is a struct with three variables, x,y and z.  
 */
-point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp){
+point calculateRoombaVelocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp, int& wrong_measurements){
 	static auto last_time_stamp = stamp;
 	static point last_roomba_pos = {roomba_x,roomba_y,roomba_z};
 	static point velocity = {0.0, 0.0, 0.0}; 
@@ -43,6 +47,8 @@ point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, 
 		if(sqrt(pow(temp.x,2) + pow(temp.y, 2)) < roomba_speed){
 			velocity.x = temp.x;
 			velocity.y = temp.y; 
+		}else{
+			wrong_measurements++; 
 		}
 		last_time_stamp = ros::Time::now(); 
 	}
@@ -53,38 +59,46 @@ point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, 
 	return velocity; 
 }
 
+
 //Takes in quad message and the position of the roomba that is in question, return as velocity control message
-mavros_msgs::PositionTarget InterceptGB(geometry_msgs::PoseStamped quad_position, ascend_msgs::GRState roomba_position){ 
-	using control::Config;
-	mavros_msgs::PositionTarget setpoint;	 
- 
+bool InterceptGB(PoseStamped quad_position, GRState roomba_position, PositionTarget& setpoint){ 
+	mavros_msgs::PositionTarget setpoint_temp;	 
+ 	static int wrong_measurements = 0; 
+
 	auto quad_pose = quad_position.pose.position; 
 	point roomba_pose = {roomba_position.x, roomba_position.y, 0.0};  
 
-	point roomba_velocity = calculate_roomba_velocity(roomba_pose.x, roomba_pose.y, roomba_pose.z, roomba_position.header.stamp); 
+	point roomba_velocity = calculateRoombaVelocity(roomba_pose.x, roomba_pose.y, roomba_pose.z, roomba_position.header.stamp, wrong_measurements); 
 
 	float distance_x = roomba_pose.x - quad_pose.x;  
 	float distance_y = roomba_pose.y - quad_pose.y;
 	float distance_z = roomba_pose.z - quad_pose.z; 
 
+	if(distance_x > Config::max_distance || distance_y > Config::max_distance || distance_z > Config::max_distance){
+		wrong_measurements++;
+		if(wrong_measurements > 10){
+			wrong_measurements = 0; 
+		return false; 
+		}  
+	}
+
+
 	float inner_product = pow(distance_x,2) + pow(distance_y, 2);
 	float interception_gain = Config::tracking_param_xy/sqrt(pow(Config::interception_param_xy,2) + inner_product); 
 	float interception_gain_z = Config::tracking_param_z/sqrt(pow(Config::interception_param_z,2) + inner_product);
 
-	setpoint.yaw = control::pose::quat2mavrosyaw(quad_position.pose.orientation); 
-	setpoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-	setpoint.header.frame_id = "fcu"; 
-	setpoint.type_mask = velocity_control;  
+	setpoint_temp.yaw = control::pose::quat2mavrosyaw(quad_position.pose.orientation); 
+	setpoint_temp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+	setpoint_temp.header.frame_id = "fcu"; 
+	setpoint_temp.type_mask = velocity_control;  
 
-	setpoint.velocity.x = interception_gain * distance_x + roomba_velocity.x;
-	setpoint.velocity.y = interception_gain * distance_y + roomba_velocity.y;
-	setpoint.velocity.z = interception_gain_z * distance_z + roomba_velocity.z;
-
-	// Some ultimate check to be sure!  
+	setpoint_temp.velocity.x = interception_gain * distance_x + roomba_velocity.x;
+	setpoint_temp.velocity.y = interception_gain * distance_y + roomba_velocity.y;
+	setpoint_temp.velocity.z = interception_gain_z * distance_z + roomba_velocity.z;
 
 
-
-	return setpoint;
+	setpoint = setpoint_temp; 
+	return true;
 }
 
 

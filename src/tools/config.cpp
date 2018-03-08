@@ -44,6 +44,7 @@ double Config::tracking_param_xy = 2.0;
 double Config::tracking_param_z = 0.02; 
 double Config::interception_param_xy = 2.0; 
 double Config::interception_param_z = 0.01; 
+double Config::max_distance = 2.0; 
 
 
 void Config::loadParams() {
