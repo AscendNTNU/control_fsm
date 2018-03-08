@@ -26,6 +26,7 @@
 #include <iostream>
 #include <mavros_msgs/PositionTarget.h>
 #include "control/tools/setpoint_msg_defines.h"
+#include <ascend_msgs/ControlFSMState.h>
 #include <list>
 
 class ControlFSM;
@@ -96,6 +97,9 @@ public:
     
     ///Should return name of the state - used for debugging purposes
     virtual std::string getStateName() const = 0;
+    
+    ///Get state message
+    virtual ascend_msgs::ControlFSMState getStateMsg() = 0; 
     
     ///Returning a valid setpoint from state 
     /**Be aware - it's returned by const pointer - only return address of _setpoint.*/
