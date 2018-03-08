@@ -256,6 +256,23 @@ bool PathPlanner::isSafeLine(float x1, float y1, float x2, float y2) {
     return true;
 }
 
+bool PathPlanner::canSimplifyLine(float x1, float y1, float x2, float y2) {
+    float delta_x = x2-x1;
+    float delta_y = y2-y1;
+    float num_points = 20*std::max(abs(delta_x),abs(delta_y));
+    for(int i = 0; i < num_points; i++){
+        x1 += delta_x/num_points;
+        y1 += delta_y/num_points;
+        // checking if the line goes through an obstacle at this point
+        if(isValidCoordinate(x1,y1)){
+            if (graph[coordToIndex(x1)][coordToIndex(y1)].unsafe) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
 
     no_plan = false;
@@ -358,7 +375,7 @@ void PathPlanner::simplifyPlan() {
 
         // If an obstacle is hit, the points are necessary and the search will start
         // at the end of the current search.
-        if(!isSafeLine(x1,y1,x2,y2)){
+        if(!canSimplifyLine(x1,y1,x2,y2)){
             first++;
             second++;
             third++;

@@ -86,6 +86,7 @@ public:
     bool isStart(float x, float y);
     bool isValidCoordinate(float x, float y);
     bool isSafeLine(float x1, float y1, float x2, float y2);
+    bool canSimplifyLine(float x1, float y1, float x2, float y2);
 
     // Use A* to calculate the path
     void makePlan(float current_x, float current_y, float target_x, float target_y);
