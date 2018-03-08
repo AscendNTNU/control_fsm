@@ -126,7 +126,6 @@ void PathPlanner::refreshUnsafeZones(){
     std::list<float>::iterator x = obstacle_coordinates.begin();
     std::list<float>::iterator y = ++(obstacle_coordinates.begin());
     while(y != obstacle_coordinates.end()&& x != obstacle_coordinates.end()){
-        std::cout << "adding unsafe zone" << std::endl;
         addUnsafeZone(*x, *y);
         x++;
         y++;
