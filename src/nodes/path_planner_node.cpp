@@ -82,9 +82,12 @@ int main(int argc, char** argv){
     	if(planner_state.make_plan){
 	    	auto obstacles_msg = control::ObstacleStateHandler::getCurrentObstacles();
 	    	obstacles.clear();
-			for(auto it = obstacles_msg.global_robot_position.begin(); it != obstacles_msg.global_robot_position.end(); ++it) {
-		    	obstacles.push_back(control::pathplanner::Obstacle{it->x, it->y,0});
-			}
+	    	auto current_coord = obstacles_msg.global_robot_position.begin();
+	    	auto current_dir = obstacles_msg.direction.begin();
+	    	while(current_coord != obstacles_msg.global_robot_position.end() && current_dir != obstacles_msg.direction.end()){
+		    	obstacles.push_back(control::pathplanner::Obstacle{current_coord->x, current_coord->y,*current_dir});
+	    	}
+
 			plan.setObstacles(obstacles);
 			plan.refreshObstacles();
 			plan.refreshUnsafeZones();
