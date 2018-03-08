@@ -39,8 +39,8 @@ inline geometry_msgs::Vector3 calcVectorBetweenPoints(const T& point_A, const K&
 }
 
 template<typename T, typename K>
-inline geometry_msgs::Vector3 vectorSum(const T& point_A, const K& point_B){
-    geometry_msgs::Vector3 vector_sum;
+inline T vectorSum(const T& point_A, const K& point_B){
+    T vector_sum;
     vector_sum.x = point_A.x + point_B.x;
     vector_sum.y = point_A.y + point_B.y;
     vector_sum.z = point_A.z + point_B.z;
@@ -171,6 +171,10 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             point_back = rotateXY(point_back, obstacle_direction);
             point_left = rotateXY(point_left, obstacle_direction);
             point_right = rotateXY(point_right, obstacle_direction);
+            point_front = vectorSum(point_front, obstacle_position);
+            point_back = vectorSum(point_back, obstacle_position);
+            point_left = vectorSum(point_left, obstacle_position);
+            point_right = vectorSum(point_right, obstacle_position);
 
 	    geometry_msgs::Polygon polygon;
 	    polygon.points.push_back(point_front);
