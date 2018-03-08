@@ -18,6 +18,13 @@ uint16_t velocity_control = IGNORE_PX | IGNORE_PY | IGNORE_PZ |
 	                    IGNORE_AFX | IGNORE_AFY | IGNORE_AFZ | 
 	                    IGNORE_YAW_RATE;
 
+typedef struct point{
+	float x; 
+	float y; 
+	float z; 
+} point;
+
+point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp);
 
 
 /* Will return the a struct with the velocity (x,y,z) of the roomba in question. If the speed of the roomba
@@ -28,14 +35,11 @@ point calculate_roomba_velocity(float roomba_x, float roomba_y, float roomba_z, 
 	static auto last_time_stamp = stamp;
 	static point last_roomba_pos = {roomba_x,roomba_y,roomba_z};
 	static point velocity = {0.0, 0.0, 0.0}; 
-	std::cout << last_roomba_pos.x << " " << last_roomba_pos.y << " " << last_roomba_pos.z << std::endl; 
 	ros::Duration delta_t = stamp - last_time_stamp;  
 	point temp;
-	std::cout << "Time is " << delta_t.toSec() << std::endl; 
 	if(delta_t.toSec() > 0.1){
 		temp.x = (roomba_x - last_roomba_pos.x)/delta_t.toSec();
 		temp.y = (roomba_y - last_roomba_pos.y)/delta_t.toSec();
-		std::cout << "Temp x: " << temp.x << "Temp y" << temp.y << std::endl; 
 		if(sqrt(pow(temp.x,2) + pow(temp.y, 2)) < roomba_speed){
 			velocity.x = temp.x;
 			velocity.y = temp.y; 
@@ -59,11 +63,9 @@ mavros_msgs::PositionTarget InterceptGB(geometry_msgs::PoseStamped quad_position
 
 	point roomba_velocity = calculate_roomba_velocity(roomba_pose.x, roomba_pose.y, roomba_pose.z, roomba_position.header.stamp); 
 
-
 	float distance_x = roomba_pose.x - quad_pose.x;  
 	float distance_y = roomba_pose.y - quad_pose.y;
 	float distance_z = roomba_pose.z - quad_pose.z; 
-
 
 	float inner_product = pow(distance_x,2) + pow(distance_y, 2);
 	float interception_gain = Config::tracking_param_xy/sqrt(pow(Config::interception_param_xy,2) + inner_product); 
