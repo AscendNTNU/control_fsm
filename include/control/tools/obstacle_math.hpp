@@ -1,5 +1,5 @@
-#ifndef CONTROL_MATH_HPP_
-#define CONTROL_MATH_HPP_
+#ifndef CONTROL_OBSTACLE_MATH_HPP_
+#define CONTROL_OBSTACLE_MATH_HPP_
 #include <type_traits>
 
 template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
