@@ -278,6 +278,8 @@ Obstacle* PathPlanner::findBlockingObstacle(float current_x, float current_y) {
 
 void PathPlanner::makePlan(float current_x, float current_y, float target_x, float target_y) {
 
+    std::cout << "Run makePlan" << std::endl;
+
     no_plan = false;
     bool escape_from_obstacle = false;
 

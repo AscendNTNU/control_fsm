@@ -51,7 +51,7 @@ int main(int argc, char** argv){
 
 	ros::init(argc, argv, "path_planner_server");
 	ros::NodeHandle n;
-    ros::Rate rate(5);
+    ros::Rate rate(1);
 
 	ROS_INFO("Path planner node started");
 
