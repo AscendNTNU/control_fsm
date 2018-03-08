@@ -11,8 +11,8 @@ using PosTarget = mavros_msgs::PositionTarget;
 
 enum class LOCAL_STATE{IDLE, LAND, RECOVER};
 //Just dummies
-const double DISTANCE_THRESHOLD = 0.5;
-const double HEIGHT_THRESHOLD = 0.5;
+constexpr double DISTANCE_THRESHOLD = 0.5;
+constexpr double HEIGHT_THRESHOLD = 0.5;
 
 //Struct for controlling local state.
 struct{
