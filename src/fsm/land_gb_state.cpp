@@ -42,34 +42,27 @@ idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
 }
 
 void
-landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint)
-{
+landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
     //TODO add Chris' algorithm here.
-    if(LandDetector::isOnGround())
-    {
+    if(LandDetector::isOnGround()) {
         //Success
         local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = true;
     }
-    else if(false)
-    {
+    else if(false) {
         local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = false;
     }
 }
 
 void
-recoverStateHandler(const PoseStamped& drone_pose)
-{
-    if (drone_pose.pose.position.z < HEIGHT_THRESHOLD)
-    {
+recoverStateHandler(const PoseStamped& drone_pose) {
+    if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
-        if (/**/false)
-        {
+        if (/**/false) {
             
         }
-        else
-        {
+        else {
             local_state.valid = true;
             local_state.transition_valid = true;
         }
@@ -156,14 +149,12 @@ void LandGBState::loopState(ControlFSM& fsm) {
     auto* setpoint = this->getSetpointPtr();
 
     //Checks if we still have visible ground robots to interact with
-    if (gb_pose.downward_tracked)
-    {
+    if (gb_pose.downward_tracked) {
         local_state.state = LOCAL_STATE::RECOVER;
         local_state.valid = false;
     }
 
-    switch(local_state.state)
-    {
+    switch(local_state.state) {
         case LOCAL_STATE::IDLE:
         idleStateHandler(gb_pose, drone_pose);
         break;
@@ -182,10 +173,8 @@ void LandGBState::loopState(ControlFSM& fsm) {
         break;
     }
     
-    if (local_state.state == LOCAL_STATE::RECOVER && local_state.transition_valid)
-    {
-        if (local_state.valid)
-        {
+    if (local_state.state == LOCAL_STATE::RECOVER && local_state.transition_valid) {
+        if (local_state.valid) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
