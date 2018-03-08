@@ -1,3 +1,6 @@
+#ifndef OBSTACLE_MATH_HPP
+#define OBSTACLE_MATH_HPP
+
 #include <cmath>
 
 namespace obstacle_math {
@@ -64,3 +67,5 @@ inline T rotateXY(const T& point, const float angle){
 }
 
 }
+
+#endif //OBSTACLE_MATH_HPP
