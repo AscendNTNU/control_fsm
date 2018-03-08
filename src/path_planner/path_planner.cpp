@@ -20,6 +20,7 @@ int PathPlanner::coordToIndex(float coord) {
 }
 
 void PathPlanner::initializeGraph(){
+    std::cout << "Init" << std::endl;
     for (float x = 0; x < FIELD_LENGTH; x += node_distance){
         for (float y = 0; y < FIELD_LENGTH; y += node_distance){
             if(isStart(x,y)){
@@ -65,6 +66,7 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
 }
 
 void PathPlanner::refreshObstacles() {
+    std::cout << "refreshObstacles" << std::endl;
     if(no_plan){
         return;
     }
@@ -109,6 +111,7 @@ void PathPlanner::addUnsafeZone(float center_x, float center_y) {
 
 }
 void PathPlanner::refreshUnsafeZones(){
+    std::cout << "refreshUnsafeZones" << std::endl;
     if(no_plan){
         return;
     }
@@ -149,6 +152,7 @@ float PathPlanner::calculateEuclidianHeuristic(float x, float y) {
 }*/
 
 void PathPlanner::relaxGraph(){
+    std::cout << "relaxGraph" << std::endl;
     Node current_node;
     while(!open_list.empty()){
         // Always search from the node with lowest f value
@@ -266,6 +270,7 @@ bool PathPlanner::canSimplifyLine(float x1, float y1, float x2, float y2) {
 }
 
 Obstacle* PathPlanner::findBlockingObstacle(float current_x, float current_y) {
+    std::cout << "Search for blocking obstacle" << std::endl;
     for (auto it = obstacles.begin(); it != obstacles.end(); it++) {
         if(abs(current_x-it->x) <= obstacle_radius*2 && abs(current_y-it->y) <= obstacle_radius*2) {
             std::cout << "Found blocking obstacle" << std::endl;
@@ -473,6 +478,7 @@ bool PathPlanner::isPlanSafe(float current_x, float current_y) {
 }
 
 void PathPlanner::resetParameters() {
+    std::cout << "Reset Parameters" << std::endl;
     while(!open_list.empty()){
         open_list.pop();
     }
