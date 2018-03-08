@@ -45,6 +45,18 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+void PositionHoldState::stateInit(ControlFSM& fsm) {
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        ROS_WARN_THROTTLE(1, "[control_fsm/positionholdstate] Obstacle avoidance kicked in");
+        this->obstacle_avoidance_kicked_in_ = true;
+    };
+
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
+
+    // Set flag for obstacle avoidance
+    obstacle_avoidance_kicked_in_ = false;
+}
+
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //No need to check other commands
     if(event.isValidCMD()) {
@@ -109,17 +121,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+void PositionHoldState::loopState(ControlFSM& fsm){
+    if (obstacle_avoidance_kicked_in_){
+        // keep new setpoint after obstacle avoidance
 
 
-void PositionHoldState::stateInit(ControlFSM& fsm) {
-    std::function<void()> obstacleAvoidanceCB = [this]()->void {
-        this->obstacle_avoidance_kicked_in_ = true;
-    };
-    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
-
-
-    // Set flag for obstacle avoidance
-    obstacle_avoidance_kicked_in_ = false;
+    }
 }
 
 void PositionHoldState::stateEnd(ControlFSM& fsm, const EventData& event) {
