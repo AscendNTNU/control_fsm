@@ -98,6 +98,10 @@ public:
     bool isValidRequest() const { return (event_type == EventType::REQUEST && request != RequestType::NONE); }
     ///Chekcs if this event is a specific valid request type
     bool isValidRequest(RequestType type) const { return isValidRequest() && request == type; }
+    ///Clear event
+    void clear() { *this = EventData(); }
+    ///On aborted
+    void abort() { eventError("ABORTED"); clear();}
 };
 
 class TakeoffCMDEvent : public EventData {

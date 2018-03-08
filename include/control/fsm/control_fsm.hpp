@@ -14,7 +14,7 @@
 #include "takeoff_state.hpp"
 #include "blind_hover_state.hpp"
 #include "position_hold_state.hpp"
-#include "interact_gb_state.hpp"
+#include "land_gb_state.hpp"
 #include "go_to_state.hpp"
 #include "land_state.hpp"
 #include "manual_flight_state.hpp"
@@ -34,7 +34,7 @@ private:
     friend class TakeoffState;
     friend class BlindHoverState;
     friend class PositionHoldState;
-    friend class InteractGBState;
+    friend class LandGBState;
     friend class GoToState;
     friend class LandState;
     friend class ManualFlightState;
@@ -47,7 +47,7 @@ private:
     static TakeoffState TAKEOFF_STATE;
     static BlindHoverState BLIND_HOVER_STATE;
     static PositionHoldState POSITION_HOLD_STATE;
-    static InteractGBState INTERACT_GB_STATE;
+    static LandGBState INTERACT_GB_STATE;
     static GoToState GO_TO_STATE;
     static LandState LAND_STATE;
     static ManualFlightState MANUAL_FLIGHT_STATE;
