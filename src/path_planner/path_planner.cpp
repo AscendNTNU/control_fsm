@@ -431,14 +431,14 @@ void PathPlanner::simplifyPlan() {
         y1 = first->getY();
         y2 = third->getY();
 
-        // If an obstacle is hit, the points are necessary and the search will start
+        // If an unsafe zone is hit, the points are necessary and the search will start
         // at the end of the current search.
         if(!canSimplifyLine(x1,y1,x2,y2)){
             first++;
             second++;
             third++;
         }
-            // If the straight line does not go through an obstacle, delete the second point
+            // If the straight line does not go through an unsafe zone, delete the second point
             // (no use in going through it when we can go in a straight line)
             // The search continues with same starting point, but the second and third point is changed
         else{
