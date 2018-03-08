@@ -1,4 +1,5 @@
 #include "control/tools/obstacle_avoidance.hpp"
+#include "control/tools/math.hpp"
 
 bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint) {
     //TODO Implement obstacle avoidance
