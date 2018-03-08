@@ -41,7 +41,7 @@ std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
 double Config::tracking_param_xy = 2.0;
-double Config::tracking_param_z = 0.1; 
+double Config::tracking_param_z = 0.02; 
 double Config::interception_param_xy = 2.0; 
 double Config::interception_param_z = 0.01; 
 
