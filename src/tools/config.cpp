@@ -148,6 +148,13 @@ void Config::loadParams() {
     //Ground robots
     getStringParam("ground_robot_state_topic", ground_robot_state_topic);
 
+    //Chris's algorithm
+    getDoubleParam("land_gb_tracking_xy", tracking_param_xy, 0.0, 5.0);
+    getDoubleParam("land_gb_tracking_z", tracking_param_z, 0.0, 5.0);
+    getDoubleParam("land_gb_interception_xy", interception_param_xy, 0.0, 5.0);
+    getDoubleParam("land_gb_interception_z", interception_param_z, 0.0, 5.0);
+    getDoubleParam("land_gb_max_distance", max_distance, 0.0, 10.0);
+
 }
 
 using Request = ascend_msgs::ReloadConfig::Request;
