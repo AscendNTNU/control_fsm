@@ -40,13 +40,8 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
         } else {
-            if(event.command_type == CommandType::TAKEOFF) {
-                //Drone already in air!
-                event.finishCMD();
-            } else {
-                //All other command needs to go via the GOTO state
-                fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-            }
+            //Send command to positionhold
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         }
     }
 }
@@ -259,10 +254,6 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                 }
                 break;
             }
-                //NOTE: Land groundrobot algorithm not implemented yet, so this is commented out
-            case CommandType::LANDGB:
-                fsm.transitionTo(ControlFSM::INTERACT_GB_STATE, this, cmd_);
-                break;
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);

@@ -20,7 +20,7 @@ enum class RequestType {
     POSHOLD, 
     GOTO, //GOTO XYZ
     LAND, 
-    INTERGB, //Interact with ground robot (tap)
+    LANDGB, //Interact with ground robot (tap)
     MANUALFLIGHT
 };
 

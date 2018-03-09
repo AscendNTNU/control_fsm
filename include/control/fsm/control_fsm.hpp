@@ -47,7 +47,7 @@ private:
     static TakeoffState TAKEOFF_STATE;
     static BlindHoverState BLIND_HOVER_STATE;
     static PositionHoldState POSITION_HOLD_STATE;
-    static LandGBState INTERACT_GB_STATE;
+    static LandGBState LAND_GB_STATE;
     static GoToState GO_TO_STATE;
     static LandState LAND_STATE;
     static ManualFlightState MANUAL_FLIGHT_STATE;
