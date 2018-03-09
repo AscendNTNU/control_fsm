@@ -227,15 +227,14 @@ void GoToState::handleManual(ControlFSM& fsm) {
 }
 
 //Check if velocity is close enough to zero
-bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
+bool droneNotMovingXY(const geometry_msgs::TwistStamped& target) {
     using control::Config;
     using std::pow;
     auto& t_l = target.twist.linear;
     //Calculate square velocity
     double dx_sq = pow(t_l.x, 2);
     double dy_sq = pow(t_l.y, 2);
-    double dz_sq = pow(t_l.z, 2);
-    return (dx_sq + dy_sq + dz_sq) < pow(Config::velocity_reached_margin, 2);
+    return (dx_sq + dy_sq) < pow(Config::velocity_reached_margin, 2);
 }
 
 void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
@@ -253,7 +252,7 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
                     return;
                 }
                 //Check if drone is moving
-                if(droneNotMoving(control::DroneHandler::getCurrentTwist())) {
+                if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
                     //Hold current position for a duration - avoiding unwanted velocity before doing anything else
                     if(!delay_transition_.enabled) {
                         delay_transition_.started = ros::Time::now();

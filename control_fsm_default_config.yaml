@@ -54,7 +54,7 @@
     #Topic for recieving obstacle state data
     obstacle_state_topic: perception/obstacles,
     #Margin to determine if velocity is reached
-    velocity_reached_margin: 0.2,
+    velocity_reached_margin: 0.1,
     #Frame ID for global frame
     global_frame_id: map,
     #Frame ID for local frame
