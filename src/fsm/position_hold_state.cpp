@@ -47,7 +47,6 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateInit(ControlFSM& fsm) {
     std::function<void()> obstacleAvoidanceCB = [this]()->void {
-        ROS_WARN_THROTTLE(1, "[control_fsm/positionholdstate] Obstacle avoidance kicked in");
         this->obstacle_avoidance_kicked_in_ = true;
     };
 
@@ -55,6 +54,7 @@ void PositionHoldState::stateInit(ControlFSM& fsm) {
 
     // Set flag for obstacle avoidance
     obstacle_avoidance_kicked_in_ = false;
+
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
@@ -124,7 +124,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 void PositionHoldState::loopState(ControlFSM& fsm){
     if (obstacle_avoidance_kicked_in_){
 	//TODO: logic to avoid being pushed around
-
+	
         // keep new setpoint after obstacle avoidance
 	 auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
@@ -160,4 +160,6 @@ ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() {
     return msg;
 }
 
-
+bool PositionHoldState::stateIsReady(ControlFSM& fsm){
+    return true;
+}
