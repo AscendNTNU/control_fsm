@@ -3,8 +3,10 @@
 #include <control/tools/logger.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
 #include <control/fsm/go_to_state.hpp>
+#include <tf2/LinearMath/Transform.h>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
@@ -66,12 +68,24 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Has not arrived yet
     delay_transition_.enabled = false;
 
+    //Get transform message
+    auto tf = control::DroneHandler::getGlobal2LocalTf();
+
+    //Get tf matrix
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+
+    //Get position goal matrix
+    auto target_vec = cmd_.position_goal_global.getVec3();
+    //Apply global to local transform
+    target_vec = tf_matrix * target_vec;
+
     //Is target altitude too low?
-    bool target_alt_too_low = cmd_.position_goal.z < control::Config::min_in_air_alt;
+    bool target_alt_too_low = target_vec.z() < control::Config::min_in_air_alt;
     if(target_alt_too_low) {
         control::handleWarnMsg("Target altitude is too low");
     }
-    if(!event.position_goal.xyz_valid || target_alt_too_low) {
+    if(!event.position_goal_global.xyz_valid || target_alt_too_low) {
         if(cmd_.isValidCMD()) {
             event.eventError("No valid position target");
             cmd_ = EventData();
@@ -81,12 +95,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
-    auto tf = control::DroneHandler::getGlobal2LocalTf();
+    // Set setpoint in local frame to target
+    setpoint_.position.x = target_vec.x();
+    setpoint_.position.y = target_vec.y();
+    setpoint_.position.z = target_vec.z();
 
-    // Set setpoint in local frame
-    setpoint_.position.x = cmd_.position_goal.x + tf.transform.translation.x;
-    setpoint_.position.y = cmd_.position_goal.y + tf.transform.translation.y;
-    setpoint_.position.z = cmd_.position_goal.z + tf.transform.translation.z;
     try {
         ///Calculate yaw setpoint
         using control::pose::quat2yaw;
@@ -121,9 +134,9 @@ void GoToState::loopState(ControlFSM& fsm) {
         //Get reference to orientation in pose
         auto& quat = global_pose.pose.orientation;
         //Calculate distance to target
-        double delta_x = global_position.x - cmd_.position_goal.x;
-        double delta_y = global_position.y - cmd_.position_goal.y;
-        double delta_z = global_position.z - cmd_.position_goal.z;
+        double delta_x = global_position.x - cmd_.position_goal_global.x;
+        double delta_y = global_position.y - cmd_.position_goal_global.y;
+        double delta_z = global_position.z - cmd_.position_goal_global.z;
         //Check if we're close enough
         using std::pow;
         using std::fabs;
@@ -255,6 +268,11 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                         return;
                     }
                     //If all checks passed - land!
+
+                    //Set local target to improve landing
+                    auto& setp_pos = setpoint_.position;
+                    cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
+                    //Transition
                     fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
                 } else {
                     //If drone is moving, reset delayed transition
@@ -272,7 +290,8 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);
                 //Attempt to hold position target
-                done_event.position_goal = cmd_.position_goal;
+                auto& setp_pos = setpoint_.position;
+                done_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
             }
                 break;
@@ -282,7 +301,7 @@ void GoToState::destinationReached(ControlFSM& fsm) {
         }
     } else {
         RequestEvent pos_hold_event(RequestType::POSHOLD);
-        pos_hold_event.position_goal = cmd_.position_goal;
+        pos_hold_event.position_goal_global = cmd_.position_goal_global;
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
     }
 

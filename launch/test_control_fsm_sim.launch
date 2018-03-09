@@ -13,5 +13,6 @@
     <include file="$(find ascend_utilities)/launch/static_tf_repeater.launch">
         <arg name="frame_id" value="odom"/>
         <arg name="child_frame_id" value="map"/>
+	<arg name="x" value="1.0"/>
     </include>
 </launch>

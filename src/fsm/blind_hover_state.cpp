@@ -59,8 +59,8 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
             } else {
                 RequestEvent req_event(RequestType::POSHOLD);
                 //Set target altitude if passed on from takeoff
-                if(event.position_goal.z_valid) {
-                    req_event.position_goal = event.position_goal;
+                if(event.setpoint_target.z_valid) {
+                    req_event.setpoint_target = event.setpoint_target;
                 }
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
             }

@@ -63,22 +63,22 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
         //If positiongoal is valid, but it's not a command
-        if(event.position_goal.xyz_valid) {
+        if(event.setpoint_target.xyz_valid) {
             //Set xy setpoint to positionGoal if we're close enough for it to be safe
-            double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
+            double xy_dist_square = std::pow(position.x - event.setpoint_target.x, 2) + std::pow(position.y - event.setpoint_target.y, 2);
             if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
-                setpoint_.position.x = event.position_goal.x;
-                setpoint_.position.y = event.position_goal.y;
+                setpoint_.position.x = event.setpoint_target.x;
+                setpoint_.position.y = event.setpoint_target.y;
             }
         }
 
         //Keep old altitude if abort
         setpoint_.position.z = position.z;
-        //Set setpoint altitude to position_goal if valid
-        if(event.position_goal.z_valid) {
-            //Set z setpoint to position_goal if we're close enough for it to be safe
-            if(std::fabs(position.z - event.position_goal.z) <= control::Config::altitude_reached_margin) {
-                setpoint_.position.z = event.position_goal.z;
+        //Set setpoint altitude to position_goal_global if valid
+        if(event.setpoint_target.z_valid) {
+            //Set z setpoint to position_goal_global if we're close enough for it to be safe
+            if(std::fabs(position.z - event.setpoint_target.z) <= control::Config::altitude_reached_margin) {
+                setpoint_.position.z = event.setpoint_target.z;
             }
         }
         //If altitude is too low - set it to minimum altitude
