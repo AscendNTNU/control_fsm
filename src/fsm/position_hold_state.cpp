@@ -16,6 +16,24 @@ PositionHoldState::PositionHoldState() {
     setpoint_.type_mask = default_mask;
 }
 
+void PositionHoldState::processCommand(ControlFSM& fsm, const EventData& cmd) {
+    //Decide next state
+    switch(cmd.command_type) {
+        case CommandType::TAKEOFF:
+            cmd.finishCMD();
+            break;
+        case CommandType::GOTOXYZ:
+        case CommandType::LANDXY:
+            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, cmd);
+            break;
+        case CommandType::LANDGB:
+            fsm.transitionTo(ControlFSM::LAND_GB_STATE, this, cmd);
+            break;
+        default:
+            break;
+    }
+}
+
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
@@ -34,22 +52,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
                 break;
         }
     } else if(event.isValidCMD()) {
-        switch(event.command_type) {
-            case CommandType::TAKEOFF:
-                event.finishCMD();
-                break;
-            case CommandType::GOTOXYZ:
-            case CommandType::LANDXY:
-                //All other command needs to go via the GOTO state
-                fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-                break;
-            case CommandType::LANDGB:
-                fsm.transitionTo(ControlFSM::LAND_GB_STATE, this, event);
-                break;
-            default:
-                break;
-                
-        }
+        processCommand(fsm, event);
     }
 }
 
@@ -57,7 +60,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //No need to check other commands
     if(event.isValidCMD()) {
         //All valid commands need to go to correct place on arena before anything else
-        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+        processCommand(fsm, event);
         return;
     }
     try {
