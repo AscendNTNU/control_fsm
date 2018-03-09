@@ -44,7 +44,7 @@ public:
 //Only make these available for unit testing
 #ifdef CONTROL_FSM_UNIT_TEST
 #include <geometry_msgs/TwistStamped.h>
-bool droneNotMoving(const geometry_msgs::TwistStamped& vel);
+bool droneNotMovingXY(const geometry_msgs::TwistStamped& vel);
 double calculatePathYaw(double dx, double dy);
 #endif
 

@@ -30,9 +30,9 @@ TEST(ControlTest, goToStateHelpers) {
     test_vel.twist.linear.x = 0.0;
     test_vel.twist.linear.y = 0.0;
     test_vel.twist.linear.z = 0.0;
-    EXPECT_EQ(droneNotMoving(test_vel), true);
+    EXPECT_EQ(droneNotMovingXY(test_vel), true);
     test_vel.twist.linear.x = 3.0;
-    EXPECT_EQ(droneNotMoving(test_vel), false);
+    EXPECT_EQ(droneNotMovingXY(test_vel), false);
 
     EXPECT_NEAR(calculatePathYaw(2.0, 1.0), 0.0, 0.0001);
     EXPECT_NEAR(calculatePathYaw(1.0, 2.0), PI_HALF, 0.0001);
