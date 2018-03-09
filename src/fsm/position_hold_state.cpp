@@ -26,20 +26,29 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
             case RequestType::LAND:
                 fsm.transitionTo(ControlFSM::LAND_STATE, this, event);
                 break;
-            /*case RequestType::TRACKGB:
-                fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, event);
+            case RequestType::LANDGB:
+                fsm.transitionTo(ControlFSM::LAND_GB_STATE, this, event);
                 break;
-            */
             default:
                 control::handleWarnMsg("Transition not allowed");
                 break;
         }
     } else if(event.isValidCMD()) {
-        if(event.command_type == CommandType::TAKEOFF) {
-            event.finishCMD();
-        } else {
-            //All other command needs to go via the GOTO state
-            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+        switch(event.command_type) {
+            case CommandType::TAKEOFF:
+                event.finishCMD();
+                break;
+            case CommandType::GOTOXYZ:
+            case CommandType::LANDXY:
+                //All other command needs to go via the GOTO state
+                fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+                break;
+            case CommandType::LANDGB:
+                fsm.transitionTo(ControlFSM::LAND_GB_STATE, this, event);
+                break;
+            default:
+                break;
+                
         }
     }
 }
