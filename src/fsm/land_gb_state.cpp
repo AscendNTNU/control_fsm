@@ -60,10 +60,7 @@ LocalState recoverStateHandler(const GBstate& dummy_1, const PoseStamped& drone_
         if (/**/false) {
             
         }
-        else {
-            LocalState.valid = true;
-            LocalState.transition_valid = true;
-        }
+        return LocalState::COMPLETED;
     }
 }
 
@@ -145,7 +142,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
 
     //Checks if we still have visible ground robots to interact with
     if (!gb_pose.downward_tracked) {
-        local_state = Local
+        local_state = LocalState::RECOVER;
         stateFunction = state_function_array[static_cast<int>(LocalState::RECOVER)];
     }
 
