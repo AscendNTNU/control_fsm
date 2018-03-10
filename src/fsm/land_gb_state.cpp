@@ -19,7 +19,7 @@ constexpr double HEIGHT_THRESHOLD = 0.5;
 //Forward declarations
 LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
-LocalState recoverStateHandler(const, GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
+LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 
@@ -59,7 +59,7 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     }
 }
 
-LocalState recoverStateHandler(const GBstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
 
@@ -70,14 +70,13 @@ LocalState recoverStateHandler(const GBstate& gb_pose, const PoseStamped& drone_
     }
 }
 
-LocalState invalidStateHandler(const GBstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint) {
 
-
+    return LocalState::INVALID;
 }
 
-LocalState completedStateHandler(const GBstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
-
-
+LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+    return LocalState::COMPLETED;
 }
 
 LandGBState::LandGBState() {
@@ -169,7 +168,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     stateFunction = state_function_array[static_cast<int>(local_state)];
 
     if (local_state == LocalState::RECOVER) {
-        if (LocalState.valid) {
+        if (local_state != LocalState::INVALID) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
