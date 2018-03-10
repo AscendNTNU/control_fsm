@@ -37,10 +37,7 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     double distance_to_gb = sqrt(pow((gb_pose.x - drone_pos.x),2)
                                 + pow((gb_pose.y - drone_pos.y),2));
     //Do checks here and transition to land
-    if (!gb_pose.downward_tracked){
-        return LocalState::RECOVER;
-    }
-    if (distance_to_gb < DISTANCE_THRESHOLD || drone_pose.pose.position.y < HEIGHT_THRESHOLD) {
+    if (distance_to_gb < DISTANCE_THRESHOLD && drone_pose.pose.position.y < HEIGHT_THRESHOLD && gb_pose.downward_tracked) {
         return LocalState::LAND;
     }
     else {
@@ -161,6 +158,8 @@ void LandGBState::loopState(ControlFSM& fsm) {
 
     // Sets the new state function
     stateFunction = state_function_array[static_cast<int>(local_state)];
+    
+    setpoint_ = *setpoint_p;
 
     if (local_state == LocalState::COMPLETED) {
             cmd_.finishCMD();
