@@ -5,66 +5,64 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 
+#include <functional>
+
 using GRstate = ascend_msgs::GRState;
 using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
-enum class LOCAL_STATE{IDLE, LAND, RECOVER};
+enum class LocalState: int {IDLE, LAND, RECOVER, INVALID, COMPLETED};
 //Just dummies
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
+LocalState recoverStateHandler(const, GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
+LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
+LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 
-//Struct for controlling local state.
-struct{
-    LOCAL_STATE state;
-    bool valid = false;
-    bool transition_valid = false;
-}local_state;
+std::array<std::function<LocalState(const GRstate&, const PoseStamped&, const PosTarget*)>, 5> state_function_array = {
+    idleStateHandler, landStateHandler, recoverStateHandler, invalidStateHandler, completedStateHandler };
 
-void
-idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose) {
+std::function<LocalState(const GRstate&, const PoseStamped&, const PosTarget*)> stateFunction = idleStateHandler;
+
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* dummy) {
     auto& drone_pos = drone_pose.pose.position;
-
     double distance_to_gb = sqrt(pow((gb_pose.x - drone_pos.x),2)
                                 + pow((gb_pose.y - drone_pos.y),2));
-    
     //Do checks here and transition to land
-    if (distance_to_gb > DISTANCE_THRESHOLD || drone_pose.pose.position.y > HEIGHT_THRESHOLD)
-    {
-        local_state.state = LOCAL_STATE::RECOVER;
-        local_state.valid = false;
+    if (!gb_pose.downward_tracked){
+        return LocalState::RECOVER;
     }
-    else
-    {
-        local_state.state = LOCAL_STATE::LAND;
-        local_state.valid = true;
+    if (distance_to_gb < DISTANCE_THRESHOLD || drone_pose.pose.position.y < HEIGHT_THRESHOLD) {
+        return LocalState::LAND;
+    }
+    else {
+        return LocalState::RECOVER;
     }
 }
 
-void
-landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
     //TODO add Chris' algorithm here.
     if(LandDetector::isOnGround()) {
         //Success
-        local_state.state = LOCAL_STATE::RECOVER;
-        local_state.valid = true;
+        return LocalState::RECOVER;
     }
     else if(false) {
-        local_state.state = LOCAL_STATE::RECOVER;
-        local_state.valid = false;
+        return LocalState::INVALID;
     }
 }
 
-void
-recoverStateHandler(const PoseStamped& drone_pose) {
+LocalState recoverStateHandler(const GBstate& dummy_1, const PoseStamped& drone_pose, const PosTarget* dummy_2) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
+
         if (/**/false) {
             
         }
         else {
-            local_state.valid = true;
-            local_state.transition_valid = true;
+            LocalState.valid = true;
+            LocalState.transition_valid = true;
         }
     }
 }
@@ -128,6 +126,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
                 return;
             }
         }
+        stateFunction = idleStateHandler;
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -135,46 +134,29 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
-
-    //Sets the local state to idle, awaiting clearance for landing.
-    local_state.state = LOCAL_STATE::IDLE;
-    local_state.valid = true;
 }
 
 void LandGBState::loopState(ControlFSM& fsm) {
     //TODO Run Chris's algorithm
-    //TODO Remove thought comments
+
     auto& drone_pose = control::DroneHandler::getCurrentPose();
     ascend_msgs::GRState gb_pose = {};
     auto* setpoint = this->getSetpointPtr();
 
     //Checks if we still have visible ground robots to interact with
-    if (gb_pose.downward_tracked) {
-        local_state.state = LOCAL_STATE::RECOVER;
-        local_state.valid = false;
+    if (!gb_pose.downward_tracked) {
+        local_state = Local
+        stateFunction = state_function_array[static_cast<int>(LocalState::RECOVER)];
     }
 
-    switch(local_state.state) {
-        case LOCAL_STATE::IDLE:
-        idleStateHandler(gb_pose, drone_pose);
-        break;
+    // Loops the current and sets the next state.
+    local_state = stateFunction(gb_pose, drone_pose, setpoint);
 
-        case LOCAL_STATE::LAND:
-        landStateHandler(gb_pose, drone_pose, setpoint);
-        break;
+    // Sets the new state function
+    stateFunction = state_function_array[static_cast<int>(local_state)];
 
-        case LOCAL_STATE::RECOVER:
-        recoverStateHandler(drone_pose);
-        break;
-
-        default:
-        local_state.valid = false;
-        control::handleErrorMsg("Local interact gb state failure!");
-        break;
-    }
-    
-    if (local_state.state == LOCAL_STATE::RECOVER && local_state.transition_valid) {
-        if (local_state.valid) {
+    if (local_state == LocalState::RECOVER) {
+        if (LocalState.valid) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
