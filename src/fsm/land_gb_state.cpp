@@ -50,7 +50,8 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 
 LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
     //TODO add Chris' algorithm here.
-    if(LandDetector::isOnGround()) {
+    auto* land_detector = LandDetector::getSharedInstancePtr();
+    if(land_detector->isOnGround()) {
         //Success
         return LocalState::RECOVER;
     }
