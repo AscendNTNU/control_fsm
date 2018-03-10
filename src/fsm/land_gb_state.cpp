@@ -17,22 +17,22 @@ constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
 
 //Forward declarations
-LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
-LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
-LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
-LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
-LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint);
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint);
+LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint);
+LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint);
+LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint);
 
 //State function array, containing all the state functions.
-std::array<std::function<LocalState(const GRstate&, const PoseStamped&, const PosTarget*)>, 5> state_function_array = {
+std::array<std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)>, 5> state_function_array = {
     idleStateHandler, landStateHandler, recoverStateHandler, invalidStateHandler, completedStateHandler };
 
 //Holds the current state function to be run every loop
-std::function<LocalState(const GRstate&, const PoseStamped&, const PosTarget*)> stateFunction = idleStateHandler;
+std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)> stateFunction = idleStateHandler;
 //Holds the current state
 LocalState local_state = LocalState::IDLE;
 
-LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* dummy) {
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* dummy) {
     auto& drone_pos = drone_pose.pose.position;
     double distance_to_gb = sqrt(pow((gb_pose.x - drone_pos.x),2)
                                 + pow((gb_pose.y - drone_pos.y),2));
@@ -48,7 +48,7 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     }
 }
 
-LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint) {
     //TODO add Chris' algorithm here.
     auto* land_detector = LandDetector::getSharedInstancePtr();
     if(land_detector->isOnGround()) {
@@ -60,7 +60,7 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     }
 }
 
-LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
 
@@ -71,12 +71,12 @@ LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_
     }
 }
 
-LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint) {
 
     return LocalState::INVALID;
 }
 
-LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint) {
     return LocalState::COMPLETED;
 }
 
@@ -150,14 +150,16 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandGBState::loopState(ControlFSM& fsm) {
-    const auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
+    auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
     
     auto& drone_pose = control::DroneHandler::getCurrentPose();
     ascend_msgs::GRState gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
-    auto* setpoint = this->getSetpointPtr();
+    auto current_setpoint_p = this->getSetpointPtr();
+    PosTarget setpoint;
+    PosTarget* setpoint_p = &setpoint;
 
     // Loops the current and sets the next state.
-    local_state = stateFunction(gb_pose, drone_pose, setpoint);
+    local_state = stateFunction(gb_pose, drone_pose, setpoint_p);
 
     // Sets the new state function
     stateFunction = state_function_array[static_cast<int>(local_state)];
