@@ -150,7 +150,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandGBState::loopState(ControlFSM& fsm) {
-    auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
+    const auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
     
     auto& drone_pose = control::DroneHandler::getCurrentPose();
     ascend_msgs::GRState gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
