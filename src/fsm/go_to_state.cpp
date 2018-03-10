@@ -124,8 +124,8 @@ void GoToState::loopState(ControlFSM& fsm) {
         bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
         bool yaw_reached = (fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= Config::yaw_reached_margin);
         //If destination is reached, begin transition to another state
-        if(xy_reached && z_reached && yaw_reached) {
-            destinationReached(fsm);
+        if(xy_reached && yaw_reached) {
+            destinationReached(fsm, z_reached);
         } else {
             delay_transition_.enabled = false;
         }
@@ -217,7 +217,7 @@ bool droneNotMoving(const geometry_msgs::TwistStamped& target) {
     return (dx_sq + dy_sq + dz_sq) < pow(Config::velocity_reached_margin, 2);
 }
 
-void GoToState::destinationReached(ControlFSM& fsm) {
+void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
     //Transition to correct state
     if(cmd_.isValidCMD()) {
         switch(cmd_.command_type) {
@@ -254,13 +254,14 @@ void GoToState::destinationReached(ControlFSM& fsm) {
                 }
                 break;
             }
-            case CommandType::GOTOXYZ: {
-                cmd_.finishCMD();
-                RequestEvent done_event(RequestType::POSHOLD);
-                //Attempt to hold position target
-                done_event.position_goal = cmd_.position_goal;
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
-            }
+            case CommandType::GOTOXYZ:
+                if(z_reached) {
+                    cmd_.finishCMD();
+                    RequestEvent done_event(RequestType::POSHOLD);
+                    //Attempt to hold position target
+                    done_event.position_goal = cmd_.position_goal;
+                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
+                }
                 break;
             default:
                 control::handleWarnMsg("Unrecognized command type");
