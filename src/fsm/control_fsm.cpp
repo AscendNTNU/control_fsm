@@ -13,7 +13,7 @@ IdleState ControlFSM::IDLE_STATE;
 TakeoffState ControlFSM::TAKEOFF_STATE;
 BlindHoverState ControlFSM::BLIND_HOVER_STATE;
 PositionHoldState ControlFSM::POSITION_HOLD_STATE;
-LandGBState ControlFSM::INTERACT_GB_STATE;
+LandGBState ControlFSM::LAND_GB_STATE;
 GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
