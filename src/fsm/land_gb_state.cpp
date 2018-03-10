@@ -17,11 +17,11 @@ constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
 
 //Forward declarations
-LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint);
-LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint);
-LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint);
-LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint);
-LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint);
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
 
 //State function array, containing all the state functions.
 std::array<std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)>, 5> state_function_array = {
@@ -32,7 +32,7 @@ std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)> stateF
 //Holds the current state
 LocalState local_state = LocalState::IDLE;
 
-LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* dummy) {
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     auto& drone_pos = drone_pose.pose.position;
     double distance_to_gb = sqrt(pow((gb_pose.x - drone_pos.x),2)
                                 + pow((gb_pose.y - drone_pos.y),2));
@@ -48,7 +48,7 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     }
 }
 
-LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint) {
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     //TODO add Chris' algorithm here.
     auto* land_detector = LandDetector::getSharedInstancePtr();
     if(land_detector->isOnGround()) {
@@ -60,23 +60,21 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     }
 }
 
-LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint) {
+LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
+        
 
-        if (/**/false) {
-            
-        }
-        return LocalState::COMPLETED;
     }
+    return LocalState::COMPLETED;
 }
 
-LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint) {
+LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
 
     return LocalState::INVALID;
 }
 
-LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint) {
+LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     return LocalState::COMPLETED;
 }
 
@@ -155,7 +153,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     ascend_msgs::GRState gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
     auto& drone_pose = control::DroneHandler::getCurrentPose();
 
-    PosTarget setpoint;
+    PosTarget setpoint{};
     PosTarget* setpoint_p = &setpoint;
 
     // Loops the current and sets the next state.
