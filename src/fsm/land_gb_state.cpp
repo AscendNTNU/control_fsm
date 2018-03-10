@@ -55,7 +55,7 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
         //Success
         return LocalState::RECOVER;
     }
-    else if(false) {
+    else if(gb_pose.downward_tracked) {
         return LocalState::INVALID;
     }
 }
@@ -150,17 +150,11 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandGBState::loopState(ControlFSM& fsm) {
-    //TODO Run Chris's algorithm
-
+    const auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
+    
     auto& drone_pose = control::DroneHandler::getCurrentPose();
-    ascend_msgs::GRState gb_pose = {};
+    ascend_msgs::GRState gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
     auto* setpoint = this->getSetpointPtr();
-
-    //Checks if we still have visible ground robots to interact with
-    if (!gb_pose.downward_tracked) {
-        local_state = LocalState::RECOVER;
-        stateFunction = state_function_array[static_cast<int>(LocalState::RECOVER)];
-    }
 
     // Loops the current and sets the next state.
     local_state = stateFunction(gb_pose, drone_pose, setpoint);
@@ -169,15 +163,14 @@ void LandGBState::loopState(ControlFSM& fsm) {
     stateFunction = state_function_array[static_cast<int>(local_state)];
 
     if (local_state == LocalState::RECOVER) {
-        if (local_state != LocalState::INVALID) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);
-        }
-        else{
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
+    }
+    if (local_state == LocalState::INVALID) {
+            cmd_.abort();
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        }
     }
 
 }
