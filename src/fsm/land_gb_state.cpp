@@ -152,9 +152,9 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 void LandGBState::loopState(ControlFSM& fsm) {
     const auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
     
-    auto& drone_pose = control::DroneHandler::getCurrentPose();
     ascend_msgs::GRState gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
-    auto current_setpoint_p = this->getSetpointPtr();
+    auto& drone_pose = control::DroneHandler::getCurrentPose();
+
     PosTarget setpoint;
     PosTarget* setpoint_p = &setpoint;
 
@@ -164,7 +164,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     // Sets the new state function
     stateFunction = state_function_array[static_cast<int>(local_state)];
 
-    if (local_state == LocalState::RECOVER) {
+    if (local_state == LocalState::COMPLETED) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
