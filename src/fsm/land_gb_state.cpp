@@ -12,19 +12,25 @@ using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
 enum class LocalState: int {IDLE, LAND, RECOVER, INVALID, COMPLETED};
-//Just dummies
+//Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
+
+//Forward declarations
 LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState recoverStateHandler(const, GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint);
 
+//State function array, containing all the state functions.
 std::array<std::function<LocalState(const GRstate&, const PoseStamped&, const PosTarget*)>, 5> state_function_array = {
     idleStateHandler, landStateHandler, recoverStateHandler, invalidStateHandler, completedStateHandler };
 
+//Holds the current state function to be run every loop
 std::function<LocalState(const GRstate&, const PoseStamped&, const PosTarget*)> stateFunction = idleStateHandler;
+//Holds the current state
+LocalState local_state = LocalState::IDLE;
 
 LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* dummy) {
     auto& drone_pos = drone_pose.pose.position;
@@ -53,7 +59,7 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     }
 }
 
-LocalState recoverStateHandler(const GBstate& dummy_1, const PoseStamped& drone_pose, const PosTarget* dummy_2) {
+LocalState recoverStateHandler(const GBstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
 
@@ -62,6 +68,16 @@ LocalState recoverStateHandler(const GBstate& dummy_1, const PoseStamped& drone_
         }
         return LocalState::COMPLETED;
     }
+}
+
+LocalState invalidStateHandler(const GBstate& gb_state, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+
+
+}
+
+LocalState completedStateHandler(const GBstate& gb_pose, const PoseStamped& drone_pose, const PosTarget* setpoint) {
+
+
 }
 
 LandGBState::LandGBState() {
