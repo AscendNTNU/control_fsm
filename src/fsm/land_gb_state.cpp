@@ -150,16 +150,13 @@ void LandGBState::loopState(ControlFSM& fsm) {
     ascend_msgs::GRState gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
     auto& drone_pose = control::DroneHandler::getCurrentPose();
 
-    PosTarget setpoint{};
-    PosTarget* setpoint_p = &setpoint;
+    PosTarget* setpoint_p = &setpoint_;
 
     // Loops the current and sets the next state.
     local_state = stateFunction(gb_pose, drone_pose, setpoint_p);
 
     // Sets the new state function
     stateFunction = state_function_array[static_cast<int>(local_state)];
-    
-    setpoint_ = *setpoint_p;
 
     if (local_state == LocalState::COMPLETED) {
             cmd_.finishCMD();
