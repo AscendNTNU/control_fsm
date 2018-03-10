@@ -11,7 +11,7 @@ using GRstate = ascend_msgs::GRState;
 using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
-enum class LocalState: int {IDLE, LAND, RECOVER, INVALID, COMPLETED};
+enum class LocalState: int {IDLE, LAND, RECOVER, ABORT, COMPLETED};
 //Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
@@ -20,12 +20,12 @@ constexpr double HEIGHT_THRESHOLD = 0.5;
 LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p);
 LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p);
 LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
-LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState abortStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
 LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
 
 //State function array, containing all the state functions.
 std::array<std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)>, 5> state_function_array = {
-    idleStateHandler, landStateHandler, recoverStateHandler, invalidStateHandler, completedStateHandler };
+    idleStateHandler, landStateHandler, recoverStateHandler, abortStateHandler, completedStateHandler };
 
 //Holds the current state function to be run every loop
 std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)> stateFunction = idleStateHandler;
@@ -53,7 +53,7 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
         return LocalState::RECOVER;
     }
     else if(gb_pose.downward_tracked) {
-        return LocalState::INVALID;
+        return LocalState::ABORT;
     }
 }
 
@@ -66,9 +66,9 @@ LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_
     return LocalState::COMPLETED;
 }
 
-LocalState invalidStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
+LocalState abortStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
 
-    return LocalState::INVALID;
+    return LocalState::ABORT;
 }
 
 LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
@@ -163,7 +163,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
             RequestEvent transition(RequestType::POSHOLD);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
     }
-    if (local_state == LocalState::INVALID) {
+    if (local_state == LocalState::ABORT) {
             cmd_.abort();
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
