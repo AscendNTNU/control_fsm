@@ -80,10 +80,8 @@ LandGBState::LandGBState() {
 }
 
 void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
-    //TODO Handle all transition requests
     if(event.isValidRequest()) {
         if(event.request == RequestType::ABORT) {
-            //TODO Blindhover or position hold?
             if(cmd_.isValidCMD()) {
                 cmd_.abort();    
             }
@@ -99,15 +97,14 @@ void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             control::handleWarnMsg("CMD still active, abort first!");
         } else {
-            if(event.command_type == CommandType::TAKEOFF) {
-                //Drone already in air, nothing else to do!
-                event.finishCMD(); 
-            } else {
-                //Transition to poshold to execute new cmd
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
-            }
+            //Transition to poshold to execute new cmd
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         }
     }
+}
+
+bool validGroundRobotID(int id, size_t num_gb) {
+    return !(id < 0 || static_cast<size_t>(id) >= num_gb);
 }
 
 void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
@@ -125,7 +122,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
         const auto& gb_state = GroundRobotHandler::getCurrentGroundRobots();
         //Check gb_id
-        if(cmd_.gb_id < 0 || static_cast<size_t>(cmd_.gb_id) >= gb_state.size()) {
+        if(!validGroundRobotID(cmd_.gb_id, gb_state.size())) {
             if(cmd_.isValidCMD()) {
                 cmd_.eventError("Invalid GB id!");
                 cmd_.clear();
@@ -179,7 +176,7 @@ const mavros_msgs::PositionTarget* LandGBState::getSetpointPtr() {
 void LandGBState::handleManual(ControlFSM &fsm) {
     if(cmd_.isValidCMD()) {
         cmd_.eventError("OFFBOARD lost");
-        cmd_ = EventData();
+        cmd_.clear();
     }
     RequestEvent manual_event(RequestType::MANUALFLIGHT);
     fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, manual_event);
