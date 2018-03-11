@@ -100,7 +100,8 @@ void LandGBState::loopState(ControlFSM& fsm) {
     }
 
     //Check if algorithm is valid
-    if(!InterceptGB(drone_pose, target_gb, setpoint_)) {
+    using control::gb::interceptGB;
+    if(!interceptGB(drone_pose, target_gb, setpoint_)) {
         cmd_.eventError("Landing procedure failed");
         cmd_.clear();
         RequestEvent abort_event(RequestType::ABORT);

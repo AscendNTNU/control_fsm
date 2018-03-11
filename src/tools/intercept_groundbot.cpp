@@ -14,6 +14,8 @@ using control::Config;
 using geometry_msgs::PoseStamped;
 using ascend_msgs::GRState;
 using mavros_msgs::PositionTarget;
+using namespace control::gb;
+
 
 constexpr float PI_HALF = 1.570796; 
 constexpr float roomba_speed = 0.35; 
@@ -61,7 +63,7 @@ point calculateRoombaVelocity(float roomba_x, float roomba_y, float roomba_z, ro
 
 
 //Takes in quad message and the position of the roomba that is in question, return as velocity control message
-bool InterceptGB(PoseStamped quad_position, GRState roomba_position, PositionTarget& setpoint){ 
+bool control::gb::interceptGB(const PoseStamped& quad_position, const GRState& roomba_position, PositionTarget& setpoint){ 
 	mavros_msgs::PositionTarget setpoint_temp;	 
  	static int wrong_measurements = 0; 
 
