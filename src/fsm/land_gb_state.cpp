@@ -72,16 +72,7 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a safe altitude.
-        PosTarget height_setpoint;
-        height_setpoint.yaw = control::pose::quat2mavrosyaw(drone_pose.pose.orientation);
-        height_setpoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-        height_setpoint.header.frame_id = "fcu";
-        height_setpoint.type_mask = default_mask;
-        height_setpoint.position.x = drone_pose.pose.position.x;
-        height_setpoint.position.y = drone_pose.pose.position.y;
-        height_setpoint.position.z = control::Config::safe_hover_altitude;
-
-        *setpoint_p = height_setpoint;
+        *setpoint_p.position.z = control::Config::safe_hover_altitude;
         return LocalState::RECOVER;
 
     }
