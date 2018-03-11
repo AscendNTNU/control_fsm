@@ -13,7 +13,7 @@ public:
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "Position hold"; }
-    ascend_msgs::ControlFSMState getStateMsg() override;
+    ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
     void processCommand(ControlFSM& fsm, const EventData& cmd);

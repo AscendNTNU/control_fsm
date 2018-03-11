@@ -130,7 +130,7 @@ void LandState::handleManual(ControlFSM &fsm) {
 
 
 
-ascend_msgs::ControlFSMState LandState::getStateMsg() {
+ascend_msgs::ControlFSMState LandState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
