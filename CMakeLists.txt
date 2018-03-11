@@ -65,11 +65,13 @@ target_link_libraries(control_fsm_lib
 
 add_executable(control_fsm_main src/nodes/control_fsm_main)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
+add_executable(fsm_data_faker src/nodes/data_faker.cpp)
 
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(control_fsm_main control_fsm_lib)
 target_link_libraries(action_interface_client ${catkin_LIBRARIES})
+target_link_libraries(fsm_data_faker ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -77,6 +79,7 @@ add_dependencies(control_fsm_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(control_tools_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(action_interface_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(fsm_data_faker ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 if(CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
     add_rostest_gtest(utest test/launch_test.test test/utest.cpp)
