@@ -111,7 +111,7 @@ void BlindHoverState::handleManual(ControlFSM &fsm) {
 
 
 
-ascend_msgs::ControlFSMState BlindHoverState::getStateMsg() {
+ascend_msgs::ControlFSMState BlindHoverState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

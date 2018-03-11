@@ -25,6 +25,8 @@ ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
 void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, const EventData& event) {
     //Only current running state is allowed to change state
     if(getState() == caller_p) {
+        //Guarantee release of resources
+        releaseCommonStateResources();
         //Run stateEnd on current running state before transitioning
         getState()->stateEnd(*this, event);
         //Set the current state pointer
@@ -37,6 +39,10 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
     } else {
         control::handleErrorMsg("Transition request made by not active state");
     }
+}
+
+void ControlFSM::releaseCommonStateResources() {
+    //Add resources here
 }
 
 //Send external event to current state and to "next" state
