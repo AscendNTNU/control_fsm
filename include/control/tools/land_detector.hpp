@@ -16,7 +16,7 @@ class LandDetectorImpl;
 /** Land detector class
  * Can be used with both mavros extended state and landing gear
  * Set land_detector_type in config to correct type!
- * If invalid type is set, and invalid LandDetector will be used!
+ * If invalid type is set, an invalid LandDetector will be used!
  */
 class LandDetector {
 private:
