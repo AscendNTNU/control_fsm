@@ -72,7 +72,11 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a safe altitude.
-        *setpoint_p.position.z = control::Config::safe_hover_altitude;
+        // TODO This is probably not safe with Mist
+        setpoint_p->type_mask = default_mask;
+        setpoint_p->position.x = drone_pose.pose.position.x;  
+        setpoint_p->position.y = drone_pose.pose.position.y;
+        setpoint_p->position.z = control::Config::safe_hover_altitude;
         return LocalState::RECOVER;
 
     }
