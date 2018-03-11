@@ -55,6 +55,10 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
         //Success
         return LocalState::RECOVER;
     }
+    else if(!interception) {
+        return LocalState::ABORT;
+    }
+    
     else {
         return LocalState::LAND;
     }
