@@ -9,12 +9,14 @@
 #include <ascend_msgs/LandDetector.h>
 #include <algorithm>
 
+//Interface for land detector
 class LandDetectorImpl {
 public:
     virtual bool isOnGround() const = 0;
     virtual bool isReady() const = 0;
 };
 
+///LandDetector using mavros
 class MavrosExtendedState : public LandDetectorImpl {
     
 private:
@@ -33,6 +35,7 @@ public:
     bool isReady() const override;
 };
 
+///LandDetector using ascend_msgs::LandDetector msg
 class LandingGearDetector : public LandDetectorImpl {
 private:
     ///ROS Nodehandle
@@ -50,6 +53,7 @@ public:
     bool isReady() const override;
 };
 
+///Invalid land detector type
 class InvalidLandDetector : public LandDetectorImpl {
 public:
     bool isOnGround() const override { control::handleErrorMsg("InvalidLandDetector"); return true; }
