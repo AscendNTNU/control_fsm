@@ -60,14 +60,13 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
         // Setpoint to a higher altitude?
-        
+
 
     }
     return LocalState::COMPLETED;
 }
 
 LocalState abortStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
-
     return LocalState::ABORT;
 }
 
