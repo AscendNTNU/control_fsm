@@ -278,7 +278,7 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
 
 
 
-ascend_msgs::ControlFSMState GoToState::getStateMsg() {
+ascend_msgs::ControlFSMState GoToState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

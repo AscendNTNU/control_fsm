@@ -206,7 +206,7 @@ void LandGBState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState LandGBState::getStateMsg() {
+ascend_msgs::ControlFSMState LandGBState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
