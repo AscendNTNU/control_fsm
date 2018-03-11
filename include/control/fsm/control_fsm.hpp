@@ -115,7 +115,7 @@ private:
     ///Initializes all states
     void initStates();
     
-    ///Make sure certain resources are released correclty in current state
+    ///Make sure certain resources are released correctly in current state
     void releaseCommonStateResources();
 
     ///All states needs access to obstacle avoidance
