@@ -75,11 +75,11 @@ LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_
         PosTarget height_setpoint;
         height_setpoint.yaw = control::pose::quat2mavrosyaw(drone_pose.pose.orientation);
         height_setpoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
-        height_setpoint.frame_id = "fcu";
+        height_setpoint.header.frame_id = "fcu";
         height_setpoint.type_mask = default_mask;
-        height_setpoint.pose.position.x = drone_pose.pose.position.x;
-        height_setpoint.pose.position.y = drone_pose.pose.position.y;
-        height_setpoint.pose.position.z = control::Config::safe_hover_altitude;
+        height_setpoint.position.x = drone_pose.pose.position.x;
+        height_setpoint.position.y = drone_pose.pose.position.y;
+        height_setpoint.position.z = control::Config::safe_hover_altitude;
 
         *setpoint_p = height_setpoint;
         return LocalState::RECOVER;
