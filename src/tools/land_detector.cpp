@@ -10,14 +10,14 @@
 #include <algorithm>
 
 //Interface for land detector
-class LandDetectorImpl {
+class LandDetectorImplementation {
 public:
     virtual bool isOnGround() const = 0;
     virtual bool isReady() const = 0;
 };
 
 ///LandDetector using mavros
-class MavrosExtendedState : public LandDetectorImpl {
+class MavrosExtendedState : public LandDetectorImplementation {
     
 private:
     ///ROS Nodehandle
@@ -36,7 +36,7 @@ public:
 };
 
 ///LandDetector using ascend_msgs::LandDetector msg
-class LandingGearDetector : public LandDetectorImpl {
+class LandingGearDetector : public LandDetectorImplementation {
 private:
     ///ROS Nodehandle
     ros::NodeHandle nh_;
@@ -54,13 +54,13 @@ public:
 };
 
 ///Invalid land detector type
-class InvalidLandDetector : public LandDetectorImpl {
+class InvalidLandDetector : public LandDetectorImplementation {
 public:
     bool isOnGround() const override { control::handleErrorMsg("InvalidLandDetector"); return true; }
     bool isReady() const override { control::handleErrorMsg("InvalidLandDetector"); return false; }
 };
 
-std::unique_ptr<LandDetectorImpl> LandDetector::impl_ = nullptr;
+std::unique_ptr<LandDetectorImplementation> LandDetector::impl_ = nullptr;
 
 MavrosExtendedState::MavrosExtendedState() {
     assert(ros::isInitialized());
@@ -115,7 +115,7 @@ bool LandingGearDetector::isReady() const {
 
  
 
-const LandDetectorImpl* LandDetector::getImplPtr() {
+const LandDetectorImplementation* LandDetector::getImplPtr() {
     if(impl_ == nullptr) {
         if(!ros::isInitialized()) {
             throw control::ROSNotInitializedException();
@@ -126,11 +126,11 @@ const LandDetectorImpl* LandDetector::getImplPtr() {
             return tolower(l);
         });
         if(type == "mavros_extended_state") {
-            impl_ = std::unique_ptr<LandDetectorImpl>(new MavrosExtendedState);
+            impl_ = std::unique_ptr<LandDetectorImplementation>(new MavrosExtendedState);
         } else if(type == "landing_gear") {
-            impl_ = std::unique_ptr<LandDetectorImpl>(new LandingGearDetector); 
+            impl_ = std::unique_ptr<LandDetectorImplementation>(new LandingGearDetector);
         } else {
-            impl_ = std::unique_ptr<LandDetectorImpl>(new InvalidLandDetector);
+            impl_ = std::unique_ptr<LandDetectorImplementation>(new InvalidLandDetector);
         }
         
         

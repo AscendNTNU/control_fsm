@@ -11,7 +11,7 @@
 #include <control/exceptions/ros_not_initialized_exception.hpp>
 
 
-class LandDetectorImpl;
+class LandDetectorImplementation;
 
 /** Land detector class
  * Can be used with both mavros extended state and landing gear
@@ -21,7 +21,7 @@ class LandDetectorImpl;
 class LandDetector {
 private:
     ///Shared instance - singleton pattern
-    static std::unique_ptr<LandDetectorImpl> impl_;
+    static std::unique_ptr<LandDetectorImplementation> impl_;
     ///Private constructor
     LandDetector() = default;
     /**Get shared_ptr to shared instance - singleton pattern
@@ -29,7 +29,7 @@ private:
      * @throw std::bad_alloc
      * @return shared_ptr to shared instance (singleton)
      */
-    static const LandDetectorImpl* getImplPtr();
+    static const LandDetectorImplementation* getImplPtr();
 
 public:
     ///Is drone in the air or landed?
