@@ -47,14 +47,11 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 }
 
 LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
-    //Gets the landdetector.
-    auto* land_detector = LandDetector::getSharedInstancePtr();
-
     //Runs the interception algorithm
     bool interception_ok = control::gb::interceptGB(drone_pose, gb_pose, *setpoint_p);
     
     //Checks if we have landed or the data is not good.
-    if(land_detector->isOnGround()) {
+    if(LandDetector::isOnGround()) {
         //Success
         return LocalState::RECOVER;
     }
