@@ -85,6 +85,16 @@ public:
     static bool require_obstacle_detection;
     /// \fsmparam When is data considered old?
     static double valid_data_timeout;
+    //"Tracking speed" in the x-y plane
+    static double tracking_param_xy;
+    //Tracking speed in the z direction
+    static double tracking_param_z; 
+    //Variable that control the change of the speed when intercepting, xy-plane
+    static double interception_param_xy;
+    //Variable that control the change of the speed when intercepting, z-direction   
+    static double interception_param_z;
+    // Maximal distance away from the roomba to run interception algorithm
+    static double max_distance;
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */

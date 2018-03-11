@@ -4,6 +4,7 @@
 #include <control/fsm/control_fsm.hpp>
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
+#include <control/tools/intercept_groundbot.hpp>
 
 #include <functional>
 
@@ -102,8 +103,12 @@ void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
-bool validGroundRobotID(int id, size_t num_gb) {
+bool isValidGroundRobotID(int id, size_t num_gb) {
     return !(id < 0 || static_cast<size_t>(id) >= num_gb);
+}
+
+bool isValidTargetGB(const ascend_msgs::GRState& gb) {
+    return gb.visible && gb.downward_tracked;
 }
 
 void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
@@ -119,16 +124,23 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         setpoint_.position.y = position.y;
         setpoint_.position.z = position.z;
 
-        const auto& gb_state = GroundRobotHandler::getCurrentGroundRobots();
+        const auto& gb_states = GroundRobotHandler::getCurrentGroundRobots();
         //Check gb_id
-        if(!validGroundRobotID(cmd_.gb_id, gb_state.size())) {
-            if(cmd_.isValidCMD()) {
-                cmd_.eventError("Invalid GB id!");
-                cmd_.clear();
-                RequestEvent abort_event(RequestType::ABORT);
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-                return;
-            }
+        if(!isValidGroundRobotID(cmd_.gb_id, gb_states.size())) {
+            cmd_.eventError("Invalid GB id!");
+            cmd_.clear();
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            return;
+        }
+        auto& gb = gb_states.at(static_cast<unsigned long>(cmd_.gb_id));
+        if(!isValidTargetGB(gb)) {
+            //Not possible to land on ground robot
+            cmd_.eventError("LandGB not possible");
+            control::handleWarnMsg("Land on ground robot not possible");
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            return;
         }
         stateFunction = idleStateHandler;
     } catch(const std::exception& e) {

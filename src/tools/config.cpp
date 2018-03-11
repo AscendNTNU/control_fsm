@@ -40,6 +40,12 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
+double Config::tracking_param_xy = 2.0;
+double Config::tracking_param_z = 0.02; 
+double Config::interception_param_xy = 2.0; 
+double Config::interception_param_z = 0.01; 
+double Config::max_distance = 2.0; 
+
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -141,6 +147,13 @@ void Config::loadParams() {
     getStringParam("obstacle_state_topic", obstacle_state_topic);
     //Ground robots
     getStringParam("ground_robot_state_topic", ground_robot_state_topic);
+
+    //Chris's algorithm
+    getDoubleParam("land_gb_tracking_xy", tracking_param_xy, 0.0, 5.0);
+    getDoubleParam("land_gb_tracking_z", tracking_param_z, 0.0, 5.0);
+    getDoubleParam("land_gb_interception_xy", interception_param_xy, 0.0, 5.0);
+    getDoubleParam("land_gb_interception_z", interception_param_z, 0.0, 5.0);
+    getDoubleParam("land_gb_max_distance", max_distance, 0.0, 10.0);
 
 }
 

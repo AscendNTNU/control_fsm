@@ -56,5 +56,15 @@
     #Topic for recieving obstacle state data
     obstacle_state_topic: perception/obstacles,
     #Margin to determine if velocity is reached
-    velocity_reached_margin: 0.2
+    velocity_reached_margin: 0.2,
+    #TODO Add description
+    land_gb_tracking_xy: 2.0,
+    #TODO Add description
+    land_gb_tracking_z: 0.02,
+    #TODO Add description
+    land_gb_interception_xy: 2.0,
+    #TODO Add description
+    land_gb_interception_z: 0.01,
+    #TODO Add description
+    land_gb_max_distance: 2.0
 }
