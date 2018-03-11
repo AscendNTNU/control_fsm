@@ -47,8 +47,10 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 }
 
 LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
-    //TODO add Chris' algorithm here.
+
     auto* land_detector = LandDetector::getSharedInstancePtr();
+    bool interception = control::gb::interceptGB(drone_pose, gb_pose, setpoint_p);
+    
     if(land_detector->isOnGround()) {
         //Success
         return LocalState::RECOVER;
@@ -60,8 +62,18 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
 
 LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
     if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
-        // Setpoint to a higher altitude?
+        // Setpoint to a safe altitude.
+        PosTarget height_setpoint;
+        height_setpoint.yaw = control::pose::quat2mavrosyaw(drone_pose.pose.orientation);
+        height_setpoint.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
+        height_setpoint.frame_id = "fcu";
+        height_setpoint.type_mask = default_mask;
+        height_setpoint.pose.position.x = drone_pose.pose.position.x;
+        height_setpoint.pose.position.y = drone_pose.pose.position.y;
+        height_setpoint.pose.position.z = control::Config::safe_hover_altitude;
 
+        *setpoint_p = height_setpoint;
+        return LocalState::RECOVER;
 
     }
     return LocalState::COMPLETED;
