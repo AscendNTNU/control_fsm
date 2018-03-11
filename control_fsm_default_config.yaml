@@ -19,7 +19,7 @@
     goto_hold_dest_time: 0.5,
     #Topic for recieving land detector data
     land_detector_topic: /mavros/extended_state,
-    #Land detector type
+    #Land detector type - landing_gear or mavros_extended_state
     land_detector_type: landing_gear,
     #Topic for recieving lidar info
     lidar_topic: /perception/obstacles/lidar,
