@@ -3,8 +3,8 @@
 #include <control/tools/config.hpp>
 
 constexpr int MAX_ITERATIONS = 100;
-
-ActionServer::ActionServer() : as_(nh_, "control_fsm_action_server", false) {
+using control::Config;
+ActionServer::ActionServer() : as_(nh_, Config::action_server_topic, false) {
     if(!ros::isInitialized()) {
         throw control::ROSNotInitializedException();
     }

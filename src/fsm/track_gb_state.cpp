@@ -28,7 +28,7 @@ void TrackGBState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState TrackGBState::getStateMsg() {
+ascend_msgs::ControlFSMState TrackGBState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

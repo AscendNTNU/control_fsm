@@ -21,7 +21,7 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
         event.eventError("CMD rejected!");
         control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else if(event.event_type == EventType::AUTONOMOUS) {
-        if(LandDetector::getSharedInstancePtr()->isOnGround()) {
+        if(LandDetector::isOnGround()) {
             fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
         } else {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
@@ -35,9 +35,8 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
     try {
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto &position = pose_stamped.pose.position;
-        auto land_detector = LandDetector::getSharedInstancePtr();
 
-        if (land_detector->isOnGround()) {
+        if (LandDetector::isOnGround()) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
         } else {
             setpoint_.type_mask = default_mask;
@@ -65,7 +64,7 @@ void ManualFlightState::handleManual(ControlFSM &fsm) {
 
 
 
-ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() {
+ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
