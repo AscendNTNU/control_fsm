@@ -181,13 +181,20 @@ void control::ObstacleAvoidance::onWarn() {
 }
 
 mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::PositionTarget setpoint) {
-    //If obstacle avoidance has altered the setpoint
-    if(doObstacleAvoidance(&setpoint)) {
+    mavros_msgs::PositionTarget setpoint_unchanged = setpoint; 
+
+    const bool setpoint_modified = doObstacleAvoidance(&setpoint);
+
+    if (setpoint_modified){
         //Notify states
-        onModified();
         onWarn();
+        if (has_setpoint_responsibility_){
+            onModified();
+            return setpoint;
+        } 
     }
-    return setpoint;
+
+    return setpoint_unchanged;
 }
 
 void control::ObstacleAvoidance::removeOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p) {

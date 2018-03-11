@@ -31,11 +31,14 @@ private:
     ///Runs obstacle avoidance, and modifies setpoint (and notifies)
     virtual bool doObstacleAvoidance(mavros_msgs::PositionTarget* setpoint);
 
-    ///Node handle
+    ///Nodehandle
     ros::NodeHandle nh_;
 
     ///Publisher for avoid zone information
     ros::Publisher zone_pub_;
+
+    ///Responsibility flag
+    bool has_setpoint_responsibility_ = true;
 
 public:
     ///Default constructor
@@ -52,30 +55,17 @@ public:
     ///Remove on modified callback
     void removeOnModifiedCBPtr(const std::shared_ptr<std::function<void()> >& cb_p);
 
+    ///Obstacle avoidance has reduced responsibility. 
+    ///It won't change setpoints and only calls warning level callbacks
+    void relaxResponsibility() { has_setpoint_responsibility_ = false; }
+    ///Obstacle avoidance takes full responsibility over setpoints and calls all callbacks
+    void takeResponsibility() { has_setpoint_responsibility_ = true; }
+
     ///Modifies setpoint if obstacle is too close
     mavros_msgs::PositionTarget run(mavros_msgs::PositionTarget setpoint);
     ///Returns true when obstacle avoidance is running
     bool isReady() { return true; }
 };
 }
-
-// Only do this for unit testing
-#ifdef CONTROL_FSM_UNIT_TEST
-#include <geometry_msgs/Vector3.h>
-
-float angleWrapper(const float angle);
-
-template<typename T, typename K>
-inline geometry_msgs::Vector3 calcVectorBetweenPoints(const T& point_A, const K& point_B);
-
-template<typename T, typename K>
-inline float calcDistanceToObstacle(const T& point, const K& obstacle_position);
-
-template<typename T, typename K>
-inline float calcAngleToObstacle(const T& point, const K& obstacle_position, const float obstacle_direction);
-
-template<typename T>
-inline geometry_msgs::Vector3 rotateXY(const T& point, const float angle);
-#endif
 
 #endif
