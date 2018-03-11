@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
     //Set FSM callbacks
     fsm.setOnStateChangedCB([&](){
-        auto msg = fsm.getState()->getStateMsg();
+        auto msg = fsm.getCurrentState()->getStateMsg();
         fsm_on_state_changed_pub.publish(msg);
     });
 

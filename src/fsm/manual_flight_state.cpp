@@ -65,7 +65,7 @@ void ManualFlightState::handleManual(ControlFSM &fsm) {
 
 
 
-ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() {
+ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

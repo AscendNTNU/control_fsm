@@ -41,7 +41,7 @@ void PreFlightState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState PreFlightState::getStateMsg() {
+ascend_msgs::ControlFSMState PreFlightState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

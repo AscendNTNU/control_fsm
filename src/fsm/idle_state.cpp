@@ -44,7 +44,7 @@ void IdleState::handleManual(ControlFSM &fsm) {
 
 
 
-ascend_msgs::ControlFSMState IdleState::getStateMsg() {
+ascend_msgs::ControlFSMState IdleState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
