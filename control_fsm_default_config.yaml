@@ -29,6 +29,10 @@
     local_position_topic: /mavros/local_position/pose, 
     #Topic for recieving mavros state
     mavros_state_topic: /mavros/state,
+    #Topic for debug server
+    debug_server_topic: /control/fsm/debug_server,
+    #Topic for action server
+    action_server_topic: /control/fsm/action_server,
     #When is message considered old?
     message_timeout: 2.0, 
     #For what distances is it uneccesary to adjust yaw
