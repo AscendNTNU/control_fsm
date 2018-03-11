@@ -94,8 +94,7 @@ void LandState::loopState(ControlFSM& fsm) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
         //Check landing
-        auto land_detector_p = LandDetector::getSharedInstancePtr();
-        if(land_detector_p->isOnGround()) {
+        if(LandDetector::isOnGround()) {
             if(cmd_.isValidCMD()) {
                 //Only landxy should occur!
                 if(cmd_.command_type == CommandType::LANDXY) {

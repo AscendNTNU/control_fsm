@@ -9,7 +9,7 @@
 
 class ActionServer {
 private:
-    using FSMGoal = ascend_msgs::ControlFSMGoal_<std::allocator<void>>;
+    using FSMGoal = ascend_msgs::ControlFSMGoal::Type;
     using GoalSharedPtr = boost::shared_ptr<const FSMGoal>;
     using StateService = ascend_msgs::ControlFSMSetActionState;
     using StateRequest = StateService::Request;

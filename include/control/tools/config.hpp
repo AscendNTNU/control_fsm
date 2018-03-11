@@ -63,8 +63,14 @@ public:
     static std::string mavros_state_changed_topic;
     /// \fsmparam Topic for recieving current state from land detector
     static std::string land_detector_topic;
+    /// \fsmparam Which type of land detector to use
+    static std::string land_detector_type;
     /// \fsmparam Topic for recieving obstacle positions
     static std::string obstacle_state_topic;
+    /// \fsmparam Topic for recieving debug service requests
+    static std::string debug_server_topic;
+    /// \fsmparam Topic for action server
+    static std::string action_server_topic;
     /// \fsmparam Buffer size used for FSMError, FSMWarn etc
     static int fsm_status_buffer_size;
     /// \fsmparam Time gotostate waits before transitioning

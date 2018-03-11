@@ -132,7 +132,7 @@ bool ControlFSM::isReady() {
                 return false;
             } 
             //Land detector must be ready
-            if (!LandDetector::getSharedInstancePtr()->isReady()) {
+            if (!LandDetector::isReady()) {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");
                 return false;
             }
