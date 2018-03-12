@@ -313,6 +313,11 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     refreshObstacles();
     refreshUnsafeZones();
 
+    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
+        std::cout << "\n GET OOOOOUT!!! \n\n";
+        return;
+    }
+
     /*
     if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
         std::cout << "\n GET OOOOOUT!!! \n\n";
@@ -377,7 +382,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     // Calculate all f values and set the parents
     relaxGraph();
 
-    // Dummy safety for avoiding infinite loop, will remove later
+    // Dummy safety for avoiding infinite loop, will remove never
     int counter = 0;
     // Go through the graph from end to start through the parents of each node
     // Add nodes to the plan
