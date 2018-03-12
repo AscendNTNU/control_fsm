@@ -24,11 +24,9 @@ uint16_t velocity_control = IGNORE_PX | IGNORE_PY | IGNORE_PZ |
 	                    IGNORE_AFX | IGNORE_AFY | IGNORE_AFZ | 
 	                    IGNORE_YAW_RATE;
 
-typedef struct point{
-	float x; 
-	float y; 
-	float z; 
-} point;
+struct point{
+	float x,y,z; 
+};
 
 point calculateRoombaVelocity(float roomba_x, float roomba_y, float roomba_z, ros::Time stamp, int& wrong_measurements);
 //mavros_msgs::PositionTarget failsafe(mavros_msgs::PositionTarget setpoint);
