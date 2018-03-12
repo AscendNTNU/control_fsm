@@ -86,6 +86,8 @@ int main(int argc, char** argv){
 	    	auto current_dir = obstacles_msg.direction.begin();
 	    	while(current_coord != obstacles_msg.global_robot_position.end() && current_dir != obstacles_msg.direction.end()){
 		    	obstacles.push_back(control::pathplanner::Obstacle{current_coord->x, current_coord->y,*current_dir});
+		    	current_coord++;
+		    	current_dir++;
 	    	}
 
 			plan.setObstacles(obstacles);
