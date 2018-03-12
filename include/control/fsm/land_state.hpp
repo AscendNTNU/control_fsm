@@ -12,7 +12,7 @@ public:
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     void loopState(ControlFSM& fsm) override;
     std::string getStateName() const override { return "Land"; }
-    ascend_msgs::ControlFSMState getStateMsg() override;
+    ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
 };

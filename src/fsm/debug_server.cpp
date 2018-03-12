@@ -9,7 +9,8 @@ DebugServer::DebugServer() {
         throw control::ROSNotInitializedException();
     }
     //Advertise service! 
-    server_ = nh_.advertiseService("control_fsm_debug", &DebugServer::handleDebugEvent, this);
+    using control::Config;
+    server_ = nh_.advertiseService(Config::debug_server_topic, &DebugServer::handleDebugEvent, this);
 }
 
 bool DebugServer::handleDebugEvent(Request& req, Response& resp) {
@@ -83,7 +84,7 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
                 case REQ::POSHOLD: return RequestType::POSHOLD;
                 case REQ::GOTO: return RequestType::GOTO;
                 case REQ::LAND: return RequestType::LAND;
-                //case REQ::INTERGB: return RequestType::INTERGB;
+                case REQ::INTERGB: return RequestType::LANDGB;
                 case REQ::MANUALFLIGHT: return RequestType::MANUALFLIGHT;
                 default: return RequestType::NONE;
             }
@@ -98,7 +99,7 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
             switch(req.commandType) {
                 case REQ::LANDXY: return LandXYCMDEvent(req.x, req.y);
                 case REQ::GOTOXYZ: return GoToXYZCMDEvent(req.x, req.y, req.z);
-                    //case REQ::LANDGB: return LandGBCMDEvent();
+                case REQ::LANDGB: return LandGBCMDEvent(req.gb_id);
                 case REQ::TAKEOFFCMD: return TakeoffCMDEvent();
                 default:
                     EventData e;
