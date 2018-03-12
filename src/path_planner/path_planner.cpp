@@ -126,7 +126,7 @@ void PathPlanner::refreshUnsafeZones(){
 
 
     for(auto current = obstacles.begin(); current != obstacles.end(); current++){
-        addObstacle(current->x, current->y);
+        addUnsafeZone(current->x, current->y);
     }
 }
 
