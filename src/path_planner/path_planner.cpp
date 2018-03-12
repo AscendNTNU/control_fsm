@@ -332,6 +332,8 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         struct Point {float x,y;};
         Point current_point{current_x, current_y};
         float drone_dir = obstacle_math::calcAngleToObstacle(current_point, *blocking_obstacle, obstacle_dir);
+
+        std::cout << "Drone direction: " << drone_dir << std::endl;
        
         // Find setpoint in right direction outside unsafe zone
         // The safe zone is obstacle_radius*2, but to ensure that
@@ -344,6 +346,8 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
             std::cout << "Cannot find safe point!" << std::endl;
             return;
         }
+        std::cout << "Safe point: " << safe_x << ", " << safe_y << std::endl;
+
 
         // Add starting point to plan and plan a new plan from the
         // setpoint to target
