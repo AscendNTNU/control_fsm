@@ -50,7 +50,7 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     } else {
         std::string msg = "Can't land! Distance: " + std::to_string(distance_to_gb < DISTANCE_THRESHOLD);
         msg += " Height: " + std::to_string(drone_pos.z > HEIGHT_THRESHOLD);
-        msg += " Downward tracked: " + std::to_string(gb.pose.downward_tracked);
+        msg += " Downward tracked: " + std::to_string(gb_pose.downward_tracked);
         control::handleWarnMsg(msg);
         return LocalState::RECOVER;
     }
