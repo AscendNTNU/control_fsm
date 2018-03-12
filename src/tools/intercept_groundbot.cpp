@@ -87,7 +87,6 @@ bool control::gb::interceptGB(const PoseStamped& quad_position, const GRState& r
 	float interception_gain = Config::tracking_param_xy/sqrt(pow(Config::interception_param_xy,2) + inner_product); 
 	float interception_gain_z = Config::tracking_param_z/sqrt(pow(Config::interception_param_z,2) + inner_product);
 
-	(inner_product + 1)
 
 	setpoint_temp.yaw = control::pose::quat2mavrosyaw(quad_position.pose.orientation); 
 	setpoint_temp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
