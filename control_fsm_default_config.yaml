@@ -4,7 +4,7 @@
     #Default blind hover altitude
     blind_hover_altitude: 1.0,
     #When is a destination reached
-    dest_reached_margin: 0.3,
+    dest_reached_margin: 0.2,
     #Topic for publishing error messages
     fsm_error_topic: control/fsm/on_error, 
     #Topic for publishing info messages
@@ -18,7 +18,9 @@
     #Time to wait before automatic landing
     goto_hold_dest_time: 0.5,
     #Topic for recieving land detector data
-    land_detector_topic: /mavros/extended_state, 
+    land_detector_topic: /mavros/extended_state,
+    #Land detector type - landing_gear or mavros_extended_state
+    land_detector_type: landing_gear,
     #Topic for recieving lidar info
     lidar_topic: /perception/obstacles/lidar,
     #Topic for recieving local velocity estimates
@@ -27,6 +29,10 @@
     local_position_topic: /mavros/local_position/pose, 
     #Topic for recieving mavros state
     mavros_state_topic: /mavros/state,
+    #Topic for debug server
+    debug_server_topic: /control/fsm/debug_server,
+    #Topic for action server
+    action_server_topic: /control/fsm/action_server,
     #When is message considered old?
     message_timeout: 2.0, 
     #For what distances is it uneccesary to adjust yaw
@@ -40,7 +46,7 @@
     #Safe altitude for hovering
     safe_hover_alt: 1.0, 
     #Margin to determine if we're close enough to setpoint
-    setp_reached_margin: 0.3, 
+    setp_reached_margin: 0.2, 
     #Buffersize for status messages
     status_msg_buffer_size: 10,
     #Takeoff altitude

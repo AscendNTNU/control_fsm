@@ -31,9 +31,12 @@ std::string Config::fsm_state_changed_topic = "control/fsm/state_changed";
 std::string Config::mavros_local_pos_topic = "mavros/local_position/pose";
 std::string Config::mavros_state_changed_topic = "mavros/state";
 std::string Config::land_detector_topic = "/landdetector";
+std::string Config::land_detector_type = "landing_gear";
 std::string Config::obstacle_state_topic = "/perception_obstacle_states";
 std::string Config::path_planner_plan_topic = "/control/planner/plan";
 std::string Config::path_planner_client_topic = "/control/planner/client";
+std::string Config::debug_server_topic = "/control/fsm/debug_server";
+std::string Config::action_server_topic = "/control/fsm/action_server";
 int Config::fsm_status_buffer_size = 10;
 double Config::go_to_hold_dest_time = 0.5;
 double Config::safe_hover_altitude = 2.0;
@@ -131,6 +134,7 @@ void Config::loadParams() {
     getStringParam("fsm_info_topic", fsm_info_topic);
     getStringParam("fsm_state_changed_topic", fsm_state_changed_topic);
     getIntParam("status_msg_buffer_size", fsm_status_buffer_size, 1, 1000000);
+    getStringParam("debug_server_topic", debug_server_topic);
     //Lidar topics
     getStringParam("lidar_topic", lidar_topic);
     //FSM topics
@@ -139,12 +143,15 @@ void Config::loadParams() {
     getStringParam("local_velocity_topic", mavros_local_vel_topic);
     //LandDetector
     getStringParam("land_detector_topic", land_detector_topic);
+    getStringParam("land_detector_type", land_detector_type);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
     //Path planner
     getDoubleParam("path_plan_timeout", path_plan_timeout, 0.0, 5.0);
     getStringParam("path_planner_client_topic", path_planner_client_topic);
     getStringParam("path_planner_plan_topic", path_planner_plan_topic);
+    //Action server
+    getStringParam("action_server_topic", action_server_topic);
 
 }
 
