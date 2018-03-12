@@ -123,7 +123,11 @@ void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 bool isValidGroundRobotID(int id, size_t num_gb) {
-    return !(id < 0 || static_cast<size_t>(id) >= num_gb);
+    //TODO Please remove these
+    std::string msg = "GB id: " + std::to_string(id);
+    msg += " Num GB: " + std::to_string(num_gb);
+    control::handleInfoMsg(msg);
+    return id >= 0 && static_cast<size_t>(id) < num_gb;
 }
 
 bool isValidTargetGB(const ascend_msgs::GRState& gb) {
