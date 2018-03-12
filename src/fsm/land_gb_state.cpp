@@ -196,7 +196,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     if (local_state == LocalState::COMPLETED) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
-            transition.position_goal = PositionGoal(setpoint_.z);
+            transition.position_goal = PositionGoal(setpoint_.position.z);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
             return;
     }
