@@ -34,6 +34,7 @@ void quadCallback(const geometry_msgs::PoseStamped& input) {
     ai_msg.drone_position.y = quad.pose.position.y;
     ai_msg.drone_position.z = quad.pose.position.z; 
 
+    landing_msg.header.stamp = ros::Time::now(); 
     if (quad.pose.position.z < 0.05){
 		landing_msg.state = 1; //Landed
 	}else if(quad.pose.position.z > 0.05){
