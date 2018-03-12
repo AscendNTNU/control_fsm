@@ -148,11 +148,20 @@ void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 }
 
 void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
-    //TODO Implement when landgb procedure is decided
-    ROS_WARN("[Control ActionServer] LandGB not implemented!!");
-    ascend_msgs::ControlFSMResult result;
-    action_is_running_ = false;
-    as_.setAborted(result);
+    LandGBCMDEvent land_xy_event(goal_p->target_id);
+    //Set callback to run on complete
+    land_xy_event.setOnCompleteCallback([this]() {
+        onActionComplete();
+    });
+    //Set callback to run on complete
+    land_xy_event.setOnFeedbackCallback([this](const std::string& msg) {
+        onActionFeedback(msg);
+    });
+    land_xy_event.setOnErrorCallback([this](const std::string& msg) {
+        onActionError(msg);
+    });
+    fsm_p->handleEvent(land_xy_event);
+    action_is_running_ = true;
 }
 
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
