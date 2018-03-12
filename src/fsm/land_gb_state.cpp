@@ -45,8 +45,10 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
                                 + pow((gb_pose.y - drone_pos.y),2));
     //Do checks here and transition to land
     if (distance_to_gb < DISTANCE_THRESHOLD && drone_pos.z > HEIGHT_THRESHOLD && gb_pose.downward_tracked) {
+	control::handleInfoMsg("Start land");
         return LocalState::LAND;
     } else {
+	control::handleWarnMsg("Can't land");
         return LocalState::RECOVER;
     }
 }
@@ -58,8 +60,10 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     //Checks if we have landed or the data is not good.
     if(LandDetector::isOnGround()) {
         //Success
+	control::handleInfoMsg("Land successfull");
         return LocalState::RECOVER;
     } else if(!interception_ok) {
+	control::handleErrorMsg("Land oh shit");
         //Oh shit!
         return LocalState::ABORT;
     } else {
@@ -143,6 +147,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //Check gb_id
         if(!isValidGroundRobotID(cmd_.gb_id, gb_states.size())) {
             cmd_.eventError("Invalid GB id!");
+            control::handleWarnMsg("Invalid GB id!");
             cmd_.clear();
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
@@ -158,6 +163,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
             return;
         }
         //Set start state
+	control::handleInfoMsg("LANDGB ism begin");
         local_state = LocalState::IDLE; 
     } catch(const std::exception& e) {
         //Critical bug - no recovery
