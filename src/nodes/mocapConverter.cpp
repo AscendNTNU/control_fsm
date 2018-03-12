@@ -5,6 +5,7 @@
 #include <ascend_msgs/LandDetector.h>
 
 
+constexpr double land_height = 0.18; 
 
 ros::Publisher pub_mocap; 
 ros::Publisher pub_landing; 
@@ -35,9 +36,9 @@ void quadCallback(const geometry_msgs::PoseStamped& input) {
     ai_msg.drone_position.z = quad.pose.position.z; 
 
     landing_msg.header.stamp = ros::Time::now(); 
-    if (quad.pose.position.z < 0.05){
+    if (quad.pose.position.z < land_height){
 		landing_msg.state = 1; //Landed
-	}else if(quad.pose.position.z > 0.05){
+	}else if(quad.pose.position.z > land_height){
 		landing_msg.state = 2; // In air
 	}
 
