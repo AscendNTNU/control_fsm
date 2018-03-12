@@ -182,8 +182,8 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             graph[x_index][y_index].setParentX(parent_x);
             graph[x_index][y_index].setParentY(parent_y);
             destination_reached = true;
-            /*std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
-            std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX()
+            std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
+            /*std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX()
                 << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;*/
         }
             // If node is not destination and hasn't been searched yet
@@ -311,7 +311,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     refreshObstacles();
     refreshUnsafeZones();
 
-
+    /*
     if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
         std::cout << "\n GET OOOOOUT!!! \n\n";
         escape_from_obstacle = true;
@@ -358,7 +358,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         initializeGraph();
         refreshObstacles();
         refreshUnsafeZones();
-    }
+    }*/
 
     float x = end_node.getX(); 
     float y = end_node.getY();
@@ -386,13 +386,17 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     while(!isStart(x, y)){
         // parent is calculated from the endpoint index, this node might have a different
         // coordinate (depending on the grid size)
-        float x_temp = graph.at(x_index).at(y_index).getParentX();
-        float y_temp = graph.at(x_index).at(y_index).getParentY();
-        x = x_temp;
-        y = y_temp;
-
+        x = graph.at(x_index).at(y_index).getParentX();
+        y = graph.at(x_index).at(y_index).getParentY();
+        
         x_index = coordToIndex(x);
         y_index = coordToIndex(y);
+
+        if(!isValidCoordinate(x,y)) {
+            std::cout << "Invalid parent: " << x << ", " << y << std::endl;
+            std::cout << "Index: " << x_index << ", " << y_index << std::endl;
+        }
+
 
         counter ++;
         if(counter >200){break;}
