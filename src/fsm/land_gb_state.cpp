@@ -45,8 +45,13 @@ LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
                                 + pow((gb_pose.y - drone_pos.y),2));
     //Do checks here and transition to land
     if (distance_to_gb < DISTANCE_THRESHOLD && drone_pos.z > HEIGHT_THRESHOLD && gb_pose.downward_tracked) {
+	    control::handleInfoMsg("Start land");
         return LocalState::LAND;
     } else {
+        std::string msg = "Can't land! Distance: " + std::to_string(distance_to_gb < DISTANCE_THRESHOLD);
+        msg += " Height: " + std::to_string(drone_pos.z > HEIGHT_THRESHOLD);
+        msg += " Downward tracked: " + std::to_string(gb_pose.downward_tracked);
+        control::handleWarnMsg(msg);
         return LocalState::RECOVER;
     }
 }
@@ -58,8 +63,10 @@ LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pos
     //Checks if we have landed or the data is not good.
     if(LandDetector::isOnGround()) {
         //Success
+	control::handleInfoMsg("Land successfull");
         return LocalState::RECOVER;
     } else if(!interception_ok) {
+	control::handleErrorMsg("Land oh shit");
         //Oh shit!
         return LocalState::ABORT;
     } else {
@@ -119,7 +126,11 @@ void LandGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 bool isValidGroundRobotID(int id, size_t num_gb) {
-    return !(id < 0 || static_cast<size_t>(id) >= num_gb);
+    //TODO Please remove these
+    std::string msg = "GB id: " + std::to_string(id);
+    msg += " Num GB: " + std::to_string(num_gb);
+    control::handleInfoMsg(msg);
+    return id >= 0 && static_cast<size_t>(id) < num_gb;
 }
 
 bool isValidTargetGB(const ascend_msgs::GRState& gb) {
@@ -143,6 +154,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //Check gb_id
         if(!isValidGroundRobotID(cmd_.gb_id, gb_states.size())) {
             cmd_.eventError("Invalid GB id!");
+            control::handleWarnMsg("Invalid GB id!");
             cmd_.clear();
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
@@ -158,6 +170,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
             return;
         }
         //Set start state
+	control::handleInfoMsg("LANDGB ism begin");
         local_state = LocalState::IDLE; 
     } catch(const std::exception& e) {
         //Critical bug - no recovery
