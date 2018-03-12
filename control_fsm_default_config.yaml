@@ -18,7 +18,7 @@
     #Time to wait before automatic landing
     goto_hold_dest_time: 0.5,
     #Topic for recieving land detector data
-    land_detector_topic: /mavros/extended_state,
+    land_detector_topic: /land_detector,
     #Land detector type - landing_gear or mavros_extended_state
     land_detector_type: landing_gear,
     #Topic for recieving lidar info
