@@ -38,7 +38,7 @@ const GroundRobotHandler::GBVectorType& GroundRobotHandler::getGroundRobots() co
 
 bool GroundRobotHandler::isReady() const {
     if(control::message::hasTimedOut(*last_gb_msg_p_)) {
-        control::handleWarnMsg("Obstacle handler: Using old data");
+        control::handleWarnMsg("Ground robot handler: Using old data");
         return false;
     }
     return true;
