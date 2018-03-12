@@ -97,6 +97,7 @@ bool control::gb::interceptGB(const PoseStamped& quad_position, const GRState& r
 	setpoint_temp.velocity.z = interception_gain_z * distance_z + roomba_velocity.z;
 
 
+	wrong_measurements = 0; 
 	setpoint = setpoint_temp; 
 	return true;
 }
