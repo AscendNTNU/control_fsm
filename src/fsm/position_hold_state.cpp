@@ -57,9 +57,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    //No need to check other commands
     if(event.isValidCMD()) {
-        //All valid commands need to go to correct place on arena before anything else
         processCommand(fsm, event);
         return;
     }
@@ -127,7 +125,7 @@ void PositionHoldState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() {
+ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

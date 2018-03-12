@@ -32,7 +32,7 @@ public:
     // 
     void stateEnd(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "GoTo";}
-    ascend_msgs::ControlFSMState getStateMsg() override;
+    ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;

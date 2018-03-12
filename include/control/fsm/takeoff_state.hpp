@@ -18,7 +18,7 @@ public:
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     void loopState(ControlFSM& fsm) override;
-    ascend_msgs::ControlFSMState getStateMsg() override;
+    ascend_msgs::ControlFSMState getStateMsg() const override;
     std::string getStateName() const override { return "Takeoff";}
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
