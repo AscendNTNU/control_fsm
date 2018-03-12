@@ -87,6 +87,7 @@ bool control::gb::interceptGB(const PoseStamped& quad_position, const GRState& r
 	float interception_gain = Config::tracking_param_xy/sqrt(pow(Config::interception_param_xy,2) + inner_product); 
 	float interception_gain_z = Config::tracking_param_z/sqrt(pow(Config::interception_param_z,2) + inner_product);
 
+
 	setpoint_temp.yaw = control::pose::quat2mavrosyaw(quad_position.pose.orientation); 
 	setpoint_temp.coordinate_frame = mavros_msgs::PositionTarget::FRAME_LOCAL_NED;
 	setpoint_temp.header.frame_id = "fcu"; 
@@ -94,7 +95,7 @@ bool control::gb::interceptGB(const PoseStamped& quad_position, const GRState& r
 
 	setpoint_temp.velocity.x = interception_gain * distance_x + roomba_velocity.x;
 	setpoint_temp.velocity.y = interception_gain * distance_y + roomba_velocity.y;
-	setpoint_temp.velocity.z = interception_gain_z * distance_z + roomba_velocity.z;
+	setpoint_temp.velocity.z = interception_gain_z * (distance_z)+ roomba_velocity.z - 0.1/(inner_product + 1);
 
 
 	wrong_measurements = 0; 
