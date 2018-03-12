@@ -172,6 +172,7 @@ void PathPlanner::relaxGraph(){
 }
 
 void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent_y, float distance_to_parent) {
+    std::cout << "Successor = " << x << ", " << y << std::endl;
     if(isValidCoordinate(x,y)){
         int x_index = coordToIndex(x);
         int y_index = coordToIndex(y);
@@ -206,6 +207,7 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 }
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
+    std::cout << "q = " << x << ", " << y << std::endl;
     handleSuccessor(x+node_distance,y, x, y, node_distance);
     if(destination_reached){return;}
     handleSuccessor(x+node_distance, y+node_distance, x, y, diagonal_node_distance);
@@ -389,14 +391,14 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         x = graph.at(x_index).at(y_index).getParentX();
         y = graph.at(x_index).at(y_index).getParentY();
         
-        x_index = coordToIndex(x);
-        y_index = coordToIndex(y);
 
         if(!isValidCoordinate(x,y)) {
             std::cout << "Invalid parent: " << x << ", " << y << std::endl;
             std::cout << "Index: " << x_index << ", " << y_index << std::endl;
         }
 
+        x_index = coordToIndex(x);
+        y_index = coordToIndex(y);
 
         counter ++;
         if(counter >200){break;}
