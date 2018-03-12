@@ -6,6 +6,90 @@
 #include <control/tools/ground_robot_handler.hpp>
 #include <control/tools/intercept_groundbot.hpp>
 
+#include <functional>
+
+using GRstate = ascend_msgs::GRState;
+using PoseStamped = geometry_msgs::PoseStamped;
+using PosTarget = mavros_msgs::PositionTarget;
+
+enum class LocalState: int {IDLE, LAND, RECOVER, ABORT, COMPLETED};
+//Parameters for thresholds, do they deserve a spot in the config?
+constexpr double DISTANCE_THRESHOLD = 0.5;
+constexpr double HEIGHT_THRESHOLD = 0.5;
+
+//Forward declarations
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState recoverStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState abortStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+LocalState completedStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p);
+
+//State function array, containing all the state functions.
+std::array<std::function<decltype(idleStateHandler)>, 5> state_function_array = {
+    idleStateHandler, 
+    landStateHandler, 
+    recoverStateHandler, 
+    abortStateHandler, 
+    completedStateHandler };
+
+
+//Holds the current state function to be run every loop
+std::function<LocalState(const GRstate&, const PoseStamped&, PosTarget*)> stateFunction = idleStateHandler;
+
+//Holds the current state
+LocalState local_state = LocalState::IDLE;
+
+LocalState idleStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
+    auto& drone_pos = drone_pose.pose.position;
+    double distance_to_gb = sqrt(pow((gb_pose.x - drone_pos.x),2)
+                                + pow((gb_pose.y - drone_pos.y),2));
+    //Do checks here and transition to land
+    if (distance_to_gb < DISTANCE_THRESHOLD && drone_pos.z > HEIGHT_THRESHOLD && gb_pose.downward_tracked) {
+        return LocalState::LAND;
+    } else {
+        return LocalState::RECOVER;
+    }
+}
+
+LocalState landStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
+    //Runs the interception algorithm
+    bool interception_ok = control::gb::interceptGB(drone_pose, gb_pose, *setpoint_p);
+    
+    //Checks if we have landed or the data is not good.
+    if(LandDetector::isOnGround()) {
+        //Success
+        return LocalState::RECOVER;
+    } else if(!interception_ok) {
+        //Oh shit!
+        return LocalState::ABORT;
+    } else {
+        //Keep running the algorithm.
+        return LocalState::LAND;
+    }
+}
+
+LocalState recoverStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
+    if (drone_pose.pose.position.z < HEIGHT_THRESHOLD) {
+        // Setpoint to a safe altitude.
+        // TODO This is probably not safe with Mist
+        setpoint_p->type_mask = default_mask;
+        setpoint_p->position.x = drone_pose.pose.position.x;  
+        setpoint_p->position.y = drone_pose.pose.position.y;
+        setpoint_p->position.z = control::Config::safe_hover_altitude;
+        return LocalState::RECOVER;
+
+    }
+    return LocalState::COMPLETED;
+}
+
+LocalState abortStateHandler(const GRstate& gb_state, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
+    return LocalState::ABORT;
+}
+
+LocalState completedStateHandler(const GRstate& gb_pose, const PoseStamped& drone_pose, PosTarget* setpoint_p) {
+    return LocalState::COMPLETED;
+}
+
 LandGBState::LandGBState() {
     setpoint_.type_mask = default_mask;
 }
@@ -73,6 +157,8 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
             return;
         }
+        //Set start state
+        local_state = LocalState::IDLE; 
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -83,30 +169,30 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void LandGBState::loopState(ControlFSM& fsm) {
-    //TODO Run Chris's algorithm
-    using control::DroneHandler;
-    using control::GroundRobotHandler;
-    auto& drone_pose = DroneHandler::getCurrentPose();
-    const auto& gb_states = GroundRobotHandler::getCurrentGroundRobots();
-    const auto& target_gb = gb_states.at(static_cast<unsigned long>(cmd_.gb_id));
+    //Get current data
+    const auto& gb_array = control::GroundRobotHandler::getCurrentGroundRobots();
+    auto& gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
+    auto& drone_pose = control::DroneHandler::getCurrentPose();
 
-    //Abort if no valid ground robot target
-    if(!isValidTargetGB(target_gb)) {
-        cmd_.eventError("No valid target ground robot!");
-        cmd_.clear();
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
+    // Sets the new state function
+    stateFunction = state_function_array[static_cast<int>(local_state)];
+    
+    // Loops the current and sets the next state.
+    local_state = stateFunction(gb_pose, drone_pose, &setpoint_);
+
+    if (local_state == LocalState::COMPLETED) {
+            cmd_.finishCMD();
+            RequestEvent transition(RequestType::POSHOLD);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
+            return;
+    }
+    if (local_state == LocalState::ABORT) {
+            cmd_.abort();
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            return; 
     }
 
-    //Check if algorithm is valid
-    if(!InterceptGB(drone_pose, target_gb, setpoint_)) {
-        cmd_.eventError("Landing procedure failed");
-        cmd_.clear();
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
 }
 
 const mavros_msgs::PositionTarget* LandGBState::getSetpointPtr() {
@@ -124,7 +210,7 @@ void LandGBState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState LandGBState::getStateMsg() {
+ascend_msgs::ControlFSMState LandGBState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
