@@ -386,8 +386,8 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     while(!isStart(x, y)){
         // parent is calculated from the endpoint index, this node might have a different
         // coordinate (depending on the grid size)
-        float x_temp = graph[x_index][y_index].getParentX();
-        float y_temp = graph[x_index][y_index].getParentY();
+        float x_temp = graph.at(x_index).at(y_index).getParentX();
+        float y_temp = graph.at(x_index).at(y_index).getParentY();
         x = x_temp;
         y = y_temp;
 
@@ -396,7 +396,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
         counter ++;
         if(counter >200){break;}
-        plan.push_front(graph[x_index][y_index]);
+        plan.push_front(graph.at(x_index).at(y_index));
     }
 
     
