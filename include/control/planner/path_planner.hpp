@@ -24,6 +24,7 @@ struct Obstacle {
     float x;
     float y;
     float dir;
+    Obstacle(float x, float y, float dir) : x(x), y(y), dir(dir){}
 };
 
 class PathPlanner;

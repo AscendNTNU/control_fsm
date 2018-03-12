@@ -51,7 +51,7 @@ int main(int argc, char** argv){
 
 	ros::init(argc, argv, "path_planner_server");
 	ros::NodeHandle n;
-    ros::Rate rate(1);
+    ros::Rate rate(5);
 
 	ROS_INFO("Path planner node started");
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv){
 	    	auto current_coord = obstacles_msg.global_robot_position.begin();
 	    	auto current_dir = obstacles_msg.direction.begin();
 	    	while(current_coord != obstacles_msg.global_robot_position.end() && current_dir != obstacles_msg.direction.end()){
-		    	obstacles.push_back(control::pathplanner::Obstacle{current_coord->x, current_coord->y,*current_dir});
+		    	obstacles.push_back(control::pathplanner::Obstacle(current_coord->x, current_coord->y,*current_dir));
 		    	current_coord++;
 		    	current_dir++;
 	    	}
@@ -100,8 +100,6 @@ int main(int argc, char** argv){
 			planner_state.current_x = position.x;
 			planner_state.current_y = position.y;
 		}
-
-    	bool is_plan_updated = plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(planner_state.current_x,planner_state.current_y) || planner_state.new_goal)){
@@ -135,6 +133,8 @@ int main(int argc, char** argv){
     		}
     	}
     
+    	bool is_plan_updated = plan.removeOldPoints(planner_state.current_x, planner_state.current_y);
+
     	// Publish plan as long as a plan is requested
     	if(planner_state.make_plan){
     		if(is_plan_updated){
