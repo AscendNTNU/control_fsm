@@ -130,7 +130,7 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");
                 return false;
             } 
-            if(!control::GroundRobotHandler::getSharedInstancePtr()->isReady()) {
+            if(!control::GroundRobotHandler::isReady()) {
                 control::handleWarnMsg("Preflight Check: No valid ground robot data!");
                 return false;
             }

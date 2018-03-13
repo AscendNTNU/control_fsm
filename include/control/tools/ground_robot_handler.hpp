@@ -13,6 +13,8 @@
 namespace control {
 class GroundRobotHandler {
     using MsgType = ascend_msgs::AIWorldObservation;
+public:
+    using GBVectorType = boost::array<ascend_msgs::GRState, 10>;
 private:
     ///Shared instance
     static std::unique_ptr<GroundRobotHandler> shared_instance_p_;
@@ -25,19 +27,17 @@ private:
 
     ///Callback for recieving ros data
     void gbCB(MsgType::ConstPtr msg_p) { last_gb_msg_p_ = std::move(msg_p); }
-
-public:
-    using GBVectorType = boost::array<ascend_msgs::GRState, 10>;
-    ///Constructor
-    GroundRobotHandler();
     ///Get valid shared instance
     static const GroundRobotHandler* getSharedInstancePtr();
+    ///Constructor
+    GroundRobotHandler();
     ///Get ground robots from instance
     const GBVectorType& getGroundRobots() const;
-    ///Get current ground robots from shared instance
+
+public:
     static GBVectorType getCurrentGroundRobots() { return getSharedInstancePtr()->getGroundRobots(); }
     ///Check if ready
-    bool isReady() const;
+    static bool isReady();
 
 
 

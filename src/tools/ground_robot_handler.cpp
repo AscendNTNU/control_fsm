@@ -36,8 +36,9 @@ const GroundRobotHandler::GBVectorType& GroundRobotHandler::getGroundRobots() co
     return last_gb_msg_p_->ground_robots;
 }
 
-bool GroundRobotHandler::isReady() const {
-    if(control::message::hasTimedOut(*last_gb_msg_p_)) {
+bool GroundRobotHandler::isReady() {
+    auto msg_p = getSharedInstancePtr()->last_gb_msg_p_;
+    if(control::message::hasTimedOut(*msg_p)) {
         control::handleWarnMsg("Ground robot handler: Using old data");
         return false;
     }

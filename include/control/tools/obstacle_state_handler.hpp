@@ -21,17 +21,17 @@ private:
     void onMsgRecievedCB(ascend_msgs::DetectedRobotsGlobalPositions::ConstPtr msg_p);
     ///Private constructor
     ObstacleStateHandler();
-public:
     ///Get shared pointer to shared instance
     static const ObstacleStateHandler* getSharedObstacleHandlerPtr();
-    ///Get last obstacles from shared instance
-    static const ascend_msgs::DetectedRobotsGlobalPositions& getCurrentObstacles();
     ///Returns obstacles from instance
     const ascend_msgs::DetectedRobotsGlobalPositions& getObstacles() const;
-    ///Is shared instance ready?
-    static bool isInstanceReady();
     ///is current instance ready
     bool isReady() const;
+public:
+    ///Get last obstacles from shared instance
+    static const ascend_msgs::DetectedRobotsGlobalPositions& getCurrentObstacles();
+    ///Is shared instance ready?
+    static bool isInstanceReady();
 };
 }
 #endif
