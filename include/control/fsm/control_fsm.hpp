@@ -114,10 +114,18 @@ private:
 
     ///Initializes all states
     void initStates();
+    
+    ///Make sure certain resources are released correctly in current state
+    void releaseCommonStateResources();
 
     ///All states needs access to obstacle avoidance
     control::ObstacleAvoidance obstacle_avoidance_;
 
+    ///Get pointer to the current running state
+    StateInterface* getState() { return state_vault_.current_state_p_; }
+    
+    ///Handles loss of offboard mode
+    void handleManual();
 protected:
     /**
      * @brief Changes the current running state
@@ -138,8 +146,8 @@ public:
     ///Destructor not used to anything specific.
     ~ControlFSM() {}
 
-    ///Get pointer to the current running state
-    StateInterface* getState() { return state_vault_.current_state_p_; }
+    ///Get const pointer to current running state
+    const StateInterface* getCurrentState() { return getState(); }
     
     /**
      * @brief Handles incoming (external) events
@@ -164,8 +172,6 @@ public:
     ///Transition to preflight from begin state
     void startPreflight();
 
-    ///Handles loss of offboard mode
-    void handleManual();
 };
 
 #endif

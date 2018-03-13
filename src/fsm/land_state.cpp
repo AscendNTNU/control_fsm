@@ -56,7 +56,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD() && cmd_.command_type == CommandType::LANDXY) {
             //Set xy setpoint to positionGoal if we're close enough for it to be safe
             double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
-            if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
+            if(xy_dist_square <= std::pow(control::Config::dest_reached_margin, 2)) {
                 setpoint_.position.x = event.position_goal.x;
                 setpoint_.position.y = event.position_goal.y;
             }
@@ -94,8 +94,7 @@ void LandState::loopState(ControlFSM& fsm) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
         //Check landing
-        auto land_detector_p = LandDetector::getSharedInstancePtr();
-        if(land_detector_p->isOnGround()) {
+        if(LandDetector::isOnGround()) {
             if(cmd_.isValidCMD()) {
                 //Only landxy should occur!
                 if(cmd_.command_type == CommandType::LANDXY) {
@@ -130,7 +129,7 @@ void LandState::handleManual(ControlFSM &fsm) {
 
 
 
-ascend_msgs::ControlFSMState LandState::getStateMsg() {
+ascend_msgs::ControlFSMState LandState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();

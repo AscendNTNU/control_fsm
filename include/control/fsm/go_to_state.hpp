@@ -35,14 +35,13 @@ public:
     // 
     void stateEnd(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "GoTo";}
-    ascend_msgs::ControlFSMState getStateMsg() override;
+    ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;
 
     ///Handles delayed transition when position is reached
-    void destinationReached(ControlFSM &fsm);
-
+    void destinationReached(ControlFSM &fsm, bool z_reached);
 };
 
 //Only make these available for unit testing

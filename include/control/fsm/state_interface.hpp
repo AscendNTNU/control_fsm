@@ -99,9 +99,9 @@ public:
     virtual std::string getStateName() const = 0;
 
     ///Get state message
-    virtual ascend_msgs::ControlFSMState getStateMsg() = 0;
-
-    ///Returning a valid setpoint from state
+    virtual ascend_msgs::ControlFSMState getStateMsg() const = 0; 
+    
+    ///Returning a valid setpoint from state 
     /**Be aware - it's returned by const pointer - only return address of _setpoint.*/
     virtual const mavros_msgs::PositionTarget* getSetpointPtr() = 0;
 
