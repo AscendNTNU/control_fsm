@@ -47,6 +47,7 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 
 void PositionHoldState::stateInit(ControlFSM& fsm) {
     std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        //TODO Why not set position setpoint to current position here??
         this->obstacle_avoidance_kicked_in_ = true;
     };
 
@@ -126,12 +127,14 @@ void PositionHoldState::loopState(ControlFSM& fsm){
 	//TODO: logic to avoid being pushed around
 	
         // keep new setpoint after obstacle avoidance
-	 auto pose_stamped = control::DroneHandler::getCurrentPose();
+	auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
         //Set setpoint to current position
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
     }
+    //Only react once
+    obstacle_avoidance_kicked_in_ = false;
 }
 
 void PositionHoldState::stateEnd(ControlFSM& fsm, const EventData& event) {

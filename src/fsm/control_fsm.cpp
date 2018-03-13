@@ -42,7 +42,8 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
 }
 
 void ControlFSM::releaseCommonStateResources() {
-    //Add resources here
+    //Force return of responsibility
+    obstacle_avoidance_.takeResponsibility();
 }
 
 //Send external event to current state and to "next" state
