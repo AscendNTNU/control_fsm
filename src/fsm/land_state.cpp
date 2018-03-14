@@ -46,6 +46,10 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         if(!control::DroneHandler::isPoseValid()) {
             throw control::PoseNotValidException();
         }
+
+	//reset obstacle avoidance flag
+	obstacle_avoidance_kicked_in_ = false;
+
         auto pose_stamped = control::DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
         //Position XY is ignored in typemask, but the values are set as a precaution.
@@ -93,6 +97,13 @@ void LandState::loopState(ControlFSM& fsm) {
         } else {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
+
+
+	if (obstacle_avoidance_kicked_in_){
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+	}
+
         //Check landing
         if(LandDetector::isOnGround()) {
             if(cmd_.isValidCMD()) {
@@ -112,6 +123,18 @@ void LandState::loopState(ControlFSM& fsm) {
         control::handleCriticalMsg(e.what());
     }
 }
+
+
+//Initialize state
+void LandState::stateInit(ControlFSM& fsm) {
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        this->obstacle_avoidance_kicked_in_  = true;
+    };
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
+
+    control::handleInfoMsg("Land init completed!");
+}
+
 
 const mavros_msgs::PositionTarget* LandState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();
