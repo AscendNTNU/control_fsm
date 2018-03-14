@@ -115,7 +115,7 @@ void PositionHoldState::handleManual(ControlFSM &fsm) {
 }
 
 
-ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() {
+ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
     ControlFSMState msg;
     msg.name = getStateName();
