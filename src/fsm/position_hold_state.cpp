@@ -45,6 +45,8 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
+    using control::Config;
+    using control::DroneHandler;
     //No need to check other commands
     if(event.isValidCMD()) {
         //All valid commands need to go to correct place on arena before anything else
@@ -52,12 +54,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
     try {
-        if(!control::DroneHandler::isPoseValid()) {
+        if(!DroneHandler::isPoseValid()) {
             //Error if pose is not valid
             throw control::PoseNotValidException();
         }
         //Get pose - and position
-        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto pose_stamped = DroneHandler::getCurrentPose();
         auto& position = pose_stamped.pose.position;
         //Set setpoint to current position
         setpoint_.position.x = position.x;
@@ -82,9 +84,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
         //If altitude is too low - set it to minimum altitude
-        if(setpoint_.position.z < control::Config::min_in_air_alt) {
-            control::handleWarnMsg("Poshold target altitude too low, using min altitude");
-            setpoint_.position.z = control::Config::min_in_air_alt;
+        if(setpoint_.position.z < Config::min_in_air_alt) {
+            control::handleWarnMsg("Altitude target too low, transition to blind hover");
+            EventData pos_lost_event;
+            pos_lost_event.event_type = EventType::POSLOST;
+            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, pos_lost_event);
+            return;
         }
 
         using control::pose::quat2yaw;
