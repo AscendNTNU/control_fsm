@@ -42,9 +42,12 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
-double Config::obstacle_clearance_side = 2.0f;
-double Config::obstacle_clearance_front = 2.0f;
-double Config::obstacle_clearance_back = 2.0f;
+double Config::obstacle_clearance_side_max = 2.0f;
+double Config::obstacle_clearance_side_min = 1.0f;
+double Config::obstacle_clearance_front_max = 2.0f;
+double Config::obstacle_clearance_front_min = 1.4f;
+double Config::obstacle_clearance_back_max = 2.0f;
+double Config::obstacle_clearance_back_min = 1.0f;
 double Config::obstacle_clearance_checkradius = 2.0f;
 
 void Config::loadParams() {
@@ -148,9 +151,12 @@ void Config::loadParams() {
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
     //Obstacle avoidance
-    getDoubleParam("obstacle_clearance_side", obstacle_clearance_side, 0, 100);
-    getDoubleParam("obstacle_clearance_front", obstacle_clearance_front, 0, 100);
-    getDoubleParam("obstacle_clearance_back", obstacle_clearance_back, 0, 100);
+    getDoubleParam("obstacle_clearance_side_max", obstacle_clearance_side_max, 0, 100);
+    getDoubleParam("obstacle_clearance_side_min", obstacle_clearance_side_min, 0, 100);
+    getDoubleParam("obstacle_clearance_front_max", obstacle_clearance_front_max, 0, 100);
+    getDoubleParam("obstacle_clearance_front_min", obstacle_clearance_front_min, 0, 100);
+    getDoubleParam("obstacle_clearance_back_max", obstacle_clearance_back_max, 0, 100);
+    getDoubleParam("obstacle_clearance_back_min", obstacle_clearance_back_min, 0, 100);
     getDoubleParam("obstacle_clearance_checkradius", obstacle_clearance_checkradius, 0, 100);  
     //Action server
     getStringParam("action_server_topic", action_server_topic);

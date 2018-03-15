@@ -68,7 +68,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
 
     const auto drone_vel = control::DroneHandler::getCurrentTwist().twist.linear;
     const auto drone_speed = std::sqrt(std::pow(drone_vel.x,2) + std::pow(drone_vel.y,2));
-    const float drone_speed_ratio = std::min((float)std::sqrt(drone_speed/3.f), 1.f); // 3.f m/s is assumed drone max speed
+    const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
 
     ascend_msgs::PolygonArray zone_msg;
 
@@ -91,13 +91,13 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             //(drone_angle_to_obstacle - 3*PI/8) < setpoint_angle_to_obstacle &&
             //setpoint_angle_to_obstacle < (drone_angle_to_obstacle + 3*PI/8);
 
-            // magic numbers are minimum clearance no matter what. 
-            // TODO: Turn into parameters and include
-            // this logic in the avoidZone function
-            //ROS_INFO_THROTTLE("Drone speed ratio: %.3f", drone_speed_ratio);
-            const auto clearance_front = std::max((float)Config::obstacle_clearance_front*drone_speed_ratio, 1.3f);
-            const auto clearance_back  = std::max((float)Config::obstacle_clearance_back*drone_speed_ratio, 1.f);
-            const auto clearance_side  = std::max((float)Config::obstacle_clearance_side*drone_speed_ratio, 1.f);
+            // TODO: this logic in the avoidZone function
+            const auto clearance_front = std::max(Config::obstacle_clearance_front_max*drone_speed_ratio, 
+			    Config::obstacle_clearance_front_min);
+            const auto clearance_back  = std::max(Config::obstacle_clearance_back_max*drone_speed_ratio,
+			    Config::obstacle_clearance_back_min);
+            const auto clearance_side  = std::max(Config::obstacle_clearance_side_max*drone_speed_ratio, 
+			    Config::obstacle_clearance_side_min);
             geometry_msgs::Vector3 minimum_vector = avoidZone(drone_angle_to_obstacle,
                     clearance_front, clearance_back, clearance_side);
 

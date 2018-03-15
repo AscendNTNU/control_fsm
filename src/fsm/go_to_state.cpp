@@ -132,11 +132,11 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
         auto quat = DroneHandler::getCurrentPose().pose.orientation;
-        auto pos  = DroneHandler::getCurrentPose().pose.position;
+        //auto pos  = DroneHandler::getCurrentPose().pose.position;
 
 	// calculate dx,dy
-	auto dx = setpoint_.position.x - pos.x;
-	auto dy = setpoint_.position.y - pos.y;
+	//auto dx = setpoint_.position.x - pos.x;
+	//auto dy = setpoint_.position.y - pos.y;
 
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
         /*
@@ -154,11 +154,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
-}
-
-void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    // Set obstacle avoidance flag on exit
-    obstacle_avoidance_kicked_in_ = false;
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
