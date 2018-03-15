@@ -13,6 +13,7 @@ public:
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     void stateInit(ControlFSM& fsm) override;
+    bool stateIsReady(ControlFSM &fsm) override;
     void loopState(ControlFSM& fsm) override;
     std::string getStateName() const override { return "Land"; }
     ascend_msgs::ControlFSMState getStateMsg() const override;

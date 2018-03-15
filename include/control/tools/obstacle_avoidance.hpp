@@ -57,9 +57,15 @@ public:
 
     ///Obstacle avoidance has reduced responsibility. 
     ///It won't change setpoints and only calls warning level callbacks
-    void relaxResponsibility() { has_setpoint_responsibility_ = false; }
+    void relaxResponsibility() { 
+	    ROS_INFO("[obs_avoid] relaxing responsibility");
+	    has_setpoint_responsibility_ = false; 
+    }
     ///Obstacle avoidance takes full responsibility over setpoints and calls all callbacks
-    void takeResponsibility() { has_setpoint_responsibility_ = true; }
+    void takeResponsibility() { 
+	    ROS_INFO("[obs_avoid] taking responsibility");
+	    has_setpoint_responsibility_ = true; 
+    }
 
     ///Modifies setpoint if obstacle is too close
     mavros_msgs::PositionTarget run(mavros_msgs::PositionTarget setpoint);

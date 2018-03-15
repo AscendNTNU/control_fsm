@@ -37,6 +37,10 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+bool LandState::stateIsReady(ControlFSM &fsm) { 
+    return is_ready_; 
+}
+
 void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         cmd_ = event;
@@ -139,6 +143,7 @@ void LandState::stateInit(ControlFSM& fsm) {
     };
     fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
 
+    is_ready_ = true;
     control::handleInfoMsg("Land init completed!");
 }
 
