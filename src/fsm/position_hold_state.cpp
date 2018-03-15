@@ -48,6 +48,9 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
 void PositionHoldState::stateInit(ControlFSM& fsm) {
     std::function<void()> obstacleAvoidanceCB = [this]()->void {
         //TODO Why not set position setpoint to current position here??
+	//NOTE: advantage: collect logic in one place (assuming it can be completely removed from loopState)
+	//NOTE: disadvantage: most callbacks in total don't do anything (are applied to inactive states) so might be better keep them minimal, but this is insignificant in this case, more control over timing if it placed in loopState (less dependent on OA implementation)
+	
         this->obstacle_avoidance_kicked_in_ = true;
     };
 
@@ -73,7 +76,6 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
         // Set flag for obstacle avoidance
         obstacle_avoidance_kicked_in_ = false;
-
 
         //Get pose - and position
         auto pose_stamped = control::DroneHandler::getCurrentPose();
@@ -136,12 +138,6 @@ void PositionHoldState::loopState(ControlFSM& fsm){
     //Only react once
     obstacle_avoidance_kicked_in_ = false;
 }
-
-void PositionHoldState::stateEnd(ControlFSM& fsm, const EventData& event) {
-    // Set flag for obstacle avoidance
-    obstacle_avoidance_kicked_in_ = false;
-}
-
 
 //Returns setpoint
 const mavros_msgs::PositionTarget* PositionHoldState::getSetpointPtr() {

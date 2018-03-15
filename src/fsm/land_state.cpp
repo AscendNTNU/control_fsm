@@ -62,6 +62,13 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
 
+
+        // TODO:Check with obstacle_avoidance if it is ok to land
+        if (true){
+            // assuming obstacle_avoidance doesn't complain, disable it during landing
+            fsm.obstacle_avoidance_.relaxResponsibility();
+        }
+
         //Only land blind when the drone is below a certain altitude
         if(position.z >= control::Config::min_in_air_alt) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND;
