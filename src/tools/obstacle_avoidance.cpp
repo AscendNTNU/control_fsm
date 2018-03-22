@@ -71,8 +71,10 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     const float drone_speed_ratio = std::min((float)std::sqrt(drone_speed/3.f), 1.f); // 3.f m/s is assumed drone max speed
 
     ascend_msgs::PolygonArray zone_msg;
+    
+    bool obstacles_valid = control::ObstacleStateHandler::isInstanceReady();
 
-    for (int i = 0; i < obstacles.count; i++){
+    for (int i = 0; i < obstacles.count && obstacles_valid; i++){
         const auto obstacle_position = obstacles.global_robot_position[i];
         const float obstacle_direction = obstacles.direction[i];
         const auto drone_distance_to_obstacle = calcDistanceToObstacle(drone_pose.pose.position, obstacle_position);
