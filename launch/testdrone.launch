@@ -1,0 +1,13 @@
+<launch>
+    <include file="$(find mavros)/launch/px4.launch">
+        <arg name="fcu_url" value="/dev/ttyUSB0:921600"/>
+    </include>
+    <arg name="fsm_name" default="control_fsm_node"/>
+    <include file="$(find control_fsm)/launch/control_fsm.launch">
+    	<arg name="node_name" value="$(arg fsm_name)"/>
+    </include>
+    <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
+    <param name="$(arg fsm_name)/land_detector_topic" value="/land_detector"/>
+    <param name="$(arg fsm_name)/land_detector_type" value="landing_gear"/>
+   
+</launch>

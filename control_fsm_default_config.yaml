@@ -14,11 +14,11 @@
     #Topic for publishing warning messages
     fsm_warn_topic: control/fsm/on_warn, 
     #Altitude for optimal gb detection
-    gb_search_altitude: 2.5, 
+    gb_search_altitude: 1.0, 
     #Time to wait before automatic landing
     goto_hold_dest_time: 0.5,
     #Topic for recieving land detector data
-    land_detector_topic: /mavros/extended_state,
+    land_detector_topic: /land_detector,
     #Land detector type - landing_gear or mavros_extended_state
     land_detector_type: landing_gear,
     #Topic for recieving lidar info
