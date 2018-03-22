@@ -82,11 +82,14 @@ public:
     /// \fsmparam Drone safezone
     static double obstacle_too_close_dist;
     /// \fsmparam Clearance osbtacle avoidance to right and left of obstacle
-    static double obstacle_clearance_side;
+    static double obstacle_clearance_side_max;
+    static double obstacle_clearance_side_min;
     /// \fsmparam Clearance osbtacle avoidance in front of obstacle
-    static double obstacle_clearance_front;
+    static double obstacle_clearance_front_max;
+    static double obstacle_clearance_front_min;
     /// \fsmparam Clearance osbtacle avoidance behind obstacle
-    static double obstacle_clearance_back;
+    static double obstacle_clearance_back_max;
+    static double obstacle_clearance_back_min;
     /// \fsmparam Radius in which obstacle collisions will be checked for
     static double obstacle_clearance_checkradius;
     /// \fsmparam Topic to listen for info about obstacles
