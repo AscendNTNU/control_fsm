@@ -66,5 +66,15 @@
     #Frame ID for local frame
     local_frame_id: odom,
     #Use global to local transforms
-    use_global_transforms: true
+    use_global_transforms: true,
+    #Restrict arena boundaries
+    restrict_arena_boundaries: true,
+    #Lowest allowed global x position
+    arena_lowest_x: 0.0,
+    #Lowest allowed global y position
+    arena_lowest_y: 0.0,
+    #Highest allowed global x position
+    arena_highest_x: 20.0,
+    #Highest allowed global y position
+    arena_highest_y: 20.0
 }

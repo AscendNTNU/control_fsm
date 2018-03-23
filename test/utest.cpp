@@ -67,8 +67,6 @@ TEST(ControlTest, tfTest) {
     EXPECT_FLOAT_EQ(expected_global_x, global_vec3.x());
     EXPECT_FLOAT_EQ(expected_global_y, global_vec3.y());
     EXPECT_FLOAT_EQ(local_pose.pose.position.z, global_vec3.z());
-
-
 }
 
 TEST(ControlTest, configTest) {
@@ -127,6 +125,22 @@ TEST(ControlTest, quatConversionTest) {
     EXPECT_NEAR(PI / 3.0, quat2yaw(pi3), 0.001);
     EXPECT_NEAR(0.0 - PI_HALF, quat2mavrosyaw(zero), 0.001);
 
+}
+
+TEST(ControlTest, arenaBoundariesTest) {
+    using control::Config;
+    double valid_x = Config::arena_lowest_x + (Config::arena_highest_x - Config::arena_lowest_x) / 2.0;
+    double valid_y = Config::arena_lowest_y + (Config::arena_highest_y - Config::arena_lowest_y) / 2.0;
+    double invalid_x = Config::arena_lowest_x - 1.0;
+    double invalid_y = Config::arena_lowest_y - 1.0;
+    tf2::Vector3 vec(valid_x, valid_y, 1.0);
+    EXPECT_TRUE(targetWithinArena(vec));
+    vec = tf2::Vector3(valid_x, invalid_y, 1.0);
+    EXPECT_FALSE(targetWithinArena(vec));
+    vec = tf2::Vector3(invalid_x, valid_y, 1.0);
+    EXPECT_FALSE(targetWithinArena(vec));
+    vec = tf2::Vector3(invalid_x, invalid_y, 1.0);
+    EXPECT_FALSE(targetWithinArena(vec));
 }
 
 int main(int argc, char** argv) {

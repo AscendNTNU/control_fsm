@@ -18,6 +18,9 @@ private:
 
     ///Current command
     EventData cmd_;
+
+    ///Local target to reach
+    tf2::Vector3 local_target_;
 public:
     GoToState();
     void stateInit(ControlFSM& fsm) override;
@@ -26,7 +29,7 @@ public:
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     // Poll drone position and set setpoint
     void loopState(ControlFSM& fsm) override;
-    // 
+    //
     void stateEnd(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "GoTo";}
     ascend_msgs::ControlFSMState getStateMsg() const override;
@@ -46,6 +49,7 @@ public:
 #include <geometry_msgs/TwistStamped.h>
 bool droneNotMovingXY(const geometry_msgs::TwistStamped& vel);
 double calculatePathYaw(double dx, double dy);
+bool targetWithinArena(const tf2::Vector3& target);
 #endif
 
 #endif
