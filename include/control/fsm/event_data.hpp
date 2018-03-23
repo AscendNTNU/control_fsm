@@ -89,7 +89,7 @@ public:
     EventType event_type = EventType::NONE; //No event as default
     ///Whats the global target (if needed by event)
     PositionGoal position_goal_global = PositionGoal(); //Invalid position as default
-    ///Whats the local target
+    ///Whats the local target setpoint
     PositionGoal setpoint_target = PositionGoal();
     ///If event is a command, what type?
     CommandType command_type = CommandType::NONE; //No command as default

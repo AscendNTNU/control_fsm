@@ -112,7 +112,15 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
         return;
     }
 
-    GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to global frame
+     * and let GoToState transform it back into local frame later!
+     */
+    auto global_position = control::DroneHandler::getCurrentGlobalPose().pose.position;
+    double goal_x = global_position.x + goal_p->x;
+    double goal_y = global_position.y + goal_p->y;
+
+    GoToXYZCMDEvent go_to_event(goal_x, goal_y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
         onActionComplete();
