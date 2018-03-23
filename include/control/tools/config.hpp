@@ -105,6 +105,7 @@ public:
     static double arena_highest_x;
     /// \fsmparam Highest allowed y global position
     static double arena_highest_y;
+
     /**Load paramaters
      * @throw control::ROSNotInitializedException
      */
