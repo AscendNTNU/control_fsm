@@ -83,6 +83,9 @@ void ActionServer::handleNewGoal(ControlFSM *fsm_p) {
         case GOALTYPE::SEARCH:
             startSearch(current_goal, fsm_p);
             break;
+        case GOALTYPE::TAKEOFF:
+            startTakeoff(current_goal, fsm_p);
+            break;
         default:
             control::handleErrorMsg("[Control Action Server] Not a valid or available action");
             as_.setPreempted();
@@ -111,7 +114,6 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
         as_.setAborted();
         return;
     }
-
     GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
@@ -155,6 +157,25 @@ void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     as_.setAborted(result);
 }
 
+void ActionServer::startTakeoff(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
+    TakeoffCMDEvent takeoff_event;
+    //Set callback to run on complete
+    takeoff_event.setOnCompleteCallback([this](){
+        onActionComplete();
+    });
+    //Set callback to run on feedback
+    takeoff_event.setOnFeedbackCallback([this](const std::string& msg) {
+        onActionFeedback(msg);
+    });
+    //Set callback to run on error
+    takeoff_event.setOnErrorCallback([this](const std::string& msg) {
+        onActionError(msg);
+    });
+    //Run event in fsm
+    fsm_p->handleEvent(takeoff_event);
+    action_is_running_ = true;
+
+}
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     GoToXYZCMDEvent search_event(goal_p->x, goal_p->y, control::Config::gb_search_altitude);
     //Set callback to run on complete
@@ -214,7 +235,6 @@ bool ActionServer::actionStateServiceCB(ActionServer::StateRequest& req, ActionS
 
     state_s_.ai_enabled = req.ai_enabled;
     state_s_.debug_enabled = req.debug_enabled;
-
     control::handleInfoMsg(std::string("AI Actions: ") + (state_s_.ai_enabled ? "Enabled" : "Disabled"));
     control::handleInfoMsg(std::string("DEBUGGER Actions: ") + (state_s_.debug_enabled ? "Enabled" : "Disabled"));
     resp.result = static_cast<unsigned char>(true);
