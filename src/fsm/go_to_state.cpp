@@ -333,7 +333,8 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
         }
     } else {
         RequestEvent pos_hold_event(RequestType::POSHOLD);
-        pos_hold_event.position_goal_global = cmd_.position_goal_global;
+        auto& setp_pos = setpoint_.position;
+        pos_hold_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
     }
 
