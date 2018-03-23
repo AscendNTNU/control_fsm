@@ -42,7 +42,7 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
-std::string Config::global_frame_id = "global_frame";
+std::string Config::global_frame_id = "map";
 std::string Config::local_frame_id = "odom";
 bool Config::use_global_transforms = true;
 

@@ -18,9 +18,6 @@ private:
 
     ///Current command
     EventData cmd_;
-    
-    ///Is state active flag
-    bool is_active_ = false;
 public:
     GoToState();
     void stateInit(ControlFSM& fsm) override;

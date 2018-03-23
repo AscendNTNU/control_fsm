@@ -42,7 +42,7 @@ private:
     ///Get latest twist
     const geometry_msgs::TwistStamped& getTwist() const;
     ///Is transform valid
-    bool isTransformsValid() const;
+
     ///Returns pointer to shared instance
     static const DroneHandler* getSharedInstancePtr();
 
@@ -59,6 +59,8 @@ public:
     static bool isTwistValid();
     ///Is pose data and transform valid
     static bool isGlobalPoseValid();
+    ///Is transform data valid
+    static bool isTransformsValid();
     ///Get transform from global to local frame
     static geometry_msgs::TransformStamped getGlobal2LocalTf();
     ///Get transform from local to global frame

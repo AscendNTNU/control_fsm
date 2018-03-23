@@ -9,15 +9,69 @@
 
 #include <control/tools/target_tools.hpp>
 #include <control/fsm/control_fsm.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <control/tools/config.hpp>
+#include <control/tools/drone_handler.hpp>
 #include "gtest/gtest.h"
 #include <sstream>
+#include <tf2/LinearMath/Transform.h>
 
 constexpr double PI_HALF = 1.57079632679;
 constexpr double PI = 3.14159265359;
 
+TEST(ControlTest, tfTest) {
+    using control::DroneHandler;
+    ros::Time start_time = ros::Time::now();
+    
+    while(ros::ok() &&
+          !DroneHandler::isTransformsValid() &&
+          !DroneHandler::isGlobalPoseValid()) {
+
+        ros::Duration(0.1).sleep();
+        ros::spinOnce();
+        if(ros::Time::now() - start_time > ros::Duration(2.0)) {
+            return;
+        }
+    }
+
+    const auto local_to_global_tf = DroneHandler::getLocal2GlobalTf();
+    const auto global_to_local_tf = DroneHandler::getGlobal2LocalTf();
+    const auto local_pose = DroneHandler::getCurrentLocalPose();
+    const auto global_pose = DroneHandler::getCurrentGlobalPose();
+
+    auto expected_global_x = local_pose.pose.position.x + local_to_global_tf.transform.translation.x;
+    auto expected_global_y = local_pose.pose.position.y + local_to_global_tf.transform.translation.y;
+
+    //Get transform message
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
+
+
+    //Get tf matrix
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+
+    //Get position goal matrix
+    tf2::Vector3 local_vec3;
+    tf2::convert(local_pose.pose.position, local_vec3);
+    //Apply global to local transform
+    tf2::Vector3 global_vec3 = tf_matrix * local_vec3;
+
+    EXPECT_FLOAT_EQ(-1.0, local_to_global_tf.transform.translation.x);
+    EXPECT_FLOAT_EQ(1.0, local_to_global_tf.transform.translation.y);
+    EXPECT_FLOAT_EQ(0.0, local_to_global_tf.transform.translation.z);
+    EXPECT_FLOAT_EQ(-1.0, global_to_local_tf.transform.translation.y);
+    EXPECT_FLOAT_EQ(1.0, global_to_local_tf.transform.translation.x);
+    EXPECT_FLOAT_EQ(0.0, global_to_local_tf.transform.translation.z);
+    EXPECT_FLOAT_EQ(expected_global_x, global_pose.pose.position.x);
+    EXPECT_FLOAT_EQ(expected_global_y, global_pose.pose.position.y);
+    EXPECT_FLOAT_EQ(expected_global_x, global_vec3.x());
+    EXPECT_FLOAT_EQ(expected_global_y, global_vec3.y());
+    EXPECT_FLOAT_EQ(local_pose.pose.position.z, global_vec3.z());
+
+
+}
+
 TEST(ControlTest, configTest) {
-    control::Config::loadParams();
     std::stringstream not_found;
     for(auto& s : control::Config::getMissingParamSet()) {
         not_found << s << "\n";
@@ -77,6 +131,7 @@ TEST(ControlTest, quatConversionTest) {
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "control_fsm_unit_test");
+    control::Config::loadParams();
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
