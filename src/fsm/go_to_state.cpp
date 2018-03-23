@@ -237,54 +237,51 @@ bool droneNotMovingXY(const geometry_msgs::TwistStamped& target) {
     return (dx_sq + dy_sq) < pow(Config::velocity_reached_margin, 2);
 }
 
+void GoToState::landingTransition(ControlFSM& fsm) {
+    //If no valid twist data it's unsafe to land
+    if(!control::DroneHandler::isTwistValid()) {
+        control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
+        cmd_.eventError("Unsafe to land!");
+        cmd_ = EventData();
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        return;
+    }
+    //Check if drone is moving
+    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
+        //Hold current position for a duration - avoiding unwanted velocity before doing anything else
+        if(!delay_transition_.enabled) {
+            delay_transition_.started = ros::Time::now();
+            delay_transition_.enabled = true;
+
+            if(cmd_.isValidCMD()) {
+                cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
+            }
+        }
+        //Delay transition
+        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+            return;
+        }
+        //If all checks passed - land!
+
+        //Set local target to improve landing
+        auto& setp_pos = setpoint_.position;
+        cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
+        //Transition
+        fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+    } else {
+        //If drone is moving, reset delayed transition
+        delay_transition_.enabled = false;
+    }
+}
+
 void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
     //Transition to correct state
     if(cmd_.isValidCMD()) {
         switch(cmd_.command_type) {
-            case CommandType::LANDXY: {
-                //If no valid twist data it's unsafe to land
-                if(!control::DroneHandler::isTwistValid()) {
-                    control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
-                    cmd_.eventError("Unsafe to land!");
-                    cmd_ = EventData();
-                    RequestEvent abort_event(RequestType::ABORT);
-                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-                    return;
-                }
-                //Check if drone is moving
-                if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
-                    //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-                    if(!delay_transition_.enabled) {
-                        delay_transition_.started = ros::Time::now();
-                        delay_transition_.enabled = true;
-
-                        if(cmd_.isValidCMD()) {
-                            cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-                        }
-                    }
-                    //Delay transition
-                    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-                        return;
-                    }
-                    //If all checks passed - land!
-
-                    //Set local target to improve landing
-                    auto& setp_pos = setpoint_.position;
-                    cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-                    //Transition
-                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
-                } else {
-                    //If drone is moving, reset delayed transition
-                    delay_transition_.enabled = false;
-                }
+            case CommandType::LANDXY:
+                landingTransition(fsm);
                 break;
-            }
-                //NOTE: Land groundrobot algorithm not implemented yet, so this is commented out
-                /*
-                case CommandType::LANDGB:
-                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
-                    break;
-                */
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);

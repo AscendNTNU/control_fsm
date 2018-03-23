@@ -37,8 +37,11 @@ public:
     bool stateIsReady(ControlFSM &fsm) override;
     void handleManual(ControlFSM &fsm) override;
 
-    ///Handles delayed transition when position is reached
+    ///Handles transitions when position is reached
     void destinationReached(ControlFSM &fsm, bool z_reached);
+
+    ///Handles landing transition
+    void landingTransition(ControlFSM& fsm);
 };
 
 //Only make these available for unit testing
