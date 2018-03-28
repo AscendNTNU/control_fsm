@@ -41,8 +41,6 @@ private:
     const geometry_msgs::PoseStamped& getLocalPose() const;
     ///Get latest twist
     const geometry_msgs::TwistStamped& getTwist() const;
-    ///Is transform valid
-
     ///Returns pointer to shared instance
     static const DroneHandler* getSharedInstancePtr();
 
