@@ -53,16 +53,16 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
-void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
+bool targetWithinArena(const tf2::Vector3& target) {
+        using control::Config;
+        bool global_x_invalid = target.x() > Config::arena_highest_x ||
+                                target.x() < Config::arena_lowest_x;
+        bool global_y_invalid = target.y() > Config::arena_highest_y ||
+                                target.y() < Config::arena_lowest_y;
+        return !global_x_invalid && !global_y_invalid;
+}
 
-    //TAKEOFF cmd should not be processed by FSM
-    if(event.isValidCMD(CommandType::TAKEOFF)) {
-        event.eventError("Goto begin cmd bug!!");
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        control::handleErrorMsg("TAKEOFF CMD should not be processed by GoTo - BUG!");
-        return;
-    }
+void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     cmd_ = event;
     //Has not arrived yet
@@ -78,27 +78,30 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Get position goal matrix
     auto target_vec = cmd_.position_goal_global.getVec3();
     //Apply global to local transform
-    target_vec = tf_matrix * target_vec;
+    local_target_ = tf_matrix * target_vec;
 
     //Is target altitude too low?
-    bool target_alt_too_low = target_vec.z() < control::Config::min_in_air_alt;
+    bool target_alt_too_low = local_target_.z() < control::Config::min_in_air_alt;
+    //Is target illegal?
+    bool invalid_target = !event.position_goal_global.xyz_valid ||
+                          !targetWithinArena(target_vec)        ||
+                          target_alt_too_low;
+
     if(target_alt_too_low) {
         control::handleWarnMsg("Target altitude is too low");
     }
-    if(!event.position_goal_global.xyz_valid || target_alt_too_low) {
-        if(cmd_.isValidCMD()) {
-            event.eventError("No valid position target");
-            cmd_ = EventData();
-        }
+    if(invalid_target) {
+        event.eventError("No valid position target");
+        cmd_ = EventData();
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         return;
     }
 
     // Set setpoint in local frame to target
-    setpoint_.position.x = target_vec.x();
-    setpoint_.position.y = target_vec.y();
-    setpoint_.position.z = target_vec.z();
+    setpoint_.position.x = local_target_.x();
+    setpoint_.position.y = local_target_.y();
+    setpoint_.position.z = local_target_.z();
 
     try {
         ///Calculate yaw setpoint
@@ -120,30 +123,54 @@ void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
+    using control::Config;;
+    using control::DroneHandler;
     try {
         //Check that position data is valid
-        if(!control::DroneHandler::isGlobalPoseValid()) {
+        if(!DroneHandler::isGlobalPoseValid()) {
             throw control::PoseNotValidException();
+        }
+
+        auto tf = DroneHandler::getLocal2GlobalTf();
+        tf2::Transform tf_matrix;
+        tf2::convert(tf.transform, tf_matrix);
+
+        //Transform local target back to global using latest transform
+        auto global_target = tf_matrix * local_target_;
+
+        //If target becomes invalid, abort
+        if(Config::restrict_arena_boundaries) {
+            if(!targetWithinArena(global_target)) {
+                //Target outside arena!!
+                control::handleWarnMsg("Target outside arena, aborting!");
+                cmd_.eventError("Target outside arena");
+                cmd_ = EventData();
+                RequestEvent abort_event(RequestType::ABORT);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+                return;
+            }
         }
 
         using control::pose::quat2mavrosyaw;
         //Get pose
-        auto global_pose = control::DroneHandler::getCurrentGlobalPose();
+        auto local_pose = control::DroneHandler::getCurrentLocalPose();
         //Get reference to position in pose
-        auto& global_position = global_pose.pose.position;
+        auto& local_position = local_pose.pose.position;
         //Get reference to orientation in pose
-        auto& quat = global_pose.pose.orientation;
+        auto& quat = local_pose.pose.orientation;
         //Calculate distance to target
-        double delta_x = global_position.x - cmd_.position_goal_global.x;
-        double delta_y = global_position.y - cmd_.position_goal_global.y;
-        double delta_z = global_position.z - cmd_.position_goal_global.z;
+        double delta_x = local_position.x - local_target_.x();
+        double delta_y = local_position.y - local_target_.y();
+        double delta_z = local_position.z - local_target_.z();
+        double delta_xy_squared = pow(delta_x, 2) + pow(delta_y, 2);
+        double delta_yaw = quat2mavrosyaw(quat) - setpoint_.yaw;
         //Check if we're close enough
         using std::pow;
         using std::fabs;
         using control::Config;
-        bool xy_reached = (pow(delta_x, 2) + pow(delta_y, 2)) <= pow(Config::dest_reached_margin, 2);
+        bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
         bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
-        bool yaw_reached = (fabs(quat2mavrosyaw(quat) - setpoint_.yaw) <= Config::yaw_reached_margin);
+        bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
         //If destination is reached, begin transition to another state
         if(xy_reached && yaw_reached) {
             destinationReached(fsm, z_reached);
@@ -216,7 +243,7 @@ double calculatePathYaw(double dx, double dy) {
 }
 
 bool GoToState::stateIsReady(ControlFSM& fsm) {
-    return true;
+    return control::DroneHandler::isGlobalPoseValid();
 }
 
 void GoToState::handleManual(ControlFSM& fsm) {
@@ -237,54 +264,51 @@ bool droneNotMovingXY(const geometry_msgs::TwistStamped& target) {
     return (dx_sq + dy_sq) < pow(Config::velocity_reached_margin, 2);
 }
 
+void GoToState::landingTransition(ControlFSM& fsm) {
+    //If no valid twist data it's unsafe to land
+    if(!control::DroneHandler::isTwistValid()) {
+        control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
+        cmd_.eventError("Unsafe to land!");
+        cmd_ = EventData();
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        return;
+    }
+    //Check if drone is moving
+    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
+        //Hold current position for a duration - avoiding unwanted velocity before doing anything else
+        if(!delay_transition_.enabled) {
+            delay_transition_.started = ros::Time::now();
+            delay_transition_.enabled = true;
+
+            if(cmd_.isValidCMD()) {
+                cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
+            }
+        }
+        //Delay transition
+        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
+            return;
+        }
+        //If all checks passed - land!
+
+        //Set local target to improve landing
+        auto& setp_pos = setpoint_.position;
+        cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
+        //Transition
+        fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+    } else {
+        //If drone is moving, reset delayed transition
+        delay_transition_.enabled = false;
+    }
+}
+
 void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
     //Transition to correct state
     if(cmd_.isValidCMD()) {
         switch(cmd_.command_type) {
-            case CommandType::LANDXY: {
-                //If no valid twist data it's unsafe to land
-                if(!control::DroneHandler::isTwistValid()) {
-                    control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
-                    cmd_.eventError("Unsafe to land!");
-                    cmd_ = EventData();
-                    RequestEvent abort_event(RequestType::ABORT);
-                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-                    return;
-                }
-                //Check if drone is moving
-                if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
-                    //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-                    if(!delay_transition_.enabled) {
-                        delay_transition_.started = ros::Time::now();
-                        delay_transition_.enabled = true;
-
-                        if(cmd_.isValidCMD()) {
-                            cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-                        }
-                    }
-                    //Delay transition
-                    if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-                        return;
-                    }
-                    //If all checks passed - land!
-
-                    //Set local target to improve landing
-                    auto& setp_pos = setpoint_.position;
-                    cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-                    //Transition
-                    fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
-                } else {
-                    //If drone is moving, reset delayed transition
-                    delay_transition_.enabled = false;
-                }
+            case CommandType::LANDXY:
+                landingTransition(fsm);
                 break;
-            }
-                //NOTE: Land groundrobot algorithm not implemented yet, so this is commented out
-                /*
-                case CommandType::LANDGB:
-                    fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, cmd_);
-                    break;
-                */
             case CommandType::GOTOXYZ: {
                 cmd_.finishCMD();
                 RequestEvent done_event(RequestType::POSHOLD);
@@ -300,7 +324,8 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
         }
     } else {
         RequestEvent pos_hold_event(RequestType::POSHOLD);
-        pos_hold_event.position_goal_global = cmd_.position_goal_global;
+        auto& setp_pos = setpoint_.position;
+        pos_hold_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
     }
 

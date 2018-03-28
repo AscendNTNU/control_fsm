@@ -77,11 +77,12 @@ geometry_msgs::TwistStamped control::DroneHandler::getCurrentTwist() {
     return getSharedInstancePtr()->getTwist();
 }
 
-bool control::DroneHandler::isTransformsValid() const {
+bool control::DroneHandler::isTransformsValid() {
     if(!Config::use_global_transforms) return true;
+    const auto& buffer = getSharedInstancePtr()->tf_buffer_;
     
-    bool tf1 = tf_buffer_.canTransform(Config::global_frame_id, Config::local_frame_id, ros::Time(0));
-    bool tf2 = tf_buffer_.canTransform(Config::local_frame_id, Config::global_frame_id, ros::Time(0)); 
+    bool tf1 = buffer.canTransform(Config::global_frame_id, Config::local_frame_id, ros::Time(0));
+    bool tf2 = buffer.canTransform(Config::local_frame_id, Config::global_frame_id, ros::Time(0));
     return tf1 && tf2;
 }
 

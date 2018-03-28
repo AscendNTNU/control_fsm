@@ -61,6 +61,7 @@
   <run_depend>ascend_msgs</run_depend>
   <run_depend>mavros</run_depend>
   <run_depend>tf2</run_depend>
+  <run_depend>tf2_ros</run_depend>
   <run_depend>vrpn_client_ros</run_depend>
   <run_depend>mavros_extras</run_depend>
   <run_depend>mavros</run_depend>

@@ -74,9 +74,9 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
         //Keep old altitude if abort
         setpoint_.position.z = position.z;
-        //Set setpoint altitude to position_goal_global if valid
+        //Set setpoint altitude to setpoint_target if valid
         if(event.setpoint_target.z_valid) {
-            //Set z setpoint to position_goal_global if we're close enough for it to be safe
+            //Set z setpoint to setpoint_target if we're close enough for it to be safe
             if(std::fabs(position.z - event.setpoint_target.z) <= control::Config::altitude_reached_margin) {
                 setpoint_.position.z = event.setpoint_target.z;
             }
