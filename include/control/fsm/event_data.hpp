@@ -87,8 +87,8 @@ public:
     RequestType request = RequestType::NONE; //No request as default
     ///What type of event is it?
     EventType event_type = EventType::NONE; //No event as default
-    ///Whats the global target (if needed by event)
-    PositionGoal position_goal_global = PositionGoal(); //Invalid position as default
+    ///Whats the local target (if needed by event)
+    PositionGoal position_goal_local = PositionGoal(); //Invalid position as default
     ///Whats the local target setpoint
     PositionGoal setpoint_target = PositionGoal();
     ///If event is a command, what type?
@@ -128,7 +128,7 @@ public:
 class LandXYCMDEvent : public EventData {
 public:
     LandXYCMDEvent(double x, double y) {
-        position_goal_global = PositionGoal(x, y, control::Config::land_xy_goto_alt);
+        position_goal_local = PositionGoal(x, y, control::Config::land_xy_goto_alt);
         event_type = EventType::COMMAND;
         command_type = CommandType::LANDXY;
     }
@@ -138,7 +138,7 @@ public:
 class GoToXYZCMDEvent : public EventData {
 public:
     GoToXYZCMDEvent(double x, double y, double z) {
-        position_goal_global = PositionGoal(x,y,z);
+        position_goal_local = PositionGoal(x,y,z);
         event_type = EventType::COMMAND;
         command_type = CommandType::GOTOXYZ;
     }

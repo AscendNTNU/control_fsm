@@ -112,12 +112,11 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     }
 
     /*AI sends relative X and Y targets
-     * To avoid rewriting large parts of the FSM, we transform the relative points to global frame
-     * and let GoToState transform it back into local frame later!
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
      */
-    auto global_position = control::DroneHandler::getCurrentGlobalPose().pose.position;
-    double goal_x = global_position.x + goal_p->x;
-    double goal_y = global_position.y + goal_p->y;
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->x;
+    double goal_y = local_position.y + goal_p->y;
 
     GoToXYZCMDEvent go_to_event(goal_x, goal_y, goal_p->z);
     //Set callback to run on completion
@@ -139,12 +138,11 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     /*AI sends relative X and Y targets
-     * To avoid rewriting large parts of the FSM, we transform the relative points to global frame
-     * and let GoToState transform it back into local frame later!
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
      */
-    auto global_position = control::DroneHandler::getCurrentGlobalPose().pose.position;
-    double goal_x = global_position.x + goal_p->x;
-    double goal_y = global_position.y + goal_p->y;
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->x;
+    double goal_y = local_position.y + goal_p->y;
     LandXYCMDEvent land_xy_event(goal_x, goal_y);
     //Set callback to run on complete
     land_xy_event.setOnCompleteCallback([this]() {
@@ -172,12 +170,11 @@ void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 
     /*AI sends relative X and Y targets
-     * To avoid rewriting large parts of the FSM, we transform the relative points to global frame
-     * and let GoToState transform it back into local frame later!
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
      */
-    auto global_position = control::DroneHandler::getCurrentGlobalPose().pose.position;
-    double goal_x = global_position.x + goal_p->x;
-    double goal_y = global_position.y + goal_p->y;
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->x;
+    double goal_y = local_position.y + goal_p->y;
 
     GoToXYZCMDEvent search_event(goal_x, goal_y, control::Config::gb_search_altitude);
     //Set callback to run on complete

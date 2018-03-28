@@ -91,7 +91,7 @@ EventData DebugServer::generateDebugEvent(ascend_msgs::ControlFSMEvent::Request&
             }
         })();
         if(event.request == RequestType::GOTO) {
-            event.position_goal_global = PositionGoal(req.x, req.y, req.z);
+            event.position_goal_local = PositionGoal(req.x, req.y, req.z);
         }
     } else if(event.event_type == EventType::COMMAND) {
         //Lambda expression returning correct commandEvent

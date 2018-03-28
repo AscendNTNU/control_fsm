@@ -76,14 +76,14 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     tf2::convert(tf.transform, tf_matrix);
 
     //Get position goal matrix
-    auto target_vec = cmd_.position_goal_global.getVec3();
+    auto target_vec = cmd_.position_goal_local.getVec3();
     //Apply global to local transform
     local_target_ = tf_matrix * target_vec;
 
     //Is target altitude too low?
     bool target_alt_too_low = local_target_.z() < control::Config::min_in_air_alt;
     //Is target illegal?
-    bool invalid_target = !event.position_goal_global.xyz_valid ||
+    bool invalid_target = !event.position_goal_local.xyz_valid ||
                           !targetWithinArena(target_vec)        ||
                           target_alt_too_low;
 
