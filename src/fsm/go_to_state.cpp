@@ -84,7 +84,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     bool target_alt_too_low = local_target_.z() < control::Config::min_in_air_alt;
     //Is target illegal?
     bool invalid_target = !event.position_goal_local.xyz_valid ||
-                          !targetWithinArena(target_vec)        ||
+                          !targetWithinArena(target_vec)       ||
                           target_alt_too_low;
 
     if(target_alt_too_low) {
