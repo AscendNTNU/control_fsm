@@ -160,6 +160,7 @@ void GoToState::stateInit(ControlFSM& fsm) {
     //Set state variables
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
 
+    setStateIsReady();
     control::handleInfoMsg("GoTo init completed!");
 }
 
@@ -197,10 +198,6 @@ double calculatePathYaw(double dx, double dy) {
     }
 
     return angle;
-}
-
-bool GoToState::stateIsReady(ControlFSM& fsm) {
-    return true;
 }
 
 void GoToState::handleManual(ControlFSM& fsm) {
