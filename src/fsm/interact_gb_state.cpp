@@ -12,6 +12,7 @@ void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
+
     if (true /*TODO:check with obstacle avoidance*/){
         fsm.obstacle_avoidance_.relaxResponsibility();
     } else{
