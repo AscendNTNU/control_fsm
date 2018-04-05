@@ -6,12 +6,13 @@
 #include <mavros_msgs/State.h>
 #include <control/tools/control_message.hpp>
 #include <control/exceptions/ros_not_initialized_exception.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using control::DroneHandler;
 
 std::unique_ptr<DroneHandler> DroneHandler::shared_instance_p_ = nullptr;
 
-DroneHandler::DroneHandler() {
+DroneHandler::DroneHandler() :tf_listener_(tf_buffer_) {
     using control::Config;
     using geometry_msgs::PoseStamped;
     using geometry_msgs::TwistStamped;
@@ -32,12 +33,21 @@ const DroneHandler* DroneHandler::getSharedInstancePtr() {
     return shared_instance_p_.get();
 }
 
-const geometry_msgs::PoseStamped& DroneHandler::getCurrentPose() {
-    return getSharedInstancePtr()->getPose(); 
+geometry_msgs::PoseStamped DroneHandler::getCurrentLocalPose() {
+    return getSharedInstancePtr()->getLocalPose();
 }
 
+geometry_msgs::PoseStamped DroneHandler::getCurrentGlobalPose() {
+    using control::Config;
+    auto& local_pose = getSharedInstancePtr()->getLocalPose();
+    auto global_pose = local_pose;
+    auto tf = getLocal2GlobalTf();
+    tf2::doTransform(local_pose, global_pose, tf);
+    return global_pose;
+    
+}
 
-const geometry_msgs::PoseStamped& DroneHandler::getPose() const {
+const geometry_msgs::PoseStamped& DroneHandler::getLocalPose() const {
     if(control::message::hasTimedOut(*last_pose_)) {
         control::handleErrorMsg("DroneHandler: Using old pose");
     }
@@ -51,14 +61,74 @@ const geometry_msgs::TwistStamped& DroneHandler::getTwist() const {
     return *last_twist_;
 }
 
-bool DroneHandler::isPoseValid() {
-    return !control::message::hasTimedOut(getCurrentPose());
-}
 
 bool DroneHandler::isTwistValid() {
-    return !control::message::hasTimedOut(getCurrentTwist());
+    auto& twist = getSharedInstancePtr()->getTwist();
+    if(control::message::hasTimedOut(twist)) return false;
+    //Assumes twist is local
+    return !control::message::hasWrongLocalFrame(twist);
 }
 
-const geometry_msgs::TwistStamped &control::DroneHandler::getCurrentTwist() {
+bool DroneHandler::isGlobalPoseValid() {
+    return isLocalPoseValid() && getSharedInstancePtr()->isTransformsValid();
+}
+
+geometry_msgs::TwistStamped control::DroneHandler::getCurrentTwist() {
     return getSharedInstancePtr()->getTwist();
+}
+
+bool control::DroneHandler::isTransformsValid() {
+    if(!Config::use_global_transforms) return true;
+    const auto& buffer = getSharedInstancePtr()->tf_buffer_;
+    
+    bool tf1 = buffer.canTransform(Config::global_frame_id, Config::local_frame_id, ros::Time(0));
+    bool tf2 = buffer.canTransform(Config::local_frame_id, Config::global_frame_id, ros::Time(0));
+    return tf1 && tf2;
+}
+
+bool control::DroneHandler::isLocalPoseValid() {
+    auto& pose = getSharedInstancePtr()->getLocalPose();
+    if(control::message::hasTimedOut(pose)) return false;
+    return !control::message::hasWrongLocalFrame(pose);
+}
+
+
+geometry_msgs::TransformStamped control::DroneHandler::getGlobal2LocalTf() {
+    using control::Config;
+    if(!Config::use_global_transforms) {
+        auto tf = geometry_msgs::TransformStamped();
+        tf.header.stamp = ros::Time::now();
+        tf.header.frame_id = Config::global_frame_id;
+        tf.child_frame_id = Config::local_frame_id;
+        //The transform should be empty; local = global
+        return tf;
+    }
+    try {
+        //Get transform
+        auto& buffer = getSharedInstancePtr()->tf_buffer_;
+        return buffer.lookupTransform(Config::local_frame_id, Config::global_frame_id, ros::Time(0));
+    } catch (const tf2::TransformException& e) {
+        control::handleErrorMsg(e.what());
+        return geometry_msgs::TransformStamped();
+    }
+}
+
+geometry_msgs::TransformStamped control::DroneHandler::getLocal2GlobalTf() {
+    using control::Config;
+    if(!Config::use_global_transforms) {
+        auto tf = geometry_msgs::TransformStamped();
+        tf.header.stamp = ros::Time::now();
+        tf.header.frame_id = Config::local_frame_id;
+        tf.child_frame_id = Config::global_frame_id;
+        //The transform should be empty; local = global
+        return tf;
+    }
+    try {
+        //Get transform
+        auto& buffer = getSharedInstancePtr()->tf_buffer_;
+        return buffer.lookupTransform(Config::global_frame_id, Config::local_frame_id, ros::Time(0));
+    } catch(const tf2::TransformException& e) {
+        control::handleErrorMsg(e.what());
+        return geometry_msgs::TransformStamped();
+    }
 }
