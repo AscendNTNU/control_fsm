@@ -2,6 +2,8 @@
 #define EVENT_DATA_HPP
 #include <functional>
 #include <control/tools/config.hpp>
+#include <utility>
+#include <tf2/LinearMath/Vector3.h>
 /*
 This class should contain all information a state might need to make a correct decision.
 */
@@ -46,14 +48,26 @@ enum class CommandType {
 
 ///Defines a position goal
 struct PositionGoal {
+    ///Is both position and altitude valid?
     bool xyz_valid = false;
+    ///Is z valid?
     bool z_valid = false;
-    double x;
-    double y;
-    double z;
+    ///Position x
+    double x{};
+    ///Position y
+    double y{};
+    ///Position z
+    double z{};
+
+    ///XYZ constructor
     PositionGoal(double pos_x, double pos_y, double pos_z) : xyz_valid(true), z_valid(true), x(pos_x), y(pos_y), z(pos_z) {}
-    PositionGoal() {}
-    PositionGoal(double pos_z) : z_valid(true), z(pos_z) {}
+    ///Default constructor
+    PositionGoal() = default;
+    ///Z constructor
+    explicit PositionGoal(double pos_z) : z_valid(true), z(pos_z) {}
+
+    ///Get vector reperesentation
+    tf2::Vector3 getVec3() { return { x, y, z }; }
 };
 
 class EventData;
@@ -73,17 +87,19 @@ public:
     RequestType request = RequestType::NONE; //No request as default
     ///What type of event is it?
     EventType event_type = EventType::NONE; //No event as default
-    ///Whats the target (if needed by event)
-    PositionGoal position_goal = PositionGoal(); //Invalid position as default
+    ///Whats the local target (if needed by event)
+    PositionGoal position_goal_local; //Invalid position as default
+    ///Whats the local target setpoint
+    PositionGoal setpoint_target;
     ///If event is a command, what type?
     CommandType command_type = CommandType::NONE; //No command as default
 
     ///Setter function for complete callback
-    void setOnCompleteCallback(std::function<void()> callback) { on_complete_ = callback; }
+    void setOnCompleteCallback(std::function<void()> callback) { on_complete_ = std::move(callback); }
     ///Setter function for error callback
-    void setOnErrorCallback(std::function<void(const std::string&)> callback) { on_error_ = callback; }
+    void setOnErrorCallback(std::function<void(const std::string&)> callback) { on_error_ = std::move(callback); }
     ///Setter function for feedback callback
-    void setOnFeedbackCallback(std::function<void(const std::string&)> callback) {on_feedback_ = callback; }
+    void setOnFeedbackCallback(std::function<void(const std::string&)> callback) {on_feedback_ = std::move(callback); }
     ///Finishes a CMD (calls the _onComplete callback)
     void finishCMD() const { on_complete_(); }
     ///CMD error (calls _onError callback)
@@ -112,7 +128,7 @@ public:
 class LandXYCMDEvent : public EventData {
 public:
     LandXYCMDEvent(double x, double y) {
-        position_goal = PositionGoal(x, y, control::Config::land_xy_goto_alt);
+        position_goal_local = PositionGoal(x, y, control::Config::land_xy_goto_alt);
         event_type = EventType::COMMAND;
         command_type = CommandType::LANDXY;
     }
@@ -122,7 +138,7 @@ public:
 class GoToXYZCMDEvent : public EventData {
 public:
     GoToXYZCMDEvent(double x, double y, double z) {
-        position_goal = PositionGoal(x,y,z);
+        position_goal_local = PositionGoal(x,y,z);
         event_type = EventType::COMMAND;
         command_type = CommandType::GOTOXYZ;
     }

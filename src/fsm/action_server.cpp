@@ -1,6 +1,5 @@
 #include <control/fsm/action_server.hpp>
 #include <control/tools/logger.hpp>
-#include <control/tools/config.hpp>
 
 constexpr int MAX_ITERATIONS = 100;
 using control::Config;
@@ -114,7 +113,15 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
         as_.setAborted();
         return;
     }
-    GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
+
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
+     */
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
+
+    GoToXYZCMDEvent go_to_event(goal_x, goal_y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
         onActionComplete();
@@ -133,7 +140,13 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
-    LandXYCMDEvent land_xy_event(goal_p->x, goal_p->y);
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
+     */
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
+    LandXYCMDEvent land_xy_event(goal_x, goal_y);
     //Set callback to run on complete
     land_xy_event.setOnCompleteCallback([this]() {
         onActionComplete();
@@ -177,7 +190,15 @@ void ActionServer::startTakeoff(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 
 }
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
-    GoToXYZCMDEvent search_event(goal_p->x, goal_p->y, control::Config::gb_search_altitude);
+
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
+     */
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
+
+    GoToXYZCMDEvent search_event(goal_x, goal_y, control::Config::gb_search_altitude);
     //Set callback to run on complete
     search_event.setOnCompleteCallback([this](){
         onActionComplete();

@@ -53,14 +53,14 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     setpoint_.position.z = control::Config::blind_hover_alt;
     try {
         //If full position is valid - no need to blind hover
-        if(control::DroneHandler::isPoseValid()) {
+        if(control::DroneHandler::isLocalPoseValid()) {
             if(event.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
             } else {
                 RequestEvent req_event(RequestType::POSHOLD);
                 //Set target altitude if passed on from takeoff
-                if(event.position_goal.z_valid) {
-                    req_event.position_goal = event.position_goal;
+                if(event.setpoint_target.z_valid) {
+                    req_event.setpoint_target = event.setpoint_target;
                 }
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
             }
@@ -80,7 +80,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 void BlindHoverState::loopState(ControlFSM& fsm) {
     try {
         //Transition to position hold when position is valid.
-        if(control::DroneHandler::isPoseValid()) {
+        if(control::DroneHandler::isLocalPoseValid()) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
                 cmd_ = EventData(); //Reset cmd_
