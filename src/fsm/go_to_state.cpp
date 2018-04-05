@@ -306,14 +306,15 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
             case CommandType::LANDXY:
                 landingTransition(fsm);
                 break;
-            case CommandType::GOTOXYZ: {
-                cmd_.finishCMD();
-                RequestEvent done_event(RequestType::POSHOLD);
-                //Attempt to hold position target
-                auto& setp_pos = setpoint_.position;
-                done_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
-            }
+            case CommandType::GOTOXYZ:
+                if (z_reached){
+                    cmd_.finishCMD();
+                    RequestEvent done_event(RequestType::POSHOLD);
+                    //Attempt to hold position target
+                    auto& setp_pos = setpoint_.position;
+                    done_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
+                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
+                }
                 break;
             default:
                 control::handleWarnMsg("Unrecognized command type");
