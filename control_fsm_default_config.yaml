@@ -60,7 +60,7 @@
     #Topic for recieving obstacle state data
     obstacle_state_topic: perception/obstacles/lidar,
     #Margin to determine if velocity is reached
-    velocity_reached_margin: 0.2,
+    velocity_reached_margin: 0.1,
     #Obstacle avoidance clearance on sides
     obstacle_clearance_side_max: 1.8,
     obstacle_clearance_side_min: 1.0,
@@ -72,4 +72,20 @@
     obstacle_clearance_back_min: 1.0,
     #Obstacle avoidance checkradius
     obstacle_clearance_checkradius: 100.0
+    #Frame ID for global frame
+    global_frame_id: map,
+    #Frame ID for local frame
+    local_frame_id: odom,
+    #Use global to local transforms
+    use_global_transforms: true,
+    #Restrict arena boundaries
+    restrict_arena_boundaries: true,
+    #Lowest allowed global x position
+    arena_lowest_x: 0.0,
+    #Lowest allowed global y position
+    arena_lowest_y: 0.0,
+    #Highest allowed global x position
+    arena_highest_x: 20.0,
+    #Highest allowed global y position
+    arena_highest_y: 20.0
 }
