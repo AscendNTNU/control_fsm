@@ -47,8 +47,8 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
             throw control::PoseNotValidException();
         }
 
-	      //reset obstacle avoidance flag
-	      obstacle_avoidance_kicked_in_ = false;
+	//reset obstacle avoidance flag
+	obstacle_avoidance_kicked_in_ = false;
       
         auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
