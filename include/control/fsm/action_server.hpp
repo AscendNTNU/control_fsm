@@ -42,6 +42,8 @@ private:
     void handleNewGoal(ControlFSM* fsm_p);
     ///Start goto action - send goto cmd to FSM
     void startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p);
+    ///Start takeoff action - send takeoff cmd to FSM
+    void startTakeoff(GoalSharedPtr goal_p, ControlFSM* fsm_p);
     ///Start landxy action - send landxy cmd to FSM
     void startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p);
     ///Start landgb - NB not in use!!
