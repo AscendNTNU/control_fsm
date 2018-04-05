@@ -12,12 +12,16 @@ using GRstate = ascend_msgs::GRState;
 using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
-enum class LocalState: int {IDLE, LAND, RECOVER, ABORT, COMPLETED};
+enum class LocalState: int {INIT, IDLE, LAND, RECOVER, ABORT, COMPLETED};
 //Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
 
 //Forward declarations
+LocalState initStateHandler(const GRstate& gb_pose,
+                            const PoseStamped& drone_pose,
+                            PosTarget* setpoint_p);
+
 LocalState idleStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
                             PosTarget* setpoint_p);
@@ -40,6 +44,7 @@ LocalState completedStateHandler(const GRstate& gb_state,
 
 //State function array, containing all the state functions.
 std::array<std::function<decltype(idleStateHandler)>, 5> state_function_array = {
+    initStateHandler,
     idleStateHandler,
     landStateHandler,
     recoverStateHandler,
@@ -49,10 +54,22 @@ std::array<std::function<decltype(idleStateHandler)>, 5> state_function_array = 
 
 
 //Holds the current state function to be run every loop
-std::function<decltype(idleStateHandler)> stateFunction = idleStateHandler;
+std::function<decltype(idleStateHandler)> stateFunction = initStateHandler;
 
 //Holds the current state
-LocalState local_state = LocalState::IDLE;
+LocalState local_state = LocalState::INIT;
+
+LocalState initStateHandler(const GRstate& gb_pose,
+                            const PoseStamped& done_pose,
+                            PosTarget* setpoint_p) {
+    //TODO: Implement this
+    if (ros::call::service("/service_name", service)) {
+        return LocalState::IDLE;
+    }
+    else {
+        return LocalState::INIT;
+    }
+}
 
 LocalState idleStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
