@@ -118,8 +118,8 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
      * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
      */
     auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
-    double goal_x = local_position.x + goal_p->x;
-    double goal_y = local_position.y + goal_p->y;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
 
     GoToXYZCMDEvent go_to_event(goal_x, goal_y, goal_p->z);
     //Set callback to run on completion
@@ -144,8 +144,8 @@ void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
      * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
      */
     auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
-    double goal_x = local_position.x + goal_p->x;
-    double goal_y = local_position.y + goal_p->y;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
     LandXYCMDEvent land_xy_event(goal_x, goal_y);
     //Set callback to run on complete
     land_xy_event.setOnCompleteCallback([this]() {
@@ -195,8 +195,8 @@ void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
      * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
      */
     auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
-    double goal_x = local_position.x + goal_p->x;
-    double goal_y = local_position.y + goal_p->y;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
 
     GoToXYZCMDEvent search_event(goal_x, goal_y, control::Config::gb_search_altitude);
     //Set callback to run on complete
