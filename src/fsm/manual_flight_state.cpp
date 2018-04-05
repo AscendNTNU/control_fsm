@@ -62,6 +62,9 @@ void ManualFlightState::handleManual(ControlFSM &fsm) {
     //Already in manual, nothing to do
 }
 
+void ManualFlightState::stateBegin(ControlFSM& fsm, const EventData& event){
+    fsm.obstacle_avoidance_.relaxResponsibility();	
+}
 
 
 ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() const {
