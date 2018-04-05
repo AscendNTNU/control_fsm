@@ -50,6 +50,15 @@ double Config::interception_param_xy = 2.0;
 double Config::interception_param_z = 0.01; 
 double Config::max_distance = 2.0; 
 
+std::string Config::global_frame_id = "map";
+std::string Config::local_frame_id = "odom";
+bool Config::use_global_transforms = true;
+
+bool Config::restrict_arena_boundaries = true;
+double Config::arena_lowest_x = 0.0;
+double Config::arena_lowest_y = 0.0;
+double Config::arena_highest_x = 20.0;
+double Config::arena_highest_y = 20.0;
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -160,8 +169,18 @@ void Config::loadParams() {
     getDoubleParam("land_gb_interception_xy", interception_param_xy, 0.0, 5.0);
     getDoubleParam("land_gb_interception_z", interception_param_z, 0.0, 5.0);
     getDoubleParam("land_gb_max_distance", max_distance, 0.0, 10.0);
+    //Frame id
+    getStringParam("global_frame_id", global_frame_id);
+    getStringParam("local_frame_id", local_frame_id);
+    getBoolParam("use_global_transforms", use_global_transforms);
     //Action server
     getStringParam("action_server_topic", action_server_topic);
+    //Arena params
+    getBoolParam("restrict_arena_boundaries", restrict_arena_boundaries);
+    getDoubleParam("arena_lowest_x", arena_lowest_x, -100.0, 100.0);
+    getDoubleParam("arena_lowest_y", arena_lowest_y, -100.0, 100.0);
+    getDoubleParam("arena_highest_x", arena_highest_x, -100.0, 100.0);
+    getDoubleParam("arena_highest_y", arena_highest_y, -100.0, 100.0);
 
 }
 
