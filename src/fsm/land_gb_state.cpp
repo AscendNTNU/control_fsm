@@ -174,7 +174,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
     cmd_ = event;
 
     try {
-        auto& position = DroneHandler::getCurrentPose().pose.position;
+        auto position = DroneHandler::getCurrentLocalPose().pose.position;
         setpoint_.type_mask = default_mask;
         setpoint_.position.x = position.x;
         setpoint_.position.y = position.y;
@@ -210,7 +210,7 @@ void LandGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
             return;
         }
         //Set start state
-	control::handleInfoMsg("LANDGB ism begin");
+	    control::handleInfoMsg("LANDGB ism begin");
         local_state = LocalState::IDLE; 
     } catch(const std::exception& e) {
         //Critical bug - no recovery
@@ -235,7 +235,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     }
 
     auto& gb_pose = gb_array.at(static_cast<unsigned long>(cmd_.gb_id));
-    auto& drone_pose = control::DroneHandler::getCurrentPose();
+    auto drone_pose = control::DroneHandler::getCurrentLocalPose();
 
     // Sets the new state function
     stateFunction = state_function_array[static_cast<int>(local_state)];
@@ -246,7 +246,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     if (local_state == LocalState::COMPLETED) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
-            transition.position_goal = PositionGoal(setpoint_.position.z);
+            transition.setpoint_target = PositionGoal(setpoint_.position.z);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
             return;
     }
