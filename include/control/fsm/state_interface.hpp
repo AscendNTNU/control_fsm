@@ -45,6 +45,8 @@ undefined behaviour. All state methods should gurantee nothrow!
 class StateInterface;
 class StateInterface {
 private:
+    ///Flag used to check if state is ready - should be set by state init
+    bool is_ready_ = false;
 
     /**
      * get vector of all instianciated states
@@ -56,10 +58,9 @@ private:
     ///Assigmnet operator should be removed
     StateInterface& operator=(const StateInterface&) = delete;
 protected:
-    ///Flag used to check if state is ready - should be set by state init
-    bool is_ready_ = false;
     ///Mark state as ready
     void setStateIsReady(){ is_ready_ = true; }
+
     ///All states needs to return a valid setpoint
     mavros_msgs::PositionTarget setpoint_;
 public:
