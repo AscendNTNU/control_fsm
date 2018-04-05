@@ -129,7 +129,7 @@ void PositionHoldState::loopState(ControlFSM& fsm){
 	//TODO: logic to avoid being pushed around
 	
         // keep new setpoint after obstacle avoidance
-	    auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
+	auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
         //Set setpoint to current position
         setpoint_.position.x = position.x;
