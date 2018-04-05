@@ -66,12 +66,14 @@ target_link_libraries(control_fsm_lib
 add_executable(control_fsm_main src/nodes/control_fsm_main)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
 add_executable(fake_snake_data src/nodes/mocapConverter.cpp)
+add_executable(gb_pose_estimation src/nodes/gb_pose_estimation.cpp)
 
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(control_fsm_main control_fsm_lib)
 target_link_libraries(action_interface_client ${catkin_LIBRARIES})
 target_link_libraries(fake_snake_data ${catkin_LIBRARIES})
+target_link_libraries(gb_pose_estimation control_tools_lib ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -80,6 +82,8 @@ add_dependencies(control_fsm_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 add_dependencies(control_tools_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(action_interface_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(fake_snake_data ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(gb_pose_estimation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 if(CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
     add_rostest_gtest(utest test/launch_test.test test/utest.cpp)

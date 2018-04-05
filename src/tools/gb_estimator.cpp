@@ -1,7 +1,7 @@
 
 #include <ros/ros.h>
 
-#include "gb_estimator.h"
+#include "control/tools/gb_estimator.h"
 #include <iostream>
 using control::GbEstimator;
 
@@ -22,8 +22,8 @@ void GbEstimator::update(const float *gb_direction, float *gb_position){
 		std::cout << "Error, not valid groundbot!" << std::endl; 
 		return; 
 	}
-	ros::Duration time_step; 
-	delta_t = ros::Time::now() - last_time_stamp; 
+	ros::Duration delta_t;
+	delta_t = ros::Time::now() - last_time_stamp;
 	last_time_stamp = ros::Time::now(); 
 		
 	float velocity[2];
