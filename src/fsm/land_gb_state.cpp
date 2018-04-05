@@ -17,7 +17,6 @@ enum class LocalState: int {INIT, IDLE, LAND, RECOVER, ABORT, COMPLETED};
 //Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
-const std::string TRANSFORM_SERVICE_TOPIC = "landing_transform";
 
 //Forward declarations
 LocalState initStateHandler(const GRstate& gb_pose,
@@ -74,7 +73,7 @@ LocalState initStateHandler(const GRstate& gb_pose,
     ascend_msgs::GroundRobotTransform tf;
     tf.request.state = tf.request.GBFRAME;
     tf.request.gb_id = cmd.gb_id;
-    ros::service::call(TRANSFORM_SERVICE_TOPIC, tf);
+    ros::service::call(control::Config::transform_gb_service, tf);
     if (tf.response.success) {
         return LocalState::IDLE;
     }
@@ -280,7 +279,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     if (local_state == LocalState::COMPLETED) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
-        ros::service::call(TRANSFORM_SERVICE_TOPIC, tf);
+        ros::service::call(control::Config::transform_gb_service, tf);
         if (tf.response.success) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
@@ -292,7 +291,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     if (local_state == LocalState::ABORT) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
-        ros::service::call(TRANSFORM_SERVICE_TOPIC, tf);
+        ros::service::call(control::Config::transform_gb_service, tf);
         if (tf.response.success) {
             cmd_.abort();
             RequestEvent abort_event(RequestType::ABORT);
