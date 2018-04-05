@@ -58,6 +58,9 @@ private:
     ///Assigmnet operator should be removed
     StateInterface& operator=(const StateInterface&) = delete;
 protected:
+    ///Mark state as ready
+    void setStateIsReady(){ is_ready_ = true; }
+
     ///All states needs to return a valid setpoint
     mavros_msgs::PositionTarget setpoint_;
 public:
@@ -68,11 +71,11 @@ public:
     ///States should never be copied
     StateInterface(const StateInterface&) = delete;
 
-    ///Used for state setup - remember to implement isReady if overriding
-    virtual void stateInit(ControlFSM& fsm) { is_ready_ = true; }
-
     ///Used to check if state is ready for flight
-    virtual bool stateIsReady(ControlFSM &fsm) { return is_ready_; }
+    bool stateIsReady() const { return is_ready_; }
+
+    ///Used for state setup - remember to call setStateIsReady if overriding
+    virtual void stateInit(ControlFSM& fsm) { setStateIsReady(); }
 
     ///Virtual destructor - override if needed
     virtual ~StateInterface() {}
