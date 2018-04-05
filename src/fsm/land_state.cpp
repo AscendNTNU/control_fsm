@@ -47,8 +47,8 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
             throw control::PoseNotValidException();
         }
 
-	      //reset obstacle avoidance flag
-	      obstacle_avoidance_kicked_in_ = false;
+        //reset obstacle avoidance flag
+        obstacle_avoidance_kicked_in_ = false;
       
         auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
@@ -106,10 +106,10 @@ void LandState::loopState(ControlFSM& fsm) {
         }
 
 
-	if (obstacle_avoidance_kicked_in_){
+        if (obstacle_avoidance_kicked_in_){
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-	}
+        }
 
         //Check landing
         if(LandDetector::isOnGround()) {
@@ -139,7 +139,7 @@ void LandState::stateInit(ControlFSM& fsm) {
     };
     fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
 
-    is_ready_ = true;
+    setStateIsReady();
     control::handleInfoMsg("Land init completed!");
 }
 
