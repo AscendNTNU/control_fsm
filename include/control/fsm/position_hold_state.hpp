@@ -8,7 +8,6 @@
 
 ///Holds the current position
 class PositionHoldState : public StateInterface {
-    bool obstacle_avoidance_kicked_in_ = false;
 public:
     PositionHoldState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
