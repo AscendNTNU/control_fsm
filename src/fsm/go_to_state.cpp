@@ -69,22 +69,22 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     delay_transition_.enabled = false;
 
     //Get transform message
-    auto tf = control::DroneHandler::getGlobal2LocalTf();
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
 
     //Get tf matrix
     tf2::Transform tf_matrix;
     tf2::convert(tf.transform, tf_matrix);
 
     //Get position goal matrix
-    auto target_vec = cmd_.position_goal_global.getVec3();
+    local_target_ = cmd_.position_goal_local.getVec3();
     //Apply global to local transform
-    local_target_ = tf_matrix * target_vec;
+    auto global_target = tf_matrix * local_target_; 
 
     //Is target altitude too low?
     bool target_alt_too_low = local_target_.z() < control::Config::min_in_air_alt;
     //Is target illegal?
-    bool invalid_target = !event.position_goal_global.xyz_valid ||
-                          !targetWithinArena(target_vec)        ||
+    bool invalid_target = !event.position_goal_local.xyz_valid ||
+                          !targetWithinArena(global_target)    ||
                           target_alt_too_low;
 
     if(target_alt_too_low) {
