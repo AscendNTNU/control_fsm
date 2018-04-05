@@ -21,30 +21,36 @@ constexpr double HEIGHT_THRESHOLD = 0.5;
 //Forward declarations
 LocalState initStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p);
+                            PosTarget* setpoint_p,
+                            const EventData& cmd);
 
 LocalState idleStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p);
+                            PosTarget* setpoint_p,
+                            const EventData& cmd);
 
 LocalState landStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p);
+                            PosTarget* setpoint_p,
+                            const EventData& cmd);
 
 LocalState recoverStateHandler(const GRstate& gb_state,
                                const PoseStamped& drone_pose,
-                               PosTarget* setpoint_p);
+                               PosTarget* setpoint_p,
+                               const EventData& cmd);
 
 LocalState abortStateHandler(const GRstate& gb_state,
                              const PoseStamped& drone_pose, 
-                             PosTarget* setpoint_p);
+                             PosTarget* setpoint_p,
+                             const EventData& cmd);
 
 LocalState completedStateHandler(const GRstate& gb_state,
                                  const PoseStamped& drone_pose,
-                                 PosTarget* setpoint_p);
+                                 PosTarget* setpoint_p,
+                                 const EventData& cmd);
 
 //State function array, containing all the state functions.
-std::array<std::function<decltype(idleStateHandler)>, 6> state_function_array = {
+std::array<std::function<decltype(initStateHandler)>, 6> state_function_array = {
     initStateHandler,
     idleStateHandler,
     landStateHandler,
@@ -62,9 +68,11 @@ LocalState local_state = LocalState::INIT;
 
 LocalState initStateHandler(const GRstate& gb_pose,
                             const PoseStamped& done_pose,
-                            PosTarget* setpoint_p) {
+                            PosTarget* setpoint_p,
+                            const EventData& cmd) {
     ascend_msgs::GroundRobotTransform tf;
     tf.request.state = tf.request.GBFRAME;
+    tf.request.gb_id = cmd.gb_id;
     ros::service::call("landing_transform", tf);
     if (tf.response.success) {
         return LocalState::IDLE;
@@ -76,7 +84,8 @@ LocalState initStateHandler(const GRstate& gb_pose,
 
 LocalState idleStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p) {
+                            PosTarget* setpoint_p,
+                            const EventData& cmd) {
     auto& drone_pos = drone_pose.pose.position;
     auto dx = gb_pose.x - drone_pos.x;
     auto dy = gb_pose.y - drone_pos.y;
@@ -100,7 +109,8 @@ LocalState idleStateHandler(const GRstate& gb_pose,
 
 LocalState landStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p) {
+                            PosTarget* setpoint_p,
+                            const EventData& cmd) {
     //Runs the interception algorithm
     bool interception_ok = control::gb::interceptGB(drone_pose, gb_pose, *setpoint_p);
     
@@ -122,7 +132,8 @@ LocalState landStateHandler(const GRstate& gb_pose,
     
 LocalState recoverStateHandler(const GRstate& gb_pose,
                                const PoseStamped& drone_pose,
-                               PosTarget* setpoint_p) {
+                               PosTarget* setpoint_p,
+                               const EventData& cmd) {
     if (drone_pose.pose.position.z < control::Config::safe_hover_altitude - control::Config::altitude_reached_margin) {
         // Setpoint to a safe altitude.
         // TODO This is probably not safe with Mist
@@ -137,13 +148,15 @@ LocalState recoverStateHandler(const GRstate& gb_pose,
 
 LocalState abortStateHandler(const GRstate& gb_state,
                              const PoseStamped& drone_pose,
-                             PosTarget* setpoint_p) {
+                             PosTarget* setpoint_p,
+                             const EventData& cmd) {
     return LocalState::ABORT;
 }
 
 LocalState completedStateHandler(const GRstate& gb_pose,
                                  const PoseStamped& drone_pose,
-                                 PosTarget* setpoint_p) {
+                                 PosTarget* setpoint_p,
+                                 const EventData& cmd) {
     return LocalState::COMPLETED;
 }
 
@@ -261,7 +274,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
     stateFunction = state_function_array[static_cast<int>(local_state)];
  
     // Loops the current and sets the next state.
-    local_state = stateFunction(gb_pose, drone_pose, &setpoint_);
+    local_state = stateFunction(gb_pose, drone_pose, &setpoint_, cmd_);
 
     if (local_state == LocalState::COMPLETED) {
             cmd_.finishCMD();
