@@ -71,7 +71,7 @@
     obstacle_clearance_back_max: 2.0,
     obstacle_clearance_back_min: 1.0,
     #Obstacle avoidance checkradius
-    obstacle_clearance_checkradius: 100.0
+    obstacle_clearance_checkradius: 100.0,
     #Frame ID for global frame
     global_frame_id: map,
     #Frame ID for local frame
