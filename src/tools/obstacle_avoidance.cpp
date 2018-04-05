@@ -64,7 +64,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     bool setpoint_modified{false};
 
     const auto& obstacles = control::ObstacleStateHandler::getCurrentObstacles();
-    const auto& drone_pose = control::DroneHandler::getCurrentPose();
+    //TODO Verify obstacles is local!
+    const auto& drone_pose = control::DroneHandler::getCurrentLocalPose();
 
     const auto drone_vel = control::DroneHandler::getCurrentTwist().twist.linear;
     const auto drone_speed = std::sqrt(std::pow(drone_vel.x,2) + std::pow(drone_vel.y,2));

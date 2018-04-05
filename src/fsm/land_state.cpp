@@ -37,10 +37,6 @@ void LandState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
-bool LandState::stateIsReady(ControlFSM &fsm) { 
-    return is_ready_; 
-}
-
 void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
     if(event.isValidCMD()) {
         cmd_ = event;
