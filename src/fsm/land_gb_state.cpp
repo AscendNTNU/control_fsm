@@ -5,6 +5,7 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 #include <control/tools/intercept_groundbot.hpp>
+#include <ascend_msgs/GroundRobotTransform.h>
 
 #include <functional>
 
@@ -43,7 +44,7 @@ LocalState completedStateHandler(const GRstate& gb_state,
                                  PosTarget* setpoint_p);
 
 //State function array, containing all the state functions.
-std::array<std::function<decltype(idleStateHandler)>, 5> state_function_array = {
+std::array<std::function<decltype(idleStateHandler)>, 6> state_function_array = {
     initStateHandler,
     idleStateHandler,
     landStateHandler,
@@ -62,8 +63,10 @@ LocalState local_state = LocalState::INIT;
 LocalState initStateHandler(const GRstate& gb_pose,
                             const PoseStamped& done_pose,
                             PosTarget* setpoint_p) {
-    //TODO: Implement this
-    if (ros::call::service("/service_name", service)) {
+    ascend_msgs::GroundRobotTransform tf;
+    tf.request.state = tf.request.GBFRAME;
+    ros::service::call("landing_transform", tf);
+    if (tf.response.success) {
         return LocalState::IDLE;
     }
     else {
