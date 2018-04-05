@@ -101,7 +101,7 @@ bool ControlFSM::isReady() {
     //All states must run their own checks
     for(auto it = StateInterface::cbegin(); it != StateInterface::cend(); it++) {
         control::handleInfoMsg((*it)->getStateName() + " is testing");
-        if(!(*it)->stateIsReady(*this)) return false;
+        if(!(*it)->stateIsReady()) return false;
     }
     //Make sure obstacle avoidance is ready if enabled
     if(control::Config::require_obstacle_detection) {
