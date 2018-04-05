@@ -236,16 +236,18 @@ void ActionServer::onActionComplete() {
         ascend_msgs::ControlFSMResult result;
         action_is_running_ = false;
         as_.setSucceeded(result);
+        control::handleInfoMsg("Action completed");
 }
 
 void ActionServer::onActionFeedback(const std::string& msg) {
         ascend_msgs::ControlFSMFeedback fb;
         fb.progression = msg;
         as_.publishFeedback(fb);
+        control::handleInfoMsg(std::string("Action feedback: ") + msg);
 }
 
 void ActionServer::onActionError(const std::string& msg) {
-        control::handleWarnMsg(std::string("CMD error: ") + msg);
+        control::handleWarnMsg(std::string("Action error: ") + msg);
         ascend_msgs::ControlFSMResult result;
         action_is_running_ = false;
         as_.setAborted(result);
