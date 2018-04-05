@@ -58,6 +58,9 @@ void PositionHoldState::stateInit(ControlFSM& fsm) {
     };
 
     fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
+
+    setStateIsReady();
+    control::handleInfoMsg("PositionHold init completed!");
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
