@@ -46,9 +46,6 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         if(!control::DroneHandler::isLocalPoseValid()) {
             throw control::PoseNotValidException();
         }
-
-        //reset obstacle avoidance flag
-        obstacle_avoidance_kicked_in_ = false;
       
         auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
@@ -66,6 +63,8 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
 
+        //reset obstacle avoidance flag
+        obstacle_avoidance_kicked_in_ = false;
 
         // TODO:Check with obstacle_avoidance if it is ok to land
         if (true){
@@ -104,7 +103,6 @@ void LandState::loopState(ControlFSM& fsm) {
         } else {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
-
 
         if (obstacle_avoidance_kicked_in_){
             RequestEvent abort_event(RequestType::ABORT);

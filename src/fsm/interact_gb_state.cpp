@@ -1,4 +1,5 @@
 #include "control/fsm/interact_gb_state.hpp"
+#include "control/fsm/control_fsm.hpp"
 #include "control/tools/setpoint_msg_defines.h"
 #include <ros/ros.h>
 
@@ -11,7 +12,13 @@ void InteractGBState::handleEvent(ControlFSM& fsm, const EventData& event) {
 }
 
 void InteractGBState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    //TODO Implement
+    if (true /*TODO:check with obstacle avoidance*/){
+        fsm.obstacle_avoidance_.relaxResponsibility();
+    } else{
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        return;
+    }
 }
 
 void InteractGBState::loopState(ControlFSM& fsm) {

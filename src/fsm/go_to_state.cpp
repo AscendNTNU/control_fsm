@@ -16,7 +16,6 @@ GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
 }
 
-
 /**
  * @brief Returns a yaw that is a multiple of 90 degrees
  * @details Drone should fly as straight forward as possible
@@ -185,8 +184,8 @@ void GoToState::loopState(ControlFSM& fsm) {
         }
 
         if (obstacle_avoidance_kicked_in_){
-            RequestEvent abort_event(RequestType::ABORT);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            //RequestEvent abort_event(RequestType::ABORT);
+            //fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
             return;
         }
       

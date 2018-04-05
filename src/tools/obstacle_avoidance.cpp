@@ -15,8 +15,6 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 
-#include <tf2/LinearMath/Quaternion.h> // not used?
-
 #include <memory>
 #include <vector>
 #include <cmath>
