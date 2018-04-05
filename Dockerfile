@@ -9,6 +9,7 @@ RUN apt-get update -qq && apt-get install -yqq \
     ros-kinetic-mavros \
     ros-kinetic-mavros-extras \
     ros-kinetic-tf2 \
+    ros-kinetic-tf2-geometry-msgs \
     ros-kinetic-vrpn-client-ros
 
 
