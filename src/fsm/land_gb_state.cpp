@@ -13,17 +13,12 @@ using GRstate = ascend_msgs::GRState;
 using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
-enum class LocalState: int {INIT, IDLE, LAND, RECOVER, ABORT, COMPLETED};
+enum class LocalState: int {IDLE, LAND, RECOVER, ABORT, COMPLETED};
 //Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
 
 //Forward declarations
-LocalState initStateHandler(const GRstate& gb_pose,
-                            const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p,
-                            const EventData& cmd);
-
 LocalState idleStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
                             PosTarget* setpoint_p,
@@ -50,8 +45,7 @@ LocalState completedStateHandler(const GRstate& gb_state,
                                  const EventData& cmd);
 
 //State function array, containing all the state functions.
-std::array<std::function<decltype(initStateHandler)>, 6> state_function_array = {
-    initStateHandler,
+std::array<std::function<decltype(idleStateHandler)>, 5> state_function_array = {
     idleStateHandler,
     landStateHandler,
     recoverStateHandler,
@@ -61,26 +55,10 @@ std::array<std::function<decltype(initStateHandler)>, 6> state_function_array = 
 
 
 //Holds the current state function to be run every loop
-std::function<decltype(idleStateHandler)> stateFunction = initStateHandler;
+std::function<decltype(idleStateHandler)> stateFunction = idleStateHandler;
 
 //Holds the current state
-LocalState local_state = LocalState::INIT;
-
-LocalState initStateHandler(const GRstate& gb_pose,
-                            const PoseStamped& done_pose,
-                            PosTarget* setpoint_p,
-                            const EventData& cmd) {
-    ascend_msgs::GroundRobotTransform tf;
-    tf.request.state = tf.request.GBFRAME;
-    tf.request.gb_id = cmd.gb_id;
-    ros::service::call(control::Config::transform_gb_service, tf);
-    if (tf.response.success) {
-        return LocalState::IDLE;
-    }
-    else {
-        return LocalState::INIT;
-    }
-}
+LocalState local_state = LocalState::IDLE;
 
 LocalState idleStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
@@ -95,7 +73,7 @@ LocalState idleStateHandler(const GRstate& gb_pose,
     if (distance_to_gb < DISTANCE_THRESHOLD &&
         drone_pos.z > HEIGHT_THRESHOLD      &&
         gb_pose.downward_tracked) {
-	control::handleInfoMsg("Start land");
+	    control::handleInfoMsg("Start land");    
         return LocalState::LAND;
     } else {
         std::string msg = "Can't land! Distance: ";
@@ -111,6 +89,13 @@ LocalState landStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
                             PosTarget* setpoint_p,
                             const EventData& cmd) {
+    //Calls service to change to the GMFRAME transform
+    ascend_msgs::GroundRobotTransform tf;
+    tf.request.state = tf.request.GBFRAME;
+    tf.request.gb_id = cmd.gb_id;
+    ros::service::call(control::Config::transform_gb_service, tf);
+    if (!tf.response.success) return LocalState::LAND;
+
     //Runs the interception algorithm
     bool interception_ok = control::gb::interceptGB(drone_pose, gb_pose, *setpoint_p);
     
