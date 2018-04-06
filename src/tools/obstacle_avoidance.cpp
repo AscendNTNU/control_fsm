@@ -112,8 +112,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
                     }
                     // need to avoid obstacle
                     setpoint_modified = true;
-                    setpoint->position.x = minimum_vector.x;
-                    setpoint->position.y = minimum_vector.y;
+                    setpoint->position.x = obstacle_global_position.x + minimum_vector.x;
+                    setpoint->position.y = obstacle_global_position.y + minimum_vector.y;
                     if (setpoint->position.z < Config::min_in_air_alt){
                         setpoint->position.z = Config::min_in_air_alt;
                     }
