@@ -51,10 +51,10 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
 bool poseIsValid() {
     using control::Config;
     using control::DroneHandler;
-    auto pos = DroneHandler::getCurrentPose().pose.position;
+    auto pos = DroneHandler::getCurrentLocalPose().pose.position;
     bool valid_altitude = (pos.z >= Config::min_in_air_alt + Config::altitude_reached_margin);
 
-    if(!control::DroneHandler::isPoseValid()) return false;
+    if(!control::DroneHandler::isLocalPoseValid()) return false;
     return valid_altitude;
 }
 
