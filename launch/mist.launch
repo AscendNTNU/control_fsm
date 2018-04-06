@@ -8,4 +8,6 @@
     </include>
     <include file="$(find ascend_utilities)/launch/land_detector.launch"/>
     <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
+    <param name="/mavros/local_position/frame_id" value="odom"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="localglobaltf" args="0 0 0 0 0 0 1 odom map" />
 </launch>

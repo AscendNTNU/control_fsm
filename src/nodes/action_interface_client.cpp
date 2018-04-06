@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
             float x_target = std::stof(commandline_options[1]);
             float y_target = std::stof(commandline_options[2]);
             float z_target = std::stof(commandline_options[3]);
-            goal.x = x_target;
-            goal.y = y_target;
+            goal.dx = x_target;
+            goal.dy = y_target;
             goal.z = z_target;
             goal.cmd = GoalType::GO_TO_XYZ;
         } catch (const std::invalid_argument &e) {
@@ -55,8 +55,8 @@ int main(int argc, char** argv) {
         try {
             float x_target = std::stof(commandline_options[1]);
             float y_target = std::stof(commandline_options[2]);
-            goal.x = x_target;
-            goal.y = y_target;
+            goal.dx = x_target;
+            goal.dy = y_target;
             goal.cmd = GoalType::LAND_AT_POINT;
         } catch (const std::invalid_argument &e) {
             ROS_ERROR("[FSM Action client] Parse error!");
