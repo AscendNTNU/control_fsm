@@ -50,27 +50,24 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     const auto drone_pose = control::DroneHandler::getCurrentLocalPose();
 
     //TODO Verify obstacles is local!
-    ROS_INFO_THROTTLE(1,"drone_pos (should be local):\t%.3f\t%.3f", drone_pose.pose.position.x, drone_pose.pose.position.y);
 
     const auto drone_vel = control::DroneHandler::getCurrentTwist().twist.linear;
     const auto drone_speed = std::sqrt(std::pow(drone_vel.x,2) + std::pow(drone_vel.y,2));
     const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
 
     ascend_msgs::PolygonArray zone_msg;
-    
+
     bool obstacles_valid = control::ObstacleStateHandler::isInstanceReady();
 
     for (int i = 0; i < obstacles.count && obstacles_valid; i++){
-        const auto obstacle_position = obstacles.global_robot_position[i];
-        ROS_INFO_THROTTLE(1,"obstacle_pos (should be local):\t%.3f\t%.3f", obstacle_position.x, obstacle_position.y);
-        //const float obstacle_direction = obstacles.direction[i];
-        const auto drone_distance_to_obstacle = calcDistanceToObstacle(drone_pose.pose.position, obstacle_position);
-        const auto setpoint_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_position);
+        const auto& obstacle_global_position = obstacles.global_robot_position[i];
+        const auto drone_distance_to_obstacle = calcDistanceToObstacle(drone_pose.pose.position, obstacle_global_position);
+        const auto setpoint_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_global_position);
 
         if (drone_distance_to_obstacle < Config::obstacle_clearance_checkradius){
             // perform obstacle avoidance
-            const auto drone_angle_to_obstacle = calcAngleToObstacle(drone_pose.pose.position, obstacle_position);
-            const auto setpoint_angle_to_obstacle = calcAngleToObstacle(setpoint->position, obstacle_position);
+            const auto drone_angle_to_obstacle = calcAngleToObstacle(drone_pose.pose.position, obstacle_global_position);
+            const auto setpoint_angle_to_obstacle = calcAngleToObstacle(setpoint->position, obstacle_global_position);
 
             // True if setpoint is within a 120 deg cone away from the obstacle
             // TODO: turn this angle into a param once complete
@@ -82,10 +79,9 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             // Rotate to global coordinate system
             const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
 
-            ROS_INFO("Local min vec: %.3f\t%.3f", minimum_vector.x, minimum_vector.y);
             //minimum_vector = rotateXY(minimum_vector, obstacle_direction);
 
-            //ROS_INFO("Minimum pos: %.3f\t%.3f", obstacle_position.x + minimum_vector.x, obstacle_position.y + minimum_vector.y);
+            //ROS_INFO("Minimum pos: %.3f\t%.3f", obstacle_global_position.x + minimum_vector.x, obstacle_global_position.y + minimum_vector.y);
 
             // generate points for zone_pub_
             constexpr int N_points{4};
@@ -93,12 +89,12 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             for (int i = 0; i < N_points; i++){
                 const float angle = static_cast<float>(i)*2.f*PI/N_points;
                 auto local_pos = avoidZone(angle, clearance);
-                local_pos = vectorSum(local_pos, obstacle_position);
+                local_pos = vectorSum(local_pos, obstacle_global_position);
 
                 geometry_msgs::Point32 global_pos;
-                global_pos.x = obstacle_position.x + local_pos.x;
-                global_pos.y = obstacle_position.y + local_pos.y;
-                global_pos.z = obstacle_position.z + local_pos.z;
+                global_pos.x = obstacle_global_position.x + local_pos.x;
+                global_pos.y = obstacle_global_position.y + local_pos.y;
+                global_pos.z = obstacle_global_position.z + local_pos.z;
                 
                 polygon.points.push_back(global_pos);
             }
@@ -120,8 +116,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
                     }
                     // need to avoid obstacle
                     setpoint_modified = true;
-                    setpoint->position.x = obstacle_position.x + minimum_vector.x;
-                    setpoint->position.y = obstacle_position.y + minimum_vector.y;
+                    setpoint->position.x = obstacle_global_position.x + minimum_vector.x;
+                    setpoint->position.y = obstacle_global_position.y + minimum_vector.y;
                     if (setpoint->position.z < Config::min_in_air_alt){
                         setpoint->position.z = Config::min_in_air_alt;
                     }
@@ -130,7 +126,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         }
 
         if (setpoint_modified){
-            //const auto new_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_position);
+            //const auto new_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_global_position);
             //ROS_INFO_THROTTLE(1, "Distance improvement %.3f to %.3f", drone_distance_to_obstacle, new_distance_to_obstacle);
         }
     }
