@@ -54,6 +54,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     const auto drone_vel = control::DroneHandler::getCurrentTwist().twist.linear;
     const auto drone_speed = std::sqrt(std::pow(drone_vel.x,2) + std::pow(drone_vel.y,2));
     const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
+    
+    ROS_INFO_THROTTLE(1, "drone_speed: %.3f", drone_speed);
 
     ascend_msgs::PolygonArray zone_msg;
 
@@ -80,12 +82,11 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
 
             // generate points for zone_pub_
-            constexpr int N_points{4};
+            constexpr int N_points{6};
             geometry_msgs::Polygon polygon;
             for (int i = 0; i < N_points; i++){
                 const float angle = static_cast<float>(i)*2.f*PI/N_points;
                 auto local_pos = avoidZone(angle, clearance);
-                local_pos = vectorSum(local_pos, obstacle_global_position);
 
                 geometry_msgs::Point32 global_pos;
                 global_pos.x = obstacle_global_position.x + local_pos.x;
