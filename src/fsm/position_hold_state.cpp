@@ -49,9 +49,14 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     using control::DroneHandler;
     //No need to check other commands
     if(event.isValidCMD()) {
-        //All valid commands need to go to correct place on arena before anything else
-        fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-        return;
+        if(event.isValidCMD(CommandType::TAKEOFF)) {
+            //Takeoff completed
+            event.finishCMD();
+        } else {
+            //All other valid commands need to go to correct place on arena before anything else
+            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
+            return;
+        }
     }
     try {
         if(!control::DroneHandler::isLocalPoseValid()) {
