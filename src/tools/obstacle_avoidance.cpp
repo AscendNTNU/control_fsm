@@ -74,14 +74,10 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             const bool setpoint_reachable = fabs(fmod(drone_angle_to_obstacle - setpoint_angle_to_obstacle, 2*PI)) < 3*PI/8;
 
             const auto clearance = std::max(Config::obstacle_clearance_max*drone_speed_ratio, Config::obstacle_clearance_min);
-            geometry_msgs::Vector3 minimum_vector = avoidZone(drone_angle_to_obstacle, clearance);
+            const geometry_msgs::Vector3 minimum_vector = avoidZone(drone_angle_to_obstacle, clearance);
 
             // Rotate to global coordinate system
             const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
-
-            //minimum_vector = rotateXY(minimum_vector, obstacle_direction);
-
-            //ROS_INFO("Minimum pos: %.3f\t%.3f", obstacle_global_position.x + minimum_vector.x, obstacle_global_position.y + minimum_vector.y);
 
             // generate points for zone_pub_
             constexpr int N_points{4};
@@ -116,8 +112,8 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
                     }
                     // need to avoid obstacle
                     setpoint_modified = true;
-                    setpoint->position.x = obstacle_global_position.x + minimum_vector.x;
-                    setpoint->position.y = obstacle_global_position.y + minimum_vector.y;
+                    setpoint->position.x = minimum_vector.x;
+                    setpoint->position.y = minimum_vector.y;
                     if (setpoint->position.z < Config::min_in_air_alt){
                         setpoint->position.z = Config::min_in_air_alt;
                     }
