@@ -1,6 +1,5 @@
 #include <control/fsm/action_server.hpp>
 #include <control/tools/logger.hpp>
-#include <control/tools/config.hpp>
 
 constexpr int MAX_ITERATIONS = 100;
 using control::Config;
@@ -83,6 +82,9 @@ void ActionServer::handleNewGoal(ControlFSM *fsm_p) {
         case GOALTYPE::SEARCH:
             startSearch(current_goal, fsm_p);
             break;
+        case GOALTYPE::TAKEOFF:
+            startTakeoff(current_goal, fsm_p);
+            break;
         default:
             control::handleErrorMsg("[Control Action Server] Not a valid or available action");
             as_.setPreempted();
@@ -112,7 +114,14 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
         return;
     }
 
-    GoToXYZCMDEvent go_to_event(goal_p->x, goal_p->y, goal_p->z);
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
+     */
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
+
+    GoToXYZCMDEvent go_to_event(goal_x, goal_y, goal_p->z);
     //Set callback to run on completion
     go_to_event.setOnCompleteCallback([this]() {
         onActionComplete();
@@ -131,7 +140,13 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
 
 //If goal is landxy, send valid landxy cmd to fsm
 void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
-    LandXYCMDEvent land_xy_event(goal_p->x, goal_p->y);
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
+     */
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
+    LandXYCMDEvent land_xy_event(goal_x, goal_y);
     //Set callback to run on complete
     land_xy_event.setOnCompleteCallback([this]() {
         onActionComplete();
@@ -155,8 +170,35 @@ void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     as_.setAborted(result);
 }
 
+void ActionServer::startTakeoff(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
+    TakeoffCMDEvent takeoff_event;
+    //Set callback to run on complete
+    takeoff_event.setOnCompleteCallback([this](){
+        onActionComplete();
+    });
+    //Set callback to run on feedback
+    takeoff_event.setOnFeedbackCallback([this](const std::string& msg) {
+        onActionFeedback(msg);
+    });
+    //Set callback to run on error
+    takeoff_event.setOnErrorCallback([this](const std::string& msg) {
+        onActionError(msg);
+    });
+    //Run event in fsm
+    fsm_p->handleEvent(takeoff_event);
+    action_is_running_ = true;
+
+}
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
-    GoToXYZCMDEvent search_event(goal_p->x, goal_p->y, control::Config::gb_search_altitude);
+
+    /*AI sends relative X and Y targets
+     * To avoid rewriting large parts of the FSM, we transform the relative points to local frame
+     */
+    auto local_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+    double goal_x = local_position.x + goal_p->dx;
+    double goal_y = local_position.y + goal_p->dy;
+
+    GoToXYZCMDEvent search_event(goal_x, goal_y, control::Config::gb_search_altitude);
     //Set callback to run on complete
     search_event.setOnCompleteCallback([this](){
         onActionComplete();
@@ -194,16 +236,18 @@ void ActionServer::onActionComplete() {
         ascend_msgs::ControlFSMResult result;
         action_is_running_ = false;
         as_.setSucceeded(result);
+        control::handleInfoMsg("Action completed");
 }
 
 void ActionServer::onActionFeedback(const std::string& msg) {
         ascend_msgs::ControlFSMFeedback fb;
         fb.progression = msg;
         as_.publishFeedback(fb);
+        control::handleInfoMsg(std::string("Action feedback: ") + msg);
 }
 
 void ActionServer::onActionError(const std::string& msg) {
-        control::handleWarnMsg(std::string("CMD error: ") + msg);
+        control::handleWarnMsg(std::string("Action error: ") + msg);
         ascend_msgs::ControlFSMResult result;
         action_is_running_ = false;
         as_.setAborted(result);
@@ -214,7 +258,6 @@ bool ActionServer::actionStateServiceCB(ActionServer::StateRequest& req, ActionS
 
     state_s_.ai_enabled = req.ai_enabled;
     state_s_.debug_enabled = req.debug_enabled;
-
     control::handleInfoMsg(std::string("AI Actions: ") + (state_s_.ai_enabled ? "Enabled" : "Disabled"));
     control::handleInfoMsg(std::string("DEBUGGER Actions: ") + (state_s_.debug_enabled ? "Enabled" : "Disabled"));
     resp.result = static_cast<unsigned char>(true);

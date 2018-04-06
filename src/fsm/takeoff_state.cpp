@@ -50,11 +50,11 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     }
     try {
         //If no position is available - abort takeoff
-        if (!control::DroneHandler::isPoseValid()) {
+        if (!control::DroneHandler::isLocalPoseValid()) {
             throw control::PoseNotValidException();
         }
         //Get orientation quaternion
-        auto q = control::DroneHandler::getCurrentPose().pose.orientation;
+        auto q = control::DroneHandler::getCurrentLocalPose().pose.orientation;
         //Set yaw setpoint based on current rotation
         setpoint_.yaw = static_cast<float>(control::getMavrosCorrectedTargetYaw(control::pose::quat2yaw(q)));
     } catch(const std::exception& e) {
@@ -70,7 +70,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
 void TakeoffState::loopState(ControlFSM& fsm) {
     using control::Config;
     try {
-        auto current_position = control::DroneHandler::getCurrentPose().pose.position;
+        auto current_position = control::DroneHandler::getCurrentLocalPose().pose.position;
 
         //Only use takeoff setpoint in the critical part of takeoff! Avoid overshoot!
         if(current_position.z >= Config::min_in_air_alt) {
@@ -78,7 +78,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
         } else {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
         }
-
+      
         if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
             //If it's a takeoff command, set completed.
             if(cmd_.isValidCMD(CommandType::TAKEOFF)) {
@@ -92,7 +92,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
             } else {
                 RequestEvent event(RequestType::BLINDHOVER);
                 //Pass on altitude target
-                event.position_goal = PositionGoal(setpoint_.position.z);
+                event.setpoint_target = PositionGoal(setpoint_.position.z);
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event);
             }
         }

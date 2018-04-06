@@ -5,6 +5,7 @@
 #include <mavros_msgs/State.h>
 #include <memory>
 #include <ros/ros.h>
+#include <tf2_ros/transform_listener.h>
 namespace control {
 /** Handles state information recieved from the drone
  * Singleton pattern gurantees one, and only one instance
@@ -15,6 +16,11 @@ class DroneHandler {
 private:
     ///Shared instance - will always exist after created!
     static std::unique_ptr<DroneHandler> shared_instance_p_;
+
+    ///Transform buffer
+    tf2_ros::Buffer tf_buffer_;
+    ///Transform listener
+    tf2_ros::TransformListener tf_listener_;
     ///Nodehandler
     ros::NodeHandle n_;
     ///Subscriber recieving pose
@@ -31,21 +37,32 @@ private:
     void onPoseRecievedCB(geometry_msgs::PoseStamped::ConstPtr msg_p) { last_pose_ = msg_p; }
     ///On new twist recieved
     void onTwistRecievedCB(geometry_msgs::TwistStamped::ConstPtr msg_p) { last_twist_ = msg_p;}
-public:
-    ///Returns pointer to shared instance
-    static const DroneHandler* getSharedInstancePtr();
-    ///Returns last pose from shared instance
-    static const geometry_msgs::PoseStamped& getCurrentPose();
-    ///Returns last twist from shared instance
-    static const geometry_msgs::TwistStamped& getCurrentTwist();
-    ///Get latest pose
-    const geometry_msgs::PoseStamped& getPose() const;
+    ///Get latest local pose
+    const geometry_msgs::PoseStamped& getLocalPose() const;
     ///Get latest twist
     const geometry_msgs::TwistStamped& getTwist() const;
+    ///Returns pointer to shared instance
+    static const DroneHandler* getSharedInstancePtr();
+
+public:
+    ///Returns last local pose from shared instance
+    static geometry_msgs::PoseStamped getCurrentLocalPose();
+    ///Returns last global pose from shared instance
+    static geometry_msgs::PoseStamped getCurrentGlobalPose();
+    ///Returns last twist from shared instance
+    static geometry_msgs::TwistStamped getCurrentTwist();
     ///Is pose data valid?
-    static bool isPoseValid();
+    static bool isLocalPoseValid();
     ///Is twist data valid?
     static bool isTwistValid();
+    ///Is pose data and transform valid
+    static bool isGlobalPoseValid();
+    ///Is transform data valid
+    static bool isTransformsValid();
+    ///Get transform from global to local frame
+    static geometry_msgs::TransformStamped getGlobal2LocalTf();
+    ///Get transform from local to global frame
+    static geometry_msgs::TransformStamped getLocal2GlobalTf();
 };
 }
 #endif
