@@ -44,15 +44,15 @@ inline double calcDistanceToObstacle(const T& point, const K& obstacle_position)
 }
 
 
-template<typename T, typename K, typename N>
-inline N calcAngleToObstacle(const T& point, const K& obstacle_position, const N obstacle_direction){
+template<typename T, typename K>
+inline float calcAngleToObstacle(const T& point, const K& obstacle_position){
     T delta_drone_obstacle;
     delta_drone_obstacle.x = point.x - obstacle_position.x;
     delta_drone_obstacle.y = point.y - obstacle_position.y;
 
-    const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle_direction);
+    //const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle_direction);
 
-    return angle_to_obstacle;
+    return angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x));
 }
 
 // Apply 2d transformation matrix
