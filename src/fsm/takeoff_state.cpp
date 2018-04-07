@@ -27,7 +27,7 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
             control::handleWarnMsg("Illegal transition request");
         }
     } else if(event.isValidCMD()) {
-        if(cmd_.isValidCMD()) {
+        if(!cmd_.isValidCMD()) {
             cmd_ = event;
         } else {
             event.eventError("Finish old CMD before sending new");
