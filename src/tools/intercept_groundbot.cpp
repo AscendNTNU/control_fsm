@@ -95,7 +95,7 @@ bool control::gb::interceptGB(const PoseStamped& quad_position, const GRState& r
 
 	setpoint_temp.velocity.x = interception_gain * distance_x + roomba_velocity.x;
 	setpoint_temp.velocity.y = interception_gain * distance_y + roomba_velocity.y;
-	setpoint_temp.velocity.z = interception_gain_z * (distance_z)+ roomba_velocity.z - 0.1/(inner_product + 1);
+	setpoint_temp.velocity.z = 0.0 /*interception_gain_z * (distance_z)+ roomba_velocity.z - 0.1/(inner_product + 1);*/
 
 
 	wrong_measurements = 0; 
