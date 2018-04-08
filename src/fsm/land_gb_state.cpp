@@ -13,13 +13,18 @@ using GRstate = ascend_msgs::GRState;
 using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
-enum class LocalState: int {IDLE, LAND, RECOVER, ABORT, COMPLETED};
+enum class LocalState: int {IDLE, SETUP, LAND, RECOVER, ABORT, COMPLETED};
 //Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
 
 //Forward declarations
 LocalState idleStateHandler(const GRstate& gb_pose,
+                            const PoseStamped& drone_pose,
+                            PosTarget* setpoint_p,
+                            const EventData& cmd);
+
+LocalState setupStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
                             PosTarget* setpoint_p,
                             const EventData& cmd);
@@ -45,8 +50,9 @@ LocalState completedStateHandler(const GRstate& gb_state,
                                  const EventData& cmd);
 
 //State function array, containing all the state functions.
-std::array<std::function<decltype(idleStateHandler)>, 5> state_function_array = {
+std::array<std::function<decltype(idleStateHandler)>, 6> state_function_array = {
     idleStateHandler,
+    setupStateHandler,
     landStateHandler,
     recoverStateHandler,
     abortStateHandler,
@@ -74,7 +80,7 @@ LocalState idleStateHandler(const GRstate& gb_pose,
         drone_pos.z > HEIGHT_THRESHOLD      &&
         gb_pose.downward_tracked) {
 	    control::handleInfoMsg("Start land");    
-        return LocalState::LAND;
+        return LocalState::SETUP;
     } else {
         std::string msg = "Can't land! Distance: ";
         msg += std::to_string(distance_to_gb < DISTANCE_THRESHOLD);
@@ -85,10 +91,10 @@ LocalState idleStateHandler(const GRstate& gb_pose,
     }
 }
 
-LocalState landStateHandler(const GRstate& gb_pose,
-                            const PoseStamped& drone_pose,
-                            PosTarget* setpoint_p,
-                            const EventData& cmd) {
+LocalState setupStateHandler(const GRstate& gb_pose,
+                             const PoseStamped& drone_pose,
+                             PosTarget* setpoint_p,
+                             const EventData& cmd) {
     //Calls service to change to the GMFRAME transform
     ascend_msgs::GroundRobotTransform tf;
     tf.request.state = tf.request.GBFRAME;
@@ -99,17 +105,23 @@ LocalState landStateHandler(const GRstate& gb_pose,
         return LocalState::ABORT;
     }
     if (!tf.response.success) return LocalState::LAND;
+    else return LocalState::SETUP;
+}
 
+LocalState landStateHandler(const GRstate& gb_pose,
+                            const PoseStamped& drone_pose,
+                            PosTarget* setpoint_p,
+                            const EventData& cmd) {
     //Runs the interception algorithm
     bool interception_ok = control::gb::interceptGB(drone_pose, gb_pose, *setpoint_p);
     
     //Checks if we have landed or the data is not good.
     if(LandDetector::isOnGround()) {
         //Success
-	control::handleInfoMsg("Land successfull");
+	control::handleInfoMsg("Land successful!");
         return LocalState::RECOVER;
     } else if(!interception_ok) {
-	control::handleErrorMsg("Land oh shit");
+	control::handleErrorMsg("Interception algorithm failed!");
         //Oh shit!
         return LocalState::ABORT;
     } else {
