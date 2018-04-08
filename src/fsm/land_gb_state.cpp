@@ -282,8 +282,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
         tf.request.state = tf.request.LOCALFRAME;
         if (ros::service::call(control::Config::transform_gb_service, tf)) {
             control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
-        }
-        if (tf.response.success) {
+        } else if (tf.response.success) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
             transition.setpoint_target = PositionGoal(setpoint_.position.z);
@@ -299,8 +298,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
         tf.request.state = tf.request.LOCALFRAME;
         if (ros::service::call(control::Config::transform_gb_service, tf)) {
             control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
-        }
-        if (tf.response.success) {
+        } else if (tf.response.success) {
             cmd_.abort();
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
