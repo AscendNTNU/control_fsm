@@ -93,7 +93,11 @@ LocalState landStateHandler(const GRstate& gb_pose,
     ascend_msgs::GroundRobotTransform tf;
     tf.request.state = tf.request.GBFRAME;
     tf.request.gb_id = cmd.gb_id;
-    ros::service::call(control::Config::transform_gb_service, tf);
+    if (!ros::service::call(control::Config::transform_gb_service, tf)) {
+        //Failing the transform is critical!
+        control::handleCriticalMsg("GB Transform service is not available!");
+        return LocalState::ABORT;
+    }
     if (!tf.response.success) return LocalState::LAND;
 
     //Runs the interception algorithm
@@ -264,7 +268,9 @@ void LandGBState::loopState(ControlFSM& fsm) {
     if (local_state == LocalState::COMPLETED) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
-        ros::service::call(control::Config::transform_gb_service, tf);
+        if (ros::service::call(control::Config::transform_gb_service, tf)) {
+            control::handleCriticalMsg("GB Transform service is not available!");
+        }
         if (tf.response.success) {
             cmd_.finishCMD();
             RequestEvent transition(RequestType::POSHOLD);
@@ -276,7 +282,9 @@ void LandGBState::loopState(ControlFSM& fsm) {
     if (local_state == LocalState::ABORT) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
-        ros::service::call(control::Config::transform_gb_service, tf);
+        if (ros::service::call(control::Config::transform_gb_service, tf)) {
+            control::handleCriticalMsg("GB Transform service is not available");
+        }
         if (tf.response.success) {
             cmd_.abort();
             RequestEvent abort_event(RequestType::ABORT);
