@@ -34,11 +34,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
         }
     } else if(event.isValidCMD()) {
         if(!cmd_.isValidCMD()) {
-            if(event.isValidCMD(CommandType::TAKEOFF)) {
-                event.finishCMD();
-            } else {
-                cmd_ = event; //Hold event until position is regained.
-            }
+            cmd_ = event; //Hold event until position is regained.
         } else {
             event.eventError("CMD rejected!");
             control::handleInfoMsg("ABORT old command first");
@@ -46,6 +42,16 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
     } else  {
         control::handleInfoMsg("Event ignored!");
     }
+}
+
+bool poseIsValid() {
+    using control::Config;
+    using control::DroneHandler;
+    auto pos = DroneHandler::getCurrentLocalPose().pose.position;
+    bool valid_altitude = (pos.z >= Config::min_in_air_alt + Config::altitude_reached_margin);
+
+    if(!control::DroneHandler::isLocalPoseValid()) return false;
+    return valid_altitude;
 }
 
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
@@ -64,8 +70,8 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
                 }
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
             }
-            return;
         }
+        return;
     } catch(const std::exception& e) {
         //Exceptions should NEVER occur! Critical bug!
         control::handleCriticalMsg(e.what());

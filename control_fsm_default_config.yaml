@@ -3,6 +3,8 @@
     altitude_reached_margin: 0.1,
     #Default blind hover altitude
     blind_hover_altitude: 1.0,
+    #Safe altitude for hovering
+    safe_hover_alt: 1.0, 
     #When is a destination reached
     dest_reached_margin: 0.2,
     #Topic for publishing error messages
@@ -43,8 +45,6 @@
     require_all_streams: true,
     #Require obstacle detection 
     require_obs_detection: true, 
-    #Safe altitude for hovering
-    safe_hover_alt: 1.0, 
     #Margin to determine if we're close enough to setpoint
     setp_reached_margin: 0.2, 
     #Buffersize for status messages
