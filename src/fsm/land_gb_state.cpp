@@ -104,7 +104,7 @@ LocalState setupStateHandler(const GRstate& gb_pose,
         control::handleCriticalMsg("GB Transform service is unavailable!");
         return LocalState::ABORT;
     }
-    if (!tf.response.success) return LocalState::LAND;
+    if (tf.response.success) return LocalState::LAND;
     else return LocalState::SETUP;
 }
 
