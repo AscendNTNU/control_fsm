@@ -101,7 +101,7 @@ LocalState setupStateHandler(const GRstate& gb_pose,
     tf.request.gb_id = cmd.gb_id;
     if (!ros::service::call(control::Config::transform_gb_service, tf)) {
         //Failing the transform is critical!
-        control::handleCriticalMsg("GB Transform service is not available!");
+        control::handleCriticalMsg("GB Transform service is unavailable!");
         return LocalState::ABORT;
     }
     if (!tf.response.success) return LocalState::LAND;
@@ -281,7 +281,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
         if (ros::service::call(control::Config::transform_gb_service, tf)) {
-            control::handleCriticalMsg("GB Transform service is not available!");
+            control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
         }
         if (tf.response.success) {
             cmd_.finishCMD();
@@ -295,7 +295,7 @@ void LandGBState::loopState(ControlFSM& fsm) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
         if (ros::service::call(control::Config::transform_gb_service, tf)) {
-            control::handleCriticalMsg("GB Transform service is not available");
+            control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
         }
         if (tf.response.success) {
             cmd_.abort();
