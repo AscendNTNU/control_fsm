@@ -34,6 +34,7 @@ std::string Config::land_detector_topic = "land_detector";
 std::string Config::land_detector_type = "landing_gear";
 std::string Config::obstacle_state_topic = "/perception_obstacle_states";
 std::string Config::ground_robot_state_topic = "/ai/world_observation";
+std::string Config::transform_gb_service = "transform_gb_service";
 std::string Config::debug_server_topic = "/control/fsm/debug_server";
 std::string Config::action_server_topic = "/control/fsm/action_server";
 int Config::fsm_status_buffer_size = 10;

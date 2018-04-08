@@ -69,6 +69,8 @@ public:
     static std::string obstacle_state_topic;
     /// \fsmparam Topic for recieving ground robot state
     static std::string ground_robot_state_topic;
+    /// \fsmparam Topic for ground robot transform service
+    static std::string transform_gb_service;
     /// \fsmparam Topic for recieving debug service requests
     static std::string debug_server_topic;
     /// \fsmparam Topic for action server
