@@ -282,8 +282,6 @@ void LandGBState::loopState(ControlFSM& fsm) {
         tf.request.state = tf.request.LOCALFRAME;
         if (ros::service::call(control::Config::transform_gb_service, tf)) {
             control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
-            //Sets the setpoint mask to blind hover
-            setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
         }
         if (tf.response.success) {
             cmd_.finishCMD();
@@ -292,14 +290,15 @@ void LandGBState::loopState(ControlFSM& fsm) {
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
             return;
         }
+        //Sets the setpoint mask to blindhover.
+        setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
+
     }
     if (local_state == LocalState::ABORT) {
         ascend_msgs::GroundRobotTransform tf;
         tf.request.state = tf.request.LOCALFRAME;
         if (ros::service::call(control::Config::transform_gb_service, tf)) {
             control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
-            //Sets the setpoint mask to blind hover
-            setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
         }
         if (tf.response.success) {
             cmd_.abort();
@@ -307,6 +306,9 @@ void LandGBState::loopState(ControlFSM& fsm) {
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
             return; 
         }
+        //Sets the setpoint mask to blindhover.
+        setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
+
     }
 
 }
