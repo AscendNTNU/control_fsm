@@ -8,8 +8,7 @@ namespace obstacle_math {
 constexpr double PI{3.14159265358979323846264338327950288419};
 
 // wrap any angle to range [0, 2pi)
-template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-T angleWrapper(const T angle){
+float angleWrapper(const float angle){
     return angle - 2*PI*floor(angle/(2*PI));
 }
 
