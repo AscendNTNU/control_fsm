@@ -316,11 +316,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     refreshObstacles();
     refreshUnsafeZones();
 
-    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
-        std::cout << "\n GET OOOOOUT!!! \n\n";
-        return;
-    }
-
     /*
     if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
         std::cout << "\n GET OOOOOUT!!! \n\n";
@@ -375,12 +370,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
 
     int x_index = coordToIndex(x);
     int y_index = coordToIndex(y);
-
-    if(graph[x_index][y_index].unsafe){
-        std::cout << "End point unsafe, invalid!" << std::endl;
-        return;
-    }
-
 
     // Calculate all f values and set the parents
     relaxGraph();
