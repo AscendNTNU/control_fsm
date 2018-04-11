@@ -49,7 +49,6 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
         // Do this to fill the circle
         for(float i = center_y-y; i<=center_y+y; i+= node_distance) {
             if (isValidCoordinate(x, i)) {
-                graph[coordToIndex(x)][coordToIndex(i)].closed = true;
                 graph[coordToIndex(x)][coordToIndex(i)].obstacle = true;
             }
         }
@@ -60,7 +59,6 @@ void PathPlanner::addObstacle(float center_x, float center_y) {
         float x = sqrt(obstacle_radius*obstacle_radius-(y-center_y)*(y-center_y));
         for(float i = center_x-x; i<=center_x+x; i+= node_distance) {
             if (isValidCoordinate(i, y)) {
-                graph[coordToIndex(i)][coordToIndex(y)].closed = true;
                 graph[coordToIndex(i)][coordToIndex(y)].obstacle = true;
             }
         }
@@ -94,7 +92,6 @@ void PathPlanner::addUnsafeZone(float center_x, float center_y) {
         // Do this to fill the circle
         for(float i = center_y-y; i<=center_y+y; i+= node_distance) {
             if (isValidCoordinate(x, i)) {
-                graph[coordToIndex(x)][coordToIndex(i)].closed = true;
                 graph[coordToIndex(x)][coordToIndex(i)].unsafe = true;
             }
         }
@@ -105,7 +102,6 @@ void PathPlanner::addUnsafeZone(float center_x, float center_y) {
         float x = sqrt(unsafe_radius*unsafe_radius-(y-center_y)*(y-center_y));
         for(float i = center_x-x; i<=center_x+x; i+= node_distance) {
             if (isValidCoordinate(i, y)) {
-                graph[coordToIndex(i)][coordToIndex(y)].closed = true;
                 graph[coordToIndex(i)][coordToIndex(y)].unsafe = true;
             }
         }
@@ -193,6 +189,13 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             float new_g = graph[coordToIndex(parent_x)][coordToIndex(parent_y)].getG() + distance_to_parent;
             // Update graph and open list if distance is less than before through the parent
             if(graph[x_index][y_index].getG() > new_g) {
+                // The heuristic values 100 and 50 are just found by testing, and can be further tuned
+                // These values are to make the cost of moving through the current node larger
+                if (graph[x_index][y_index].obstacle) {
+                    new_g = new_g * 100;
+                } else if (graph[x_index][y_index].unsafe) {
+                    new_g = new_g * 50;
+                }
                 graph[x_index][y_index].updateF(new_g);
                 // For visualization
                 if(max_f < graph[x_index][y_index].getF()){
@@ -265,7 +268,7 @@ bool PathPlanner::canSimplifyLine(float x1, float y1, float x2, float y2) {
         y1 += delta_y/num_points;
         // checking if the line goes through an obstacle at this point
         if(isValidCoordinate(x1,y1)){
-            if (graph[coordToIndex(x1)][coordToIndex(y1)].unsafe) {
+            if (graph[coordToIndex(x1)][coordToIndex(y1)].obstacle) {
                 return false;
             }
         }
