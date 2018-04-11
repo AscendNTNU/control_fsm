@@ -43,10 +43,10 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         cmd_.sendFeedback("Landing!");
     }
     try {
-        if(!control::DroneHandler::isPoseValid()) {
+        if(!control::DroneHandler::isLocalPoseValid()) {
             throw control::PoseNotValidException();
         }
-        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
         //Position XY is ignored in typemask, but the values are set as a precaution.
         setpoint_.position.x = position.x;
@@ -55,10 +55,10 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //If it is a valid landxy command
         if(cmd_.isValidCMD() && cmd_.command_type == CommandType::LANDXY) {
             //Set xy setpoint to positionGoal if we're close enough for it to be safe
-            double xy_dist_square = std::pow(position.x - event.position_goal.x, 2) + std::pow(position.y - event.position_goal.y, 2);
-            if(xy_dist_square <= std::pow(control::Config::dest_reached_margin, 2)) {
-                setpoint_.position.x = event.position_goal.x;
-                setpoint_.position.y = event.position_goal.y;
+            double xy_dist_square = std::pow(position.x - event.setpoint_target.x, 2) + std::pow(position.y - event.setpoint_target.y, 2);
+            if(xy_dist_square <= std::pow(control::Config::setpoint_reached_margin, 2)) {
+                setpoint_.position.x = event.setpoint_target.x;
+                setpoint_.position.y = event.setpoint_target.y;
             }
         }
 
@@ -85,7 +85,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
 void LandState::loopState(ControlFSM& fsm) {
     try {
-        auto pose_stamped = control::DroneHandler::getCurrentPose();
+        auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
         //Switch to blind land when altitude is below certain limit.
         if(position.z >= control::Config::min_in_air_alt) {

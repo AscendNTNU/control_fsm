@@ -9,16 +9,68 @@
 
 #include <control/tools/target_tools.hpp>
 #include <control/fsm/control_fsm.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <control/tools/config.hpp>
 #include <control/planner/path_planner.hpp>
+#include <control/tools/drone_handler.hpp>
 #include "gtest/gtest.h"
 #include <sstream>
+#include <tf2/LinearMath/Transform.h>
 
 constexpr double PI_HALF = 1.57079632679;
 constexpr double PI = 3.14159265359;
 
+TEST(ControlTest, tfTest) {
+    using control::DroneHandler;
+    ros::Time start_time = ros::Time::now();
+    
+    while(ros::ok() &&
+          !DroneHandler::isTransformsValid() &&
+          !DroneHandler::isGlobalPoseValid()) {
+
+        ros::Duration(0.1).sleep();
+        ros::spinOnce();
+        if(ros::Time::now() - start_time > ros::Duration(2.0)) {
+            return;
+        }
+    }
+
+    const auto local_to_global_tf = DroneHandler::getLocal2GlobalTf();
+    const auto global_to_local_tf = DroneHandler::getGlobal2LocalTf();
+    const auto local_pose = DroneHandler::getCurrentLocalPose();
+    const auto global_pose = DroneHandler::getCurrentGlobalPose();
+
+    auto expected_global_x = local_pose.pose.position.x + local_to_global_tf.transform.translation.x;
+    auto expected_global_y = local_pose.pose.position.y + local_to_global_tf.transform.translation.y;
+
+    //Get transform message
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
+
+
+    //Get tf matrix
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+
+    //Get position goal matrix
+    tf2::Vector3 local_vec3;
+    tf2::convert(local_pose.pose.position, local_vec3);
+    //Apply global to local transform
+    tf2::Vector3 global_vec3 = tf_matrix * local_vec3;
+
+    EXPECT_FLOAT_EQ(-1.0, local_to_global_tf.transform.translation.x);
+    EXPECT_FLOAT_EQ(1.0, local_to_global_tf.transform.translation.y);
+    EXPECT_FLOAT_EQ(0.0, local_to_global_tf.transform.translation.z);
+    EXPECT_FLOAT_EQ(-1.0, global_to_local_tf.transform.translation.y);
+    EXPECT_FLOAT_EQ(1.0, global_to_local_tf.transform.translation.x);
+    EXPECT_FLOAT_EQ(0.0, global_to_local_tf.transform.translation.z);
+    EXPECT_FLOAT_EQ(expected_global_x, global_pose.pose.position.x);
+    EXPECT_FLOAT_EQ(expected_global_y, global_pose.pose.position.y);
+    EXPECT_FLOAT_EQ(expected_global_x, global_vec3.x());
+    EXPECT_FLOAT_EQ(expected_global_y, global_vec3.y());
+    EXPECT_FLOAT_EQ(local_pose.pose.position.z, global_vec3.z());
+}
+
 TEST(ControlTest, configTest) {
-    control::Config::loadParams();
     std::stringstream not_found;
     for(auto& s : control::Config::getMissingParamSet()) {
         not_found << s << "\n";
@@ -31,9 +83,9 @@ TEST(ControlTest, goToStateHelpers) {
     test_vel.twist.linear.x = 0.0;
     test_vel.twist.linear.y = 0.0;
     test_vel.twist.linear.z = 0.0;
-    EXPECT_EQ(droneNotMoving(test_vel), true);
+    EXPECT_EQ(droneNotMovingXY(test_vel), true);
     test_vel.twist.linear.x = 3.0;
-    EXPECT_EQ(droneNotMoving(test_vel), false);
+    EXPECT_EQ(droneNotMovingXY(test_vel), false);
 
     EXPECT_NEAR(calculatePathYaw(2.0, 1.0), 0.0, 0.0001);
     EXPECT_NEAR(calculatePathYaw(1.0, 2.0), PI_HALF, 0.0001);
@@ -90,11 +142,27 @@ TEST(PathPlannerTest, coordToIndexTest) {
     EXPECT_EQ(obj2.coordToIndex(0.2499), 0);
     EXPECT_EQ(obj2.coordToIndex(10), 20);
     EXPECT_EQ(obj2.coordToIndex(0.4999), 1);
+}
 
+TEST(ControlTest, arenaBoundariesTest) {
+    using control::Config;
+    double valid_x = Config::arena_lowest_x + (Config::arena_highest_x - Config::arena_lowest_x) / 2.0;
+    double valid_y = Config::arena_lowest_y + (Config::arena_highest_y - Config::arena_lowest_y) / 2.0;
+    double invalid_x = Config::arena_lowest_x - 1.0;
+    double invalid_y = Config::arena_lowest_y - 1.0;
+    tf2::Vector3 vec(valid_x, valid_y, 1.0);
+    EXPECT_TRUE(targetWithinArena(vec));
+    vec = tf2::Vector3(valid_x, invalid_y, 1.0);
+    EXPECT_FALSE(targetWithinArena(vec));
+    vec = tf2::Vector3(invalid_x, valid_y, 1.0);
+    EXPECT_FALSE(targetWithinArena(vec));
+    vec = tf2::Vector3(invalid_x, invalid_y, 1.0);
+    EXPECT_FALSE(targetWithinArena(vec));
 }
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "control_fsm_unit_test");
+    control::Config::loadParams();
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

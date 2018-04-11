@@ -2,4 +2,6 @@
 	<test test-name="test_fsm" pkg="control_fsm" type="utest">
 		<rosparam file="$(find control_fsm)/control_fsm_default_config.yaml" command="load"/>
 	</test>
+	<node pkg="tf2_ros" type="static_transform_publisher" name="map_to_global_tf_node" args="1 -1 0 0 0 0 1 odom map"/>
+	<node pkg="rosbag" type="play" name="mavros_pos_node" args="--clock $(find control_fsm)/test/mavros_pos.bag"/>
 </launch>

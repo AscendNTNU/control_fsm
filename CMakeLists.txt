@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
       actionlib
       ascend_msgs
       tf2
+      tf2_ros
+      tf2_geometry_msgs
       roslaunch
 )
 
@@ -51,9 +53,14 @@ file(GLOB control_tools_SRC "src/tools/*.cpp")
 add_library(control_fsm_lib
         ${control_fsm_SRC}
 )
+
 #Control tools not directly related to the FSM
 add_library(control_tools_lib
         ${control_tools_SRC}
+)
+
+target_link_libraries(control_tools_lib
+        ${catkin_LIBRARIES}
 )
 
 target_link_libraries(control_fsm_lib
