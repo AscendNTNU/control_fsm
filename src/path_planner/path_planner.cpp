@@ -168,7 +168,7 @@ void PathPlanner::relaxGraph(){
 }
 
 void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent_y, float distance_to_parent) {
-    std::cout << "Successor = " << x << ", " << y << std::endl;
+    //std::cout << "Successor = " << x << ", " << y << std::endl;
     if(isValidCoordinate(x,y)){
         int x_index = coordToIndex(x);
         int y_index = coordToIndex(y);
@@ -210,7 +210,7 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 }
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
-    std::cout << "q = " << x << ", " << y << std::endl;
+    //std::cout << "q = " << x << ", " << y << std::endl;
     handleSuccessor(x+node_distance,y, x, y, node_distance);
     if(destination_reached){return;}
     handleSuccessor(x+node_distance, y+node_distance, x, y, diagonal_node_distance);
@@ -436,9 +436,7 @@ void PathPlanner::simplifyPlan() {
     std::list<Node>::iterator third = ++(simple_plan.begin());
     third++;
 
-    if(first == simple_plan.end()){
-        return;
-    } else if(second == simple_plan.end()){
+    if(first == simple_plan.end() || second == simple_plan.end()){
         return;
     }
 
