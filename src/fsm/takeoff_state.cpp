@@ -12,28 +12,44 @@
 #include <functional>
 
 using PosTarget_p = mavros_msgs::PositionTarget *;
-using DronePose = geometry_msgs::Point;
+using DronePos = geometry_msgs::Point;
 //Local state for takeoff
-enum class LocalState {LOW_ALT, HIGH_ALT};
+enum class LocalState {LOW_ALT, HIGH_ALT, TRANSITION};
 
 //Forward declaration of state functions.
-LocalState lowAltState(PosTarget_p target, const DronePose& pose);
-LocalState highAltState(PosTarget_p target, const DronePose& pose);
+LocalState lowAltState(PosTarget_p target, const DronePos& pos);
+LocalState highAltState(PosTarget_p target, const DronePos& pos);
+LocalState transitionState(PosTarget_p target, const DronePos& pos);
 
-std::array<std::function<decltype(lowAltState)>, 2> state_array = { lowAltState,
-                                                                    highAltState
+std::array<std::function<decltype(lowAltState)>, 3> state_array = { lowAltState,
+                                                                    highAltState,
+                                                                    transitionState
                                                                   };
 LocalState local_state = LocalState::LOW_ALT;
 std::function<decltype(lowAltState)> stateFunction = lowAltState;
 
-LocalState lowAltState(PosTarget_p target, const DronePose& pose) {
-    
-    return LocalState::LOW_ALT;
+LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
+    if(pos.z <= 1 - control::Config::altitude_reached_margin) {
+        return LocalState::LOW_ALT;
+    } else if (pos.z <= target->position.z - control::Config::altitude_reached_margin) {
+        //Activate position sampling and continue to desired altitude
+        return LocalState::HIGH_ALT; 
+    } else {
+        //Return a transition request
+        return LocalState::TRANSITION;
+    }
 }
 
-LocalState highAltState(PosTarget_p target, const DronePose& pose) {
-
+LocalState highAltState(PosTarget_p target, const DronePos& pos) {
+    target->type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
+    if (pos.z >= target->position.z - control::Config::altitude_reached_margin) {
+        return LocalState::TRANSITION;
+    }
     return LocalState::HIGH_ALT; 
+}
+
+LocalState transitionState(PosTarget_p target, const DronePos& pos) {
+    return LocalState::TRANSITION;
 }
 
 TakeoffState::TakeoffState() {
@@ -103,7 +119,7 @@ void TakeoffState::loopState(ControlFSM& fsm) {
         local_state = stateFunction(&setpoint_, current_position);
         stateFunction = state_array[static_cast<int>(local_state)];
 
-        if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
+        if (local_state == LocalState::TRANSITION) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
                 cmd_ = EventData();
