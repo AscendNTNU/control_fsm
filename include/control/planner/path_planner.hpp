@@ -68,6 +68,7 @@ public:
 
     // Add a circular obstacle
     void addObstacle(float center_x, float center_y);
+    Obstacle obstacleNextPos(float obstacle_x, float obstacle_y);
     void refreshObstacles();
     Obstacle* findBlockingObstacle(float current_x, float current_y);
 
