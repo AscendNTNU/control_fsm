@@ -87,7 +87,7 @@ Obstacle PathPlanner::obstacleNextPos(float obstacle_x, float obstacle_y) {
     float center_x = 10;
     float center_y = 10;
     float obstacle_angle = atan2(obstacle_y-center_y, obstacle_x-center_x); // radians
-    float angle_to_next_pos = -0.17; // radians
+    float angle_to_next_pos = 0.17; // radians
     float radius = sqrt((center_x-obstacle_x)*(center_x-obstacle_x)+(center_y-obstacle_y)*(center_y-obstacle_y));
     float next_x = center_x + radius*cos(obstacle_angle+angle_to_next_pos);
     float next_y = center_y + radius*sin(obstacle_angle+angle_to_next_pos);
