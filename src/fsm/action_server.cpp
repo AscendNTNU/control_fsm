@@ -134,8 +134,8 @@ void ActionServer::startGoTo(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     go_to_event.setOnErrorCallback([this](const std::string& msg) {
         onActionError(msg);
     });
-    fsm_p->handleEvent(go_to_event);
     action_is_running_ = true;
+    fsm_p->handleEvent(go_to_event);
 }
 
 //If goal is landxy, send valid landxy cmd to fsm
@@ -158,8 +158,8 @@ void ActionServer::startLandXY(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     land_xy_event.setOnErrorCallback([this](const std::string& msg) {
         onActionError(msg);
     });
-    fsm_p->handleEvent(land_xy_event);
     action_is_running_ = true;
+    fsm_p->handleEvent(land_xy_event);
 }
 
 void ActionServer::startLandGB(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
@@ -184,9 +184,9 @@ void ActionServer::startTakeoff(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     takeoff_event.setOnErrorCallback([this](const std::string& msg) {
         onActionError(msg);
     });
+    action_is_running_ = true;
     //Run event in fsm
     fsm_p->handleEvent(takeoff_event);
-    action_is_running_ = true;
 
 }
 void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
@@ -211,9 +211,9 @@ void ActionServer::startSearch(GoalSharedPtr goal_p, ControlFSM* fsm_p) {
     search_event.setOnErrorCallback([this](const std::string& msg) {
         onActionError(msg);
     });
+    action_is_running_ = true;
     //Run event in fsm
     fsm_p->handleEvent(search_event);
-    action_is_running_ = true;
 
 }
 
