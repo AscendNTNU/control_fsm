@@ -10,6 +10,7 @@ public:
     void handleEvent(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "ManualFlight"; }
     void loopState(ControlFSM& fsm) override;
+    void stateBegin(ControlFSM& fsm, const EventData& event) override;
     ascend_msgs::ControlFSMState getStateMsg() const override;
     //Returns setpoint
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
