@@ -9,6 +9,7 @@ constexpr double land_height = 0.18;
 
 ros::Publisher pub_mocap; 
 ros::Publisher pub_landing; 
+ros::Publisher pub_perception;
 
 ascend_msgs::AIWorldObservation ai_msg; 
 ascend_msgs::LandDetector landing_msg;
@@ -26,6 +27,8 @@ void quadCallback(const geometry_msgs::PoseStamped& input) {
     quad.pose.orientation.z = input.pose.orientation.y;
     quad.header = input.header;
     quad.header.frame_id = "map";
+
+    pub_perception(quad); 
 
     diff = ros::Time::now() - start_time; 
 	ai_msg.elapsed_time = diff.toSec();
@@ -81,6 +84,7 @@ int main(int argc, char **argv){
     ros::Subscriber sub_quad = n.subscribe("vrpn_client_node/quad/pose", 100, quadCallback);
     ros::Subscriber sub_roomba = n.subscribe("vrpn_client_node/roomba/pose", 100, roombaCallback); 
 
+    pub_perception = n.advertise<geometry_msgs::PoseStamped>("/perception/local_position",100);
     pub_landing = n.advertise<ascend_msgs::LandDetector>("land_detector", 100); 
     pub_mocap = n.advertise<ascend_msgs::AIWorldObservation>("/ai/world_observation",100);
     //Let ROS do its magic
