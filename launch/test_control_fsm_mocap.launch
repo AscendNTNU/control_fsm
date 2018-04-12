@@ -9,6 +9,12 @@
         <arg name="node_name" value="$(arg fsm_name)"/>
     </include>
     <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
+    <param name="$(arg fsm_name)/land_detector_topic" value="/land_detector"/>
+    <param name="$(arg fsm_name)/land_detector_type" value="landing_gear"/>
 
-
+    <node pkg="control_fsm" name="mocap_data_faker" type="mocap_data_faker"/>
+    	<remap from="/mavros/mocap/pose" to="/perception/local_position"/>
+    /node>
+    <node pkg="control_fsm" name="gb_pose_estimation" type="gb_pose_estimation"/>
+    	
 </launch>
