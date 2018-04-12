@@ -29,10 +29,12 @@ LocalState local_state = LocalState::LOW_ALT;
 std::function<decltype(lowAltState)> stateFunction = lowAltState;
 
 LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
-    if(pos.z <= 1 - control::Config::altitude_reached_margin) {
+    using control::Config;
+    if(pos.z <= low_alt_takeoff_marg - altitude_reached_margin) {
         return LocalState::LOW_ALT;
-    } else if (pos.z <= target->position.z - control::Config::altitude_reached_margin) {
+    } else if (pos.z <= takeoff_altitude - altitude_reached_margin) {
         //Activate position sampling and continue to desired altitude
+        //TODO: Add another state to sample position and set type_mask
         return LocalState::HIGH_ALT; 
     } else {
         //Return a transition request
@@ -41,8 +43,7 @@ LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
 }
 
 LocalState highAltState(PosTarget_p target, const DronePos& pos) {
-    target->type_mask = default_mask | SETPOINT_TYPE_TAKEOFF;
-    if (pos.z >= target->position.z - control::Config::altitude_reached_margin) {
+    if (pos.z >= control: - control::Config::altitude_reached_margin) {
         return LocalState::TRANSITION;
     }
     return LocalState::HIGH_ALT; 

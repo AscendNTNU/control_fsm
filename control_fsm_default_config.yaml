@@ -51,6 +51,8 @@
     status_msg_buffer_size: 10,
     #Takeoff altitude
     takeoff_altitude: 1.0, 
+    #Low alt takeoff margin
+    low_alt_takeoff_marg: 1.0,
     #Margin to determine if we're close enough to yaw setpoint
     yaw_reached_margin: 0.02,
     #Altitude for goto in landxy
