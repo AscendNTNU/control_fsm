@@ -28,7 +28,7 @@ void quadCallback(const geometry_msgs::PoseStamped& input) {
     quad.header = input.header;
     quad.header.frame_id = "map";
 
-    pub_perception(quad); 
+    pub_perception.publish(quad); 
 
     diff = ros::Time::now() - start_time; 
 	ai_msg.elapsed_time = diff.toSec();
@@ -84,8 +84,8 @@ int main(int argc, char **argv){
     ros::Subscriber sub_quad = n.subscribe("vrpn_client_node/quad/pose", 100, quadCallback);
     ros::Subscriber sub_roomba = n.subscribe("vrpn_client_node/roomba/pose", 100, roombaCallback); 
 
-    pub_perception = n.advertise<geometry_msgs::PoseStamped>("/perception/local_position",100);
-    pub_landing = n.advertise<ascend_msgs::LandDetector>("land_detector", 100); 
+    pub_perception = n.advertise<geometry_msgs::PoseStamped>("/mavros/mocap/pose",100);
+    pub_landing = n.advertise<ascend_msgs::LandDetector>("/land_detector", 100); 
     pub_mocap = n.advertise<ascend_msgs::AIWorldObservation>("/ai/world_observation",100);
     //Let ROS do its magic
     ros::Rate loop_rate(30);
