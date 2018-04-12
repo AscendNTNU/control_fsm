@@ -64,8 +64,8 @@
     #Margin to determine if velocity is reached
     velocity_reached_margin: 0.1,
     #Obstacle avoidance clearance 
-    obstacle_clearance_max: 2.8,
-    obstacle_clearance_min: 1.5,
+    obstacle_clearance_max: 1.1,
+    obstacle_clearance_min: 1.0,
     #Obstacle avoidance checkradius
     obstacle_clearance_checkradius: 40.0,
     #Frame ID for global frame
