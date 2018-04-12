@@ -4,7 +4,7 @@
 
 using namespace control::pathplanner;
 
-bool debug = true;
+bool debug = false;
 
 
 PathPlanner::PathPlanner(float obstacle_radius, float node_distance)
@@ -214,7 +214,7 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
 }
 
 void PathPlanner::handleAllSuccessors(float x, float y) {
-    //std::cout << "q = " << x << ", " << y << std::endl;
+    if(debug) {std::cout << "q = " << x << ", " << y << std::endl;}
     handleSuccessor(x+node_distance,y, x, y, node_distance);
     if(destination_reached){return;}
     handleSuccessor(x+node_distance, y+node_distance, x, y, diagonal_node_distance);
