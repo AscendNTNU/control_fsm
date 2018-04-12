@@ -80,6 +80,10 @@ void PathPlanner::refreshObstacles() {
 
     for(auto current = obstacles.begin(); current != obstacles.end(); current++){
         addObstacle(current->x, current->y);
+        Obstacle next_obstacle = obstacleNextPos(current->x,current->y);
+        addObstacle(next_obstacle.x, next_obstacle.y);
+        next_obstacle = obstacleNextPos(next_obstacle.x,next_obstacle.y);
+        addObstacle(next_obstacle.x, next_obstacle.y);
     }
 }
 
@@ -134,10 +138,6 @@ void PathPlanner::refreshUnsafeZones(){
 
     for(auto current = obstacles.begin(); current != obstacles.end(); current++){
         addUnsafeZone(current->x, current->y);
-        Obstacle next_obstacle = obstacleNextPos(current->x,current->y);
-        addUnsafeZone(next_obstacle.x, next_obstacle.y);
-        next_obstacle = obstacleNextPos(next_obstacle.x,next_obstacle.y);
-        addUnsafeZone(next_obstacle.x, next_obstacle.y);
     }
 }
 
