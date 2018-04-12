@@ -8,4 +8,5 @@ cmake-build-debug/
 *.out
 tags
 .vscode
+*.swp
 
