@@ -43,7 +43,6 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     using control::Config;
     //Takeoff altitude
     setpoint_.position.z = Config::takeoff_altitude;
-    //Takeoff finished threshold
 
     if(event.isValidCMD()) {
         cmd_ = event;
@@ -72,6 +71,14 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     using control::Config;
     try {
         auto current_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+
+        //Only use takeoff setpoint in the critical part of takeoff! Avoid overshoot!
+        if(current_position.z >= Config::min_in_air_alt) {
+            setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
+        } else {
+            setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
+        }
+      
         if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
