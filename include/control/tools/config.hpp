@@ -95,6 +95,22 @@ public:
     static std::string path_planner_plan_topic;
     /// \fsmparam Topic for planner service client
     static std::string path_planner_client_topic;
+    /// \fsmparam Frame id for global frame
+    static std::string global_frame_id;
+    /// \fsmparam Frame id for local frame
+    static std::string local_frame_id;
+    /// \fsmparam Use transform for global position
+    static bool use_global_transforms;
+    /// \fsmparam Restrict drone position to within arena
+    static bool restrict_arena_boundaries;
+    /// \fsmparam Lowest allowed x global position
+    static double arena_lowest_x;
+    /// \fsmparam Lowest allowed y global position
+    static double arena_lowest_y;
+    /// \fsmparam Highest allowed x global position
+    static double arena_highest_x;
+    /// \fsmparam Highest allowed y global position
+    static double arena_highest_y;
 
     /**Load paramaters
      * @throw control::ROSNotInitializedException

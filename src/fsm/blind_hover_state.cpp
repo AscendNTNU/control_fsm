@@ -34,11 +34,7 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
         }
     } else if(event.isValidCMD()) {
         if(!cmd_.isValidCMD()) {
-            if(event.isValidCMD(CommandType::TAKEOFF)) {
-                event.finishCMD();
-            } else {
-                cmd_ = event; //Hold event until position is regained.
-            }
+            cmd_ = event; //Hold event until position is regained.
         } else {
             event.eventError("CMD rejected!");
             control::handleInfoMsg("ABORT old command first");
@@ -48,24 +44,34 @@ void BlindHoverState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+bool poseIsValid() {
+    using control::Config;
+    using control::DroneHandler;
+    auto pos = DroneHandler::getCurrentLocalPose().pose.position;
+    bool valid_altitude = (pos.z >= Config::min_in_air_alt + Config::altitude_reached_margin);
+
+    if(!control::DroneHandler::isLocalPoseValid()) return false;
+    return valid_altitude;
+}
+
 void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     //Set default blind hover altitude
     setpoint_.position.z = control::Config::blind_hover_alt;
     try {
         //If full position is valid - no need to blind hover
-        if(control::DroneHandler::isPoseValid()) {
+        if(control::DroneHandler::isLocalPoseValid()) {
             if(event.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
             } else {
                 RequestEvent req_event(RequestType::POSHOLD);
                 //Set target altitude if passed on from takeoff
-                if(event.position_goal.z_valid) {
-                    req_event.position_goal = event.position_goal;
+                if(event.setpoint_target.z_valid) {
+                    req_event.setpoint_target = event.setpoint_target;
                 }
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, req_event);
             }
-            return;
         }
+        return;
     } catch(const std::exception& e) {
         //Exceptions should NEVER occur! Critical bug!
         control::handleCriticalMsg(e.what());
@@ -80,7 +86,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 void BlindHoverState::loopState(ControlFSM& fsm) {
     try {
         //Transition to position hold when position is valid.
-        if(control::DroneHandler::isPoseValid()) {
+        if(control::DroneHandler::isLocalPoseValid()) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
                 cmd_ = EventData(); //Reset cmd_

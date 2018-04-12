@@ -138,17 +138,6 @@ float PathPlanner::calculateEuclidianHeuristic(float x, float y) {
     return(sqrt((x-end_node.getX())*(x-end_node.getX())+(y-end_node.getY())*(y-end_node.getY())));
 }
 
-/*void PathPlanner::printGraph(){
-    for(int i = 0; i < graph_size; i++){
-        for(int j = 0; j < graph_size; j++){
-            std::cout << std::fixed;
-            std::cout << std::setprecision(2);
-            std::cout << graph[i][j].getF() << "  ";
-        }
-        std::cout << std::endl;
-    }
-}*/
-
 void PathPlanner::relaxGraph(){
     if (debug) {std::cout << "relaxGraph" << std::endl;}
     Node current_node;
@@ -316,71 +305,11 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     refreshObstacles();
     refreshUnsafeZones();
 
-    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
-        std::cout << "\n GET OOOOOUT!!! \n\n";
-        return;
-    }
-
-    /*
-    if(graph[coordToIndex(current_x)][coordToIndex(current_y)].unsafe) {
-        std::cout << "\n GET OOOOOUT!!! \n\n";
-        escape_from_obstacle = true;
-
-        // ---- make this a function ----
-
-        // Figure out which obstacle is blocking
-        Obstacle* blocking_obstacle = findBlockingObstacle(current_x, current_y);
-        if (!blocking_obstacle) {
-            std::cout << "Unable to solve problem!" << std::endl;
-            return;
-        }
-
-        // Find the direction of the obstacle
-        float obstacle_dir = blocking_obstacle->dir;
-        
-        // Find desired direction of the drone
-        struct Point {float x,y;};
-        Point current_point{current_x, current_y};
-        float drone_dir = obstacle_math::calcAngleToObstacle(current_point, *blocking_obstacle, obstacle_dir);
-
-        std::cout << "Drone direction: " << drone_dir << std::endl;
-       
-        // Find setpoint in right direction outside unsafe zone
-        // The safe zone is obstacle_radius*2, but to ensure that
-        // the new point is outside the safe zone, 2.5 is used here
-        float safe_radius = obstacle_radius*2.5;
-        float safe_x = safe_radius*cos(drone_dir)+blocking_obstacle->x;
-        float safe_y = safe_radius*sin(drone_dir)+blocking_obstacle->y;
-
-        if(!isValidCoordinate(safe_x, safe_y)) {
-            std::cout << "Cannot find safe point!" << std::endl;
-            return;
-        }
-        std::cout << "Safe point: " << safe_x << ", " << safe_y << std::endl;
-
-
-        // Add starting point to plan and plan a new plan from the
-        // setpoint to target
-        resetParameters();
-        start_node = Node(safe_x, safe_y, 0, 0);
-        start_node.setParentX(0);
-        start_node.setParentY(0);
-        initializeGraph();
-        refreshObstacles();
-        refreshUnsafeZones();
-    }*/
-
     float x = end_node.getX(); 
     float y = end_node.getY();
 
     int x_index = coordToIndex(x);
     int y_index = coordToIndex(y);
-
-    if(graph[x_index][y_index].unsafe){
-        std::cout << "End point unsafe, invalid!" << std::endl;
-        return;
-    }
-
 
     // Calculate all f values and set the parents
     relaxGraph();
@@ -413,19 +342,8 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         plan.push_front(graph.at(x_index).at(y_index));
     }
 
-    
-
-    // Print the plan - can be removed
-    /*std::cout << std::endl << "Whole plan:" << std::endl;
-    for (std::list<Node>::iterator it = plan.begin(); it!= plan.end(); ++it){
-        std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
-    }*/
-
     // Delete unnecessary points
     simplifyPlan();
-    if(escape_from_obstacle) {
-        simple_plan.push_front(graph[current_x][current_y]);
-    }
 }
 
 void PathPlanner::simplifyPlan() {
@@ -464,12 +382,6 @@ void PathPlanner::simplifyPlan() {
             third++;
         }
     }
-
-    // Print the remaining points
-    /*std::cout << "Simple plan: " << std::endl;
-    for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
-        std::cout << "x: " << it->getX() << " y: " << it->getY() << std::endl;
-    }*/
 }
 
 bool PathPlanner::isPlanSafe(float current_x, float current_y) {
