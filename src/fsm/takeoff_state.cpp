@@ -9,6 +9,32 @@
 #include <control/exceptions/pose_not_valid_exception.hpp>
 #include "control/tools/config.hpp"
 #include "control/tools/drone_handler.hpp"
+#include <functional>
+
+using PosTarget_p = mavros_msgs::PositionTarget *;
+using DronePose = geometry_msgs::Point;
+//Local state for takeoff
+enum class LocalState {LOW_ALT, HIGH_ALT};
+
+//Forward declaration of state functions.
+LocalState lowAltState(PosTarget_p target, const DronePose& pose);
+LocalState highAltState(PosTarget_p target, const DronePose& pose);
+
+std::array<std::function<decltype(lowAltState)>, 2> state_array = { lowAltState,
+                                                                    highAltState
+                                                                  };
+LocalState local_state = LocalState::LOW_ALT;
+std::function<decltype(lowAltState)> stateFunction = lowAltState;
+
+LocalState lowAltState(PosTarget_p target, const DronePose& pose) {
+    
+    return LocalState::LOW_ALT;
+}
+
+LocalState highAltState(PosTarget_p target, const DronePose& pose) {
+
+    return LocalState::HIGH_ALT; 
+}
 
 TakeoffState::TakeoffState() {
     setpoint_ = mavros_msgs::PositionTarget();
@@ -43,6 +69,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     using control::Config;
     //Takeoff altitude
     setpoint_.position.z = Config::takeoff_altitude;
+    local_state = LocalState::LOW_ALT;
     //Takeoff finished threshold
 
     if(event.isValidCMD()) {
@@ -72,6 +99,10 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     using control::Config;
     try {
         auto current_position = control::DroneHandler::getCurrentLocalPose().pose.position;
+        //Runs the state functions and sets the new state;
+        local_state = stateFunction(&setpoint_, current_position);
+        stateFunction = state_array[static_cast<int>(local_state)];
+
         if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
