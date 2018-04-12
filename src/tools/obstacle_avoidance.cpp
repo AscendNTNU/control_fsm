@@ -34,10 +34,10 @@ using obstacle_math::calcDistanceToObstacle;
 geometry_msgs::Vector3 calcMinimumLocalVector(const float drone_angle_to_obstacle, const float drone_direction, const float drone_speed_ratio,
                                               const float clearance_min, const float clearance_max){
 
-    auto angle = angleWrapper(PI + drone_angle_to_obstacle + drone_direction);
+    auto angle = angleWrapper(PI + drone_angle_to_obstacle - drone_direction);
 
     auto front_clearance = clearance_min;
-    if (drone_speed_ratio < 0.1){
+    if (drone_speed_ratio > 0.1){
         // direction is proabably noise, ignore it
         front_clearance = clearance_max;
         ROS_INFO_THROTTLE(5,"drone_speed_ratio %f", drone_speed_ratio);
@@ -123,27 +123,28 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         if (checkAndAvoidSingleObstacle(setpoint, drone_pose.pose.position, drone_velocity, obstacles.global_robot_position[i], zone_msg)){
             setpoint_modified = true;
         }
-        
-        if (i == 0){}
-            // generate points for zone_pub_
-            constexpr int N_points{16};
-            geometry_msgs::Polygon polygon;
-            for (int i = 0; i < N_points; i++){
-                const float angle = static_cast<float>(i)*2*PI/N_points;
-                const auto drone_direction = std::atan2(drone_velocity.y, drone_velocity.x);
-                const auto drone_speed = std::sqrt(std::pow(drone_velocity.x,2) + std::pow(drone_velocity.y,2));
-                const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
+    
+        // generate points for zone_pub_
+        constexpr int N_points{8};
+        geometry_msgs::Polygon polygon;
+        for (int j = 0; j < N_points; j++){
+            const float angle = static_cast<float>(j)*2.f*PI/static_cast<float>(N_points);
+            const auto drone_direction = std::atan2(drone_velocity.y, drone_velocity.x);
+            const auto drone_speed = std::sqrt(std::pow(drone_velocity.x,2) + std::pow(drone_velocity.y,2));
+            const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
 
-                const auto local_pos = calcMinimumLocalVector(angle, drone_direction, drone_speed_ratio, control::Config::obstacle_clearance_min, 2.0*control::Config::obstacle_clearance_min);
+            const auto local_pos = calcMinimumLocalVector(angle, drone_direction, drone_speed_ratio, control::Config::obstacle_clearance_min, 2.0*control::Config::obstacle_clearance_min);
+            
+            ROS_INFO_THROTTLE(1,"angle, local_pos: %.3f %.3f %.3f %.3f", angle, local_pos.x, local_pos.y, local_pos.z);
 
-                geometry_msgs::Point32 global_pos;
-                global_pos.x = obstacles.global_robot_position[i].x + local_pos.x;
-                global_pos.y = obstacles.global_robot_position[i].y + local_pos.y;
-                global_pos.z = obstacles.global_robot_position[i].z + local_pos.z;
+            geometry_msgs::Point32 global_pos;
+            global_pos.x = obstacles.global_robot_position[i].x + local_pos.x;
+            global_pos.y = obstacles.global_robot_position[i].y + local_pos.y;
+            global_pos.z = obstacles.global_robot_position[i].z + local_pos.z;
 
-                polygon.points.push_back(global_pos);
+            polygon.points.push_back(global_pos);
 
-                zone_msg.polygons.push_back(polygon);
+            zone_msg.polygons.push_back(polygon);
         }
 
         if (setpoint_modified){
