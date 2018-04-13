@@ -80,6 +80,8 @@ void PathPlanner::refreshObstacles() {
 
     for(auto current = obstacles.begin(); current != obstacles.end(); current++){
         addObstacle(current->x, current->y);
+        Obstacle next_obstacle = obstacleNextPos(current->x,current->y);
+        addObstacle(next_obstacle.x, next_obstacle.y);
     }
 }
 
