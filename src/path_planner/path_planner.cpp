@@ -299,7 +299,6 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
     if (debug) {std::cout << "Run makePlan" << std::endl;}
 
     no_plan = false;
-    bool escape_from_obstacle = false;
 
     // If start or end point is not valid, a plan is not created
     if(!isValidCoordinate(current_x,current_y)){
