@@ -120,7 +120,7 @@ void Config::loadParams() {
     //Global params (used by multiple states)
     getDoubleParam("blind_hover_altitude", blind_hover_alt, 0.0, 5.0);
     getDoubleParam("takeoff_altitude", takeoff_altitude, 0.0, 5.0);
-    getDoubleParam("low_alt_takeoff_marg", low_alt_takeoff_marg)
+    getDoubleParam("low_alt_takeoff_marg", low_alt_takeoff_marg, 0.0, 1.0);
     getDoubleParam("altitude_reached_margin", altitude_reached_margin, 0.0, 1.0);
     getDoubleParam("yaw_reached_margin", yaw_reached_margin, 0.0, 0.2);
     getDoubleParam("safe_hover_alt", safe_hover_altitude, 0.0, 5.0);
