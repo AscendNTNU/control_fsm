@@ -11,8 +11,8 @@ BeginState::BeginState() {
 //Begin state only waits for preflight request
 void BeginState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
-        if(event.request == RequestType::PREFLIGHT) {
-            fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
+        if(event.request == RequestType::MANUALFLIGHT) {
+            fsm.transitionTo(ControlFSM::MANUAL_FLIGHT_STATE, this, event);
         } else {
             control::handleWarnMsg("Invalid transiton request!");
         }
