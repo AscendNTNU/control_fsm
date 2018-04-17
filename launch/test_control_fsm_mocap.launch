@@ -16,5 +16,6 @@
     	<remap from="/mavros/mocap/pose" to="/perception/local_position"/>
     /node>
     <node pkg="control_fsm" name="gb_pose_estimation" type="gb_pose_estimation"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="localglobaltf" args="0 0 0 0 0 0 1 odom map" />
     	
 </launch>
