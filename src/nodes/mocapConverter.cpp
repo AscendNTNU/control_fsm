@@ -59,6 +59,7 @@ void roombaCallback(const geometry_msgs::PoseStamped& input) {
     ai_msg.ground_robots[0].header = input.header;
     ai_msg.ground_robots[0].x = roomba_pose.x; 
     ai_msg.ground_robots[0].y = roomba_pose.y;
+    ai_msg.ground_robots[0].theta = 0.0; 
 
     if(fabs(roomba_pose.x - ai_msg.drone_position.x) < 0.5 && fabs(roomba_pose.y - ai_msg.drone_position.y) < 0.5){
     	ai_msg.ground_robots[0].visible = true; 
