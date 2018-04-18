@@ -31,25 +31,30 @@ using obstacle_math::calcDistanceToObstacle;
 /// Return a vector (x,y,z) which corresponds to the point closest to the obstacle
 /// which is allowed, referenced from the obstacles coordinate system. x-axis is positive
 /// direction of motion. Obstacle driving in with obstacle_direction=0 would be driving in x-direction
-geometry_msgs::Vector3 calcMinimumLocalVector(const float drone_angle_to_obstacle, const float drone_direction, const float drone_speed_ratio,
+geometry_msgs::Vector3 calcMinimumVector(const float drone_angle_to_obstacle, const float drone_direction, const float drone_speed_ratio,
                                               const float clearance_min, const float clearance_max){
 
-    auto angle = angleWrapper(PI + drone_angle_to_obstacle - drone_direction);
-
-    auto front_clearance = clearance_min;
-    if (drone_speed_ratio > 0.1){
-        // direction is proabably noise, ignore it
-        front_clearance = clearance_max;
-        ROS_INFO_THROTTLE(5,"drone_speed_ratio %f", drone_speed_ratio);
-    }
-
+    
     geometry_msgs::Vector3 minimum_vector;
-    minimum_vector.x = front_clearance * std::cos(angle);
-    minimum_vector.y = clearance_min * std::sin(angle);
+    if (drone_speed_ratio > 0.1){
+        const auto worst_direction = PI + drone_direction;
+        const auto angle = angleWrapper(drone_angle_to_obstacle - worst_direction);
+        
+        const auto clearance_front = clearance_min + drone_speed_ratio*(clearance_max - clearance_min);
+
+        minimum_vector.x = clearance_front * std::cos(angle);
+        
+        minimum_vector.y = clearance_min * std::sin(angle);
+        minimum_vector = rotateXY(minimum_vector, worst_direction);
+        
+    } else {
+        minimum_vector.x = clearance_min * std::cos(drone_angle_to_obstacle);
+        minimum_vector.y = clearance_min * std::sin(drone_angle_to_obstacle);
+        minimum_vector.z = 0.0f;
+    }
+    
     minimum_vector.z = 0.0f;
-
-    //ROS_INFO_THROTTLE(1, "local(%.3f,%.3f,%.3f)", local_pos.x, local_pos.y, local_pos.z);
-
+    
     return minimum_vector;
 }
 
@@ -75,7 +80,7 @@ bool checkAndAvoidSingleObstacle(mavros_msgs::PositionTarget* setpoint, const V1
         const bool setpoint_reachable = fabs(fmod(drone_angle_to_obstacle - setpoint_angle_to_obstacle, 2*PI)) < 3*PI/8;
 
         const auto clearance = std::max(Config::obstacle_clearance_max*drone_speed_ratio, Config::obstacle_clearance_min);
-        const auto minimum_vector = calcMinimumLocalVector(drone_angle_to_obstacle, drone_direction, drone_speed_ratio, clearance, 2.0*clearance);
+        const auto minimum_vector = calcMinimumVector(drone_angle_to_obstacle, drone_direction, drone_speed_ratio, clearance, 2.0*clearance);
         
         const auto minimum_distance = std::sqrt(std::pow(minimum_vector.x, 2) + std::pow(minimum_vector.y, 2));
         if (drone_distance_to_obstacle < minimum_distance){
@@ -113,7 +118,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     const auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
     const auto drone_pose = control::DroneHandler::getCurrentLocalPose();
     const auto drone_velocity = control::DroneHandler::getCurrentTwist().twist.linear;
-    
+
     ascend_msgs::PolygonArray zone_msg;
 
     bool obstacles_valid = control::ObstacleStateHandler::isInstanceReady();
@@ -125,7 +130,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         }
     
         // generate points for zone_pub_
-        constexpr int N_points{8};
+        constexpr int N_points{16};
         geometry_msgs::Polygon polygon;
         for (int j = 0; j < N_points; j++){
             const float angle = static_cast<float>(j)*2.f*PI/static_cast<float>(N_points);
@@ -133,8 +138,10 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             const auto drone_speed = std::sqrt(std::pow(drone_velocity.x,2) + std::pow(drone_velocity.y,2));
             const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
 
-            const auto local_pos = calcMinimumLocalVector(angle, drone_direction, drone_speed_ratio, control::Config::obstacle_clearance_min, 2.0*control::Config::obstacle_clearance_min);
+            const auto local_pos = calcMinimumVector(angle, drone_direction, drone_speed_ratio, control::Config::obstacle_clearance_min, 2.0*control::Config::obstacle_clearance_min);
             
+
+
             ROS_INFO_THROTTLE(1,"angle, local_pos: %.3f %.3f %.3f %.3f", angle, local_pos.x, local_pos.y, local_pos.z);
 
             geometry_msgs::Point32 global_pos;
@@ -143,9 +150,9 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
             global_pos.z = obstacles.global_robot_position[i].z + local_pos.z;
 
             polygon.points.push_back(global_pos);
-
-            zone_msg.polygons.push_back(polygon);
         }
+        
+        zone_msg.polygons.push_back(polygon);
 
         if (setpoint_modified){
             //const auto new_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_global_position);

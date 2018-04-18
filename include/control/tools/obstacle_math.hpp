@@ -56,7 +56,7 @@ inline float calcAngleToObstacle(const T& point, const K& obstacle_position){
 
 // Apply 2d transformation matrix
 template<typename T>
-inline T rotateXY(const T& point, const float angle){
+T rotateXY(const T& point, const float angle){
     T new_point;
     new_point.x = point.x * std::cos(angle) - point.y * std::sin(angle);
     new_point.y = point.x * std::sin(angle) + point.y * std::cos(angle);
