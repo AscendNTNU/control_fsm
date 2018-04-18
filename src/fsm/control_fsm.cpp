@@ -9,7 +9,6 @@
 #include <control/tools/ground_robot_handler.hpp>
 
 BeginState ControlFSM::BEGIN_STATE;
-PreFlightState ControlFSM::PREFLIGHT_STATE;
 IdleState ControlFSM::IDLE_STATE;
 TakeoffState ControlFSM::TAKEOFF_STATE;
 BlindHoverState ControlFSM::BLIND_HOVER_STATE;
@@ -168,14 +167,14 @@ bool ControlFSM::isReady() {
 
 void ControlFSM::startPreflight() {
     if(!isReady()) {
-        control::handleWarnMsg("FSM not ready, can't transition to preflight!");
+        control::handleWarnMsg("FSM not ready, can't transition to manual flight!");
         return;
     }
     if(getState() == &BEGIN_STATE) {
-        RequestEvent event(RequestType::PREFLIGHT);
-        transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
+        RequestEvent event(RequestType::MANUALFLIGHT);
+        transitionTo(MANUAL_FLIGHT_STATE, &BEGIN_STATE, event);
     } else {
-        std::string err_msg = "Can't transition to preflight from ";
+        std::string err_msg = "Can't transition to manual flight from ";
         err_msg += getState()->getStateName();
         control::handleErrorMsg(err_msg);
     }

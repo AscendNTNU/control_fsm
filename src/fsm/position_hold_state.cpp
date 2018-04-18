@@ -92,9 +92,12 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
         //If altitude is too low - set it to minimum altitude
-        if(setpoint_.position.z < control::Config::min_in_air_alt) {
-            control::handleWarnMsg("Poshold target altitude too low, using min altitude");
-            setpoint_.position.z = control::Config::min_in_air_alt;
+        if(setpoint_.position.z < Config::min_in_air_alt) {
+            control::handleWarnMsg("Altitude target too low, transition to blind hover");
+            EventData pos_lost_event;
+            pos_lost_event.event_type = EventType::POSLOST;
+            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, pos_lost_event);
+            return;
         }
 
         using control::pose::quat2yaw;

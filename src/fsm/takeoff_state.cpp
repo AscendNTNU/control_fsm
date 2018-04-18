@@ -27,7 +27,7 @@ void TakeoffState::handleEvent(ControlFSM& fsm, const EventData& event) {
             control::handleWarnMsg("Illegal transition request");
         }
     } else if(event.isValidCMD()) {
-        if(cmd_.isValidCMD()) {
+        if(!cmd_.isValidCMD()) {
             cmd_ = event;
         } else {
             event.eventError("Finish old CMD before sending new");
@@ -73,12 +73,6 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     try {
         auto current_position = control::DroneHandler::getCurrentLocalPose().pose.position;
         if (current_position.z >= (setpoint_.position.z - Config::altitude_reached_margin)) {
-            //If it's a takeoff command, set completed.
-            if(cmd_.isValidCMD(CommandType::TAKEOFF)) {
-                cmd_.finishCMD();
-                cmd_ = EventData();
-            }
-
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, cmd_);
                 cmd_ = EventData();
