@@ -9,7 +9,6 @@
 
 #include "state_interface.hpp"
 #include "begin_state.hpp"
-#include "preflight_state.hpp"
 #include "idle_state.hpp"
 #include "takeoff_state.hpp"
 #include "blind_hover_state.hpp"
@@ -29,7 +28,6 @@ class ControlFSM {
 private:
     //Add state classes as friend classes here - allowing them to use transitionTo.
     friend class BeginState;
-    friend class PreFlightState;
     friend class IdleState;
     friend class TakeoffState;
     friend class BlindHoverState;
@@ -42,7 +40,6 @@ private:
     //Static instances of the different states
     //Also add them to allStates_ vector in constructor
     static BeginState BEGIN_STATE;
-    static PreFlightState PREFLIGHT_STATE;
     static IdleState IDLE_STATE;
     static TakeoffState TAKEOFF_STATE;
     static BlindHoverState BLIND_HOVER_STATE;

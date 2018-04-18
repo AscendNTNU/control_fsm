@@ -20,9 +20,10 @@ using ascend_msgs::GroundRobotTransform;
 using geometry_msgs::PoseStamped;
 
 geometry_msgs::PoseStamped::ConstPtr last_pose_p;
+ascend_msgs::AIWorldObservation::ConstPtr last_gb_msg_p;
 
 void localPositionCB(PoseStamped::ConstPtr msg_p);
-void groundRobotCB(const AIWorldObservation& msg);
+void groundRobotCB(AIWorldObservation::ConstPtr msg_p);
 bool serviceCB(GroundRobotTransform::Request& req,
                GroundRobotTransform::Response& resp);
 
@@ -36,9 +37,9 @@ int main(int argc, char **argv){
     ros::NodeHandle n;
     ros::NodeHandle np("~");
     
-    std::string gb_topic = "/detectedGroundRobots";
+    std::string gb_topic = "/AIWorldObservation";
     std::string local_pos_topic = "/perception/local_position";
-    std::string filter_topic = "/local_position";
+    std::string filter_topic = "/mavros/mocap/pose";
     
     if(!np.getParam("gb_topic", gb_topic)) {
         ROS_WARN("Using gb_topic = %s", gb_topic.c_str());
@@ -60,12 +61,27 @@ int main(int argc, char **argv){
 
 bool serviceCB(GroundRobotTransform::Request& req,
                GroundRobotTransform::Response& resp) {
+    
+    if(last_gb_msg_p == nullptr || last_pose_p == nullptr) {
+        ROS_ERROR_NAMED("GB estimator", "Missing messages");
+        return false;
+    }
+    auto& gb_msg = *last_gb_msg_p;
     if(req.state == req.GBFRAME) {
+        if(target_gb < 0 || target_gb > static_cast<int>(gb_msg.ground_robots.size())) {
+            ROS_ERROR("Invalid GB id: %i", target_gb);
+            current_state = State::LOCAL_POSITION;
+            return false;
+        };
         target_gb = req.gb_id;
         current_state = State::GB_POSITION;
+        //Set new gb estimator
+        auto& gb = last_gb_msg_p->ground_robots[target_gb];
+        gb_est = control::GbEstimator(gb.x, gb.y);
     } else if(req.state == req.LOCALFRAME) {
         target_gb = -1;
         current_state = State::LOCAL_POSITION;
+        gb_est = control::GbEstimator();
     } else {
         ROS_ERROR_NAMED("GB estimation", "Invalid requested state");
     }
@@ -80,10 +96,16 @@ void localPositionCB(PoseStamped::ConstPtr msg_p) {
     last_pose_p = std::move(msg_p);
 }
 
-void groundRobotCB(const AIWorldObservation& msg) {
+void groundRobotCB(AIWorldObservation::ConstPtr msg_p) {
+    auto& msg = *msg_p;
+    last_gb_msg_p = msg_p;
     //Wait for pose before sending
     if(last_pose_p == nullptr) return;
-    if(target_gb >= 0 && target_gb < static_cast<int>(msg.ground_robots.size())) return;
+    //Validate gb id
+    if(target_gb < 0 || target_gb > static_cast<int>(msg.ground_robots.size())) {
+        ROS_ERROR("Invalid GB id: %i", target_gb);
+        return;
+    };
 
     if(current_state == State::GB_POSITION) {
         auto& gb = msg.ground_robots[target_gb];

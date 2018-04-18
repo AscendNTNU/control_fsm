@@ -19,7 +19,7 @@ GbEstimator::GbEstimator(){
 
 void GbEstimator::update(const float *gb_direction, float *gb_position){
 	if(!valid){
-		std::cout << "Error, not valid groundbot!" << std::endl; 
+		ROS_ERROR_NAMED("GB Estimator", "Error, not valid groundbot!"); 
 		return; 
 	}
 	ros::Duration delta_t;
