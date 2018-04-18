@@ -28,7 +28,6 @@ std::array<std::function<decltype(lowAltState)>, 4> state_array = { lowAltState,
                                                                     transitionState
                                                                   };
 LocalState local_state = LocalState::LOW_ALT;
-std::function<decltype(lowAltState)> stateFunction = lowAltState;
 
 LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
     if(pos.z <= control::Config::low_alt_takeoff_marg - control::Config::altitude_reached_margin) {
@@ -126,8 +125,8 @@ void TakeoffState::loopState(ControlFSM& fsm) {
     try {
         auto current_position = control::DroneHandler::getCurrentLocalPose().pose.position;
         //Runs the state functions and sets the new state;
+        auto& stateFunction = state_array[static_cast<int>(local_state)];
         local_state = stateFunction(&setpoint_, current_position);
-        stateFunction = state_array[static_cast<int>(local_state)];
 
         if (local_state == LocalState::TRANSITION) {
             if (cmd_.isValidCMD()) {
