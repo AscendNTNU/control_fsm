@@ -105,8 +105,8 @@ void LandState::loopState(ControlFSM& fsm) {
                 }
                 cmd_ = EventData();
             }
-            RequestEvent idle_request(RequestType::IDLE);
-            fsm.transitionTo(ControlFSM::IDLE_STATE, this, idle_request);
+            RequestEvent takeoff_request(RequestType::TAKEOFF);
+            fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, takeoff_request);
         }
     } catch (const std::exception& e) {
         control::handleCriticalMsg(e.what());

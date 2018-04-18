@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
     ros::Rate loopRate(SETPOINT_PUB_RATE);
     //Main loop
     while(ros::ok()) {
+        ROS_WARN_THROTTLE(5, "This is a test branch: Landing WILL result in automatic takeoff!");
 
         //Handle all incoming messages - generates fsm events
         ros::spinOnce();
