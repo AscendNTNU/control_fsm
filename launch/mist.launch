@@ -10,4 +10,5 @@
     <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
     <param name="/mavros/local_position/frame_id" value="odom"/>
     <node pkg="tf2_ros" type="static_transform_publisher" name="localglobaltf" args="0 0 0 0 0 0 1 odom map" />
+	<include file="$(find control_fsm)/launch/path_planner.launch"/>
 </launch>

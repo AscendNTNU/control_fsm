@@ -71,7 +71,7 @@ int main(int argc, char** argv){
     // For saving memory
 	points_in_plan.reserve(20);
 
-	while(!control::DroneHandler::isLocalPoseValid() && control::ObstacleStateHandler::isInstanceReady() && ros::ok()){
+	while(!control::DroneHandler::isGlobalPoseValid() && control::ObstacleStateHandler::isInstanceReady() && ros::ok()){
 		ros::spinOnce();
 		ros::Duration(1.0).sleep();
 	}
@@ -95,7 +95,7 @@ int main(int argc, char** argv){
 			plan.refreshUnsafeZones();
 
 			// Update planner state
-			geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentLocalPose();
+			geometry_msgs::PoseStamped current_pose = control::DroneHandler::getCurrentGlobalPose();
 			auto& position = current_pose.pose.position;
 			planner_state.current_x = position.x;
 			planner_state.current_y = position.y;

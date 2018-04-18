@@ -17,7 +17,7 @@
 namespace control{
 namespace pathplanner{
 
-#define FIELD_LENGTH 20.0
+#define FIELD_LENGTH 10.0
 
 
 struct Obstacle {
