@@ -30,6 +30,8 @@ std::array<std::function<decltype(lowAltState)>, 4> state_array = { lowAltState,
 LocalState local_state = LocalState::LOW_ALT;
 
 LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
+    //Set type mask to blind takeoff
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
     if(pos.z <= control::Config::low_alt_takeoff_marg - control::Config::altitude_reached_margin) {
         return LocalState::LOW_ALT;
     } else if (pos.z <= control::Config::takeoff_altitude - control::Config::altitude_reached_margin) {
@@ -95,6 +97,7 @@ void TakeoffState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Takeoff altitude
     setpoint_.position.z = Config::takeoff_altitude;
     local_state = LocalState::LOW_ALT;
+    setpoint_.type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
     //Takeoff finished threshold
 
     if(event.isValidCMD()) {
