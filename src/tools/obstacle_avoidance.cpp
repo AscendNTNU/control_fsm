@@ -67,7 +67,7 @@ bool checkAndAvoidSingleObstacle(mavros_msgs::PositionTarget* setpoint, const V1
     
     const auto drone_direction = std::atan2(drone_velocity.y, drone_velocity.x);
     const auto drone_speed = std::sqrt(std::pow(drone_velocity.x,2) + std::pow(drone_velocity.y,2));
-    const float drone_speed_ratio = std::min((float)drone_speed/2.5f, 1.f); // 2.5 m/s is assumed drone max speed
+    const float drone_speed_ratio = std::min((float)drone_speed/1.0f, 1.f); // 1.0 m/s is assumed drone max speed
 
     bool setpoint_modified = false;
     if (drone_distance_to_obstacle < Config::obstacle_clearance_checkradius){
