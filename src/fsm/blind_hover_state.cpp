@@ -80,6 +80,10 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     if(event.isValidCMD()) {
         cmd_ = event;
     }
+
+    // Obstacle avoidance has no data to go by, so disable it
+    fsm.obstacle_avoidance_.relaxResponsibility();
+
     control::handleWarnMsg("No valid pose available, blindhovering!");
 }
 

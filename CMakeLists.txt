@@ -103,5 +103,8 @@ if(CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
     add_rostest_gtest(utest test/launch_test.test test/utest.cpp)
     target_link_libraries(utest control_fsm_lib path_planner_lib)
+    target_link_libraries(utest control_fsm_lib)
+    target_link_libraries(utest ${catkin_LIBRARIS})
     roslaunch_add_file_check(launch)
 endif()
+

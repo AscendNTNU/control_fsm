@@ -41,7 +41,8 @@ void ControlFSM::transitionTo(StateInterface& state, StateInterface* caller_p, c
 }
 
 void ControlFSM::releaseCommonStateResources() {
-    //Add resources here
+    //Force return of responsibility
+    obstacle_avoidance_.takeResponsibility();
 }
 
 //Send external event to current state and to "next" state
@@ -129,7 +130,7 @@ bool ControlFSM::isReady() {
             if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
                 control::handleWarnMsg("Preflight Check: No valid mavros state data!");
                 return false;
-            } 
+            }
             //Land detector must be ready
             if (!LandDetector::isReady()) {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");

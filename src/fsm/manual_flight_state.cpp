@@ -44,6 +44,7 @@ void printLandStateOnChange(bool landed) {
 
 void ManualFlightState::stateBegin(ControlFSM& fsm, const EventData& event) {
     printLandState(LandDetector::isOnGround());
+    fsm.obstacle_avoidance_.relaxResponsibility();	
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
@@ -78,7 +79,6 @@ const mavros_msgs::PositionTarget* ManualFlightState::getSetpointPtr() {
 void ManualFlightState::handleManual(ControlFSM &fsm) {
     //Already in manual, nothing to do
 }
-
 
 
 ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() const {

@@ -28,12 +28,17 @@ private:
 
     ///Current command
     EventData cmd_;
-
+    
     ///Is state active flag
     bool is_active_ = false;
+
+    ///Obstacle avoidance kicked in flag
+    bool obstacle_avoidance_kicked_in_ = false;
+    
     ///Plan callback 
     void planCB(ascend_msgs::PointArrayStamped::ConstPtr msg_p);
 
+  
     ///Local target to reach
     tf2::Vector3 local_target_;
 public:

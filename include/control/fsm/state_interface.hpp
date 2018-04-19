@@ -3,17 +3,17 @@
 
 /** @page fsm_description FSM design
  *  @brief Describes the design pattern
- *  
+ *
  *  All states inherits the StateInterface class, and the
- *  FSM use polymorphism to switch between different states. 
- *  
- *  On transition between states, the StateInterface::stateBegin method will be called in the new state. 
+ *  FSM use polymorphism to switch between different states.
+ *
+ *  On transition between states, the StateInterface::stateBegin method will be called in the new state.
  *  The active states StateInterface::loopState method will always run in a loop.
  *  The StateInterface::stateEnd method will be called before the fsm transition to another state.
- *  
- *  Transitioning between states is done with the ControlFSM::transtionTo method. 
- *  
- *  FSM is not async so do not run any blocking code 
+ *
+ *  Transitioning between states is done with the ControlFSM::transtionTo method.
+ *
+ *  FSM is not async so do not run any blocking code
  *  in any of these methods.
  *  EventData is passed by reference and is NOT guaranteed to remain in scope.
  *  DO NOT store event data by reference.
@@ -34,7 +34,7 @@ class ControlFSM;
 ///Abstract interface class inherited by all states
 /*
 NOTE:
-FSM is not async so do not run any blocking code 
+FSM is not async so do not run any blocking code
 in any of these methods.
 EventData is passed by reference and is NOT guaranteed to remain in scope.
 DO NOT store event data by reference.
@@ -85,7 +85,7 @@ public:
 
     ///Handles loss of offboard mode - must be implemented by state
     virtual void handleManual(ControlFSM& fsm) = 0;
-     
+
     ///Runs on current state AFTER transition
     /**stateBegin is only implemented if needed by state.*/
     virtual void stateBegin(ControlFSM& fsm, const EventData& event) {}
@@ -93,14 +93,14 @@ public:
     ///Runs on current state BEFORE transition
     /**stateEnd is only implemented if needed by state*/
     virtual void stateEnd(ControlFSM& fsm, const EventData& event) {}
-    
+
     ///Runs state specific code
     /**loopState is only implemented if needed by state*/
     virtual void loopState(ControlFSM& fsm) {}
-    
+
     ///Should return name of the state - used for debugging purposes
     virtual std::string getStateName() const = 0;
-    
+
     ///Get state message
     virtual ascend_msgs::ControlFSMState getStateMsg() const = 0; 
     
@@ -110,10 +110,10 @@ public:
 
     ///Static interface returning iterator to first state
     static std::list<StateInterface*>::const_iterator cbegin() { return getAllStatesVector()->cbegin(); }
-    
+
     ///Static interface returning iterator to last + 1 state
     static std::list<StateInterface*>::const_iterator cend() { return getAllStatesVector()->cend(); }
-  
+
     ///Returns number of instanciated states
     static size_t getNumStates() { return getAllStatesVector()->size(); }
 };
