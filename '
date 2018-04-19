@@ -118,11 +118,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
 
     ascend_msgs::PolygonArray zone_msg;
 
-    const bool obstacles_valid = control::ObstacleStateHandler::isInstanceReady();
-    
-    if (!obstacles_valid){
-        ROS_WARN_THROTTLE(1, "[obstacle_avoidance]: ObstacleStateHandler not ready"); 
-    }
+    bool obstacles_valid = control::ObstacleStateHandler::isInstanceReady();
 
     for (int i = 0; i < obstacles.count && obstacles_valid; i++){
         
@@ -141,6 +137,10 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
 
             const auto local_pos = calcMinimumVector(angle, drone_direction, drone_speed_ratio, control::Config::obstacle_clearance_min, 2.0*control::Config::obstacle_clearance_min);
             
+
+
+            ROS_INFO_THROTTLE(1,"angle, local_pos: %.3f %.3f %.3f %.3f", angle, local_pos.x, local_pos.y, local_pos.z);
+
             geometry_msgs::Point32 global_pos;
             global_pos.x = obstacles.global_robot_position[i].x + local_pos.x;
             global_pos.y = obstacles.global_robot_position[i].y + local_pos.y;
