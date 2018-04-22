@@ -58,12 +58,12 @@ public:
     ///Obstacle avoidance has reduced responsibility. 
     ///It won't change setpoints and only calls warning level callbacks
     void relaxResponsibility() { 
-	    ROS_INFO("[obs_avoid] relaxing responsibility");
+	    ROS_INFO("[control]: Low-Level obstacle-avoidance disabled");
 	    has_setpoint_responsibility_ = false; 
     }
     ///Obstacle avoidance takes full responsibility over setpoints and calls all callbacks
     void takeResponsibility() { 
-	    ROS_INFO("[obs_avoid] taking responsibility");
+	    ROS_INFO("[control]: Low-Level obstacle-avoidance enabled");
 	    has_setpoint_responsibility_ = true; 
     }
 
