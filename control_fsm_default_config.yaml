@@ -30,7 +30,7 @@
     #Topic for recieving local position estimates
     local_position_topic: /mavros/local_position/pose, 
     #Topic for recieving distance data
-    distance_sensor_topic: /mavros/distance_sensor/h4v_tl,
+    distance_sensor_topic: /mavros/distance_sensor/hrlv_ez4_pub,
     #Topic for recieving mavros state
     mavros_state_topic: /mavros/state,
     #Topic for debug server
