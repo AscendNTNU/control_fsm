@@ -8,6 +8,7 @@
 #include "control/fsm/control_fsm.hpp"
 #include "control/tools/drone_handler.hpp"
 
+
 LandState::LandState() {
     //Ignoring PX and PY - lands without XY feedback
     setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
@@ -110,7 +111,8 @@ void LandState::loopState(ControlFSM& fsm) {
         }
 
         //Check landing
-        if(LandDetector::isOnGround()) {
+        bool low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
+        if(LandDetector::isOnGround() && low_enough) {
             if(cmd_.isValidCMD()) {
                 //Only landxy should occur!
                 if(cmd_.command_type == CommandType::LANDXY) {

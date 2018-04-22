@@ -8,7 +8,6 @@
 #include <control/tools/obstacle_state_handler.hpp>
 
 BeginState ControlFSM::BEGIN_STATE;
-PreFlightState ControlFSM::PREFLIGHT_STATE;
 IdleState ControlFSM::IDLE_STATE;
 TakeoffState ControlFSM::TAKEOFF_STATE;
 BlindHoverState ControlFSM::BLIND_HOVER_STATE;
@@ -127,6 +126,10 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Preflight Check: No valid twist data");
                 return false;
             }
+            if(!control::DroneHandler::isDistValid()) {
+                control::handleWarnMsg("Preflight Check: No valid distance data");
+                return false;
+            }
             //Mavros must publish state data
             if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
                 control::handleWarnMsg("Preflight Check: No valid mavros state data!");
@@ -165,14 +168,14 @@ bool ControlFSM::isReady() {
 
 void ControlFSM::startPreflight() {
     if(!isReady()) {
-        control::handleWarnMsg("FSM not ready, can't transition to preflight!");
+        control::handleWarnMsg("FSM not ready, can't transition to manual flight!");
         return;
     }
     if(getState() == &BEGIN_STATE) {
-        RequestEvent event(RequestType::PREFLIGHT);
-        transitionTo(PREFLIGHT_STATE, &BEGIN_STATE, event);
+        RequestEvent event(RequestType::MANUALFLIGHT);
+        transitionTo(MANUAL_FLIGHT_STATE, &BEGIN_STATE, event);
     } else {
-        std::string err_msg = "Can't transition to preflight from ";
+        std::string err_msg = "Can't transition to manual flight from ";
         err_msg += getState()->getStateName();
         control::handleErrorMsg(err_msg);
     }

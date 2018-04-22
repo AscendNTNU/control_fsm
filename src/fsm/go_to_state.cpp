@@ -79,13 +79,8 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
         } else {
-            if(event.command_type == CommandType::TAKEOFF) {
-                //Drone already in air!
-                event.finishCMD();
-            } else {
-                //All other command needs to go via the GOTO state
-                fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-            }
+            //All other command needs to go via the GOTO state
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         }
     }
 }

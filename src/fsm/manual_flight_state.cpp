@@ -11,17 +11,13 @@ ManualFlightState::ManualFlightState() {
 //Only check for an abort event
 void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
-        if(event.request == RequestType::PREFLIGHT) {
-            control::handleWarnMsg("Going back to preflight, land drone before offboard");
-            fsm.transitionTo(ControlFSM::PREFLIGHT_STATE, this, event);
-        } else {
-            control::handleWarnMsg("Invalid transition request");
-        }
+        control::handleWarnMsg("Invalid transition request");
     } else if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
         control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else if(event.event_type == EventType::AUTONOMOUS) {
-        if(LandDetector::isOnGround()) {
+        bool low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
+        if(LandDetector::isOnGround() && low_enough) {
             fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
         } else {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
@@ -31,12 +27,34 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+void printLandState(bool landed) {
+    if(landed) {
+        control::handleInfoMsg("On ground: Transitions to IDLE when armed and OFFBOARD");
+    } else {
+        control::handleInfoMsg("In air: Transitions to POSHOLD when armed and OFFBOARD"); 
+    }
+}
+
+void printLandStateOnChange(bool landed) {
+    static bool last_state = landed;
+    if(landed != last_state) {
+        printLandState(landed);
+    }
+    last_state = landed;;
+}
+
+void ManualFlightState::stateBegin(ControlFSM& fsm, const EventData& event) {
+    printLandState(LandDetector::isOnGround());
+}
+
 void ManualFlightState::loopState(ControlFSM& fsm) {
     try {
-        auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
-        auto &position = pose_stamped.pose.position;
+        const auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
+        const auto &position = pose_stamped.pose.position;
+        const bool on_ground = LandDetector::isOnGround(); 
+        printLandStateOnChange(on_ground);
 
-        if (LandDetector::isOnGround()) {
+        if (on_ground) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
         } else {
             setpoint_.type_mask = default_mask;
