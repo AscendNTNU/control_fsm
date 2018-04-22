@@ -139,3 +139,16 @@ geometry_msgs::TransformStamped control::DroneHandler::getLocal2GlobalTf() {
         return geometry_msgs::TransformStamped();
     }
 }
+
+bool control::DroneHandler::isDistValid() {
+    auto& dist = getSharedInstancePtr()->getDistance();
+    return !control::message::hasTimedOut(dist);
+}
+
+const sensor_msgs::Range& control::DroneHandler::getDistance() const {
+    if(control::message::hasTimedOut(*last_dist_)) {
+        control::handleErrorMsg("DroneHandler: Using old distance");
+    }
+    return *last_dist_;
+}
+
