@@ -125,6 +125,10 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Preflight Check: No valid twist data");
                 return false;
             }
+            if(!control::DroneHandler::isDistValid()) {
+                control::handleWarnMsg("Preflight Check: No valid distance data");
+                return false;
+            }
             //Mavros must publish state data
             if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
                 control::handleWarnMsg("Preflight Check: No valid mavros state data!");
