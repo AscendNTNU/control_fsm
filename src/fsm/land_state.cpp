@@ -95,7 +95,7 @@ void LandState::loopState(ControlFSM& fsm) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
         //Check landing
-        bool low_enough = control::DroneHandler::getCurrentDistance().range < 0.05;
+        bool low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
         if(LandDetector::isOnGround() && low_enough) {
             if(cmd_.isValidCMD()) {
                 //Only landxy should occur!
