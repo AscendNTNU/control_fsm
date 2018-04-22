@@ -207,7 +207,6 @@ float areaSafePrediction(geometry_msgs::Point32 point, const float sim_forward_t
     center.x = 10.f;
     center.y = 10.f;
 
-
     for (auto t{0.f}; t < sim_forward_time; t += dt) {
         for (auto& obstacle_pos : obstacles.global_robot_position){
             // move obstacle forward
@@ -243,14 +242,12 @@ void control::ObstacleAvoidance::onWarn() {
 mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::PositionTarget setpoint) {
 
     /// <testing>
-    geometry_msgs::Point32 point;
-    point.x = 5.f;
-    point.y = 15.f;
-    const auto safe_time = areaSafePrediction(point, 10.f);
-    ROS_INFO_THROTTLE(1,"safe time for (%.3f , %.3f) is %.3f", point.x, point.y, safe_time);
+    //geometry_msgs::Point32 point;
+    //point.x = 5.f;
+    //point.y = 15.f;
+    //const auto safe_time = areaSafePrediction(point, 10.f);
+    //ROS_INFO_THROTTLE(1,"safe time for (%.3f , %.3f) is %.3f", point.x, point.y, safe_time);
     /// </testing>
-
-
 
 
     mavros_msgs::PositionTarget setpoint_unchanged = setpoint; 
