@@ -16,11 +16,14 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
         event.eventError("CMD rejected!");
         control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else if(event.event_type == EventType::AUTONOMOUS) {
-        if(LandDetector::isOnGround()) {
+        /*if(LandDetector::isOnGround() && control::DroneHandler::getCurrentLocalPose().pose.position.z < "Offset") {
             fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
         } else {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
-        }
+        }*/
+        //Dont wanna go to idle state when we switch to offboard! 
+        fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
+
     } else {
         control::handleInfoMsg("Event ignored");
     }
