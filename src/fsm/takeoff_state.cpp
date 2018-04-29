@@ -32,7 +32,7 @@ LocalState local_state = LocalState::LOW_ALT;
 LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
     //Set type mask to blind takeoff
     target->type_mask = default_mask | SETPOINT_TYPE_TAKEOFF | IGNORE_PX | IGNORE_PY;
-    if(pos.z <= control::Config::low_alt_takeoff_marg - control::Config::altitude_reached_margin) {
+    if(pos.z <= control::Config::lowest_takeoff_altitude - control::Config::altitude_reached_margin) {
         return LocalState::LOW_ALT;
     } else if (pos.z <= control::Config::takeoff_altitude - control::Config::altitude_reached_margin) {
         //Activate position sampling and continue to desired altitude

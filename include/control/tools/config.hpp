@@ -33,8 +33,8 @@ public:
     static double blind_hover_alt;
     /// \fsmparam Takeoff altitude
     static double takeoff_altitude;
-    /// \fsmparam Low alt takeoff margin
-    static double low_alt_takeoff_marg;
+    /// \fsmparam Low alt takeoff altitude
+    static double lowest_takeoff_altitude;
     /// \fsmparam Minmum allowed position hold altitude
     static double min_in_air_alt;
     /// \fsmparam Are we close enough to target altitude

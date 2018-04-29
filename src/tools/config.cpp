@@ -14,7 +14,7 @@ std::unique_ptr<Config> Config::shared_instance_p_ = nullptr;
 double Config::dest_reached_margin = 0.3;
 double Config::blind_hover_alt = 1.0;
 double Config::takeoff_altitude = 1.0;
-double Config::low_alt_takeoff_marg = 1.0;
+double Config::lowest_takeoff_altitude = 1.0;
 double Config::land_xy_goto_alt = 1.0;
 double Config::altitude_reached_margin = 0.1;
 double Config::setpoint_reached_margin = 0.3;
@@ -121,7 +121,7 @@ void Config::loadParams() {
     //Global params (used by multiple states)
     getDoubleParam("blind_hover_altitude", blind_hover_alt, 0.0, 5.0);
     getDoubleParam("takeoff_altitude", takeoff_altitude, 0.0, 5.0);
-    getDoubleParam("low_alt_takeoff_marg", low_alt_takeoff_marg, 0.0, 1.0);
+    getDoubleParam("lowest_takeoff_altitude", lowest_takeoff_altitude, 0.0, 1.0);
     getDoubleParam("altitude_reached_margin", altitude_reached_margin, 0.0, 1.0);
     getDoubleParam("yaw_reached_margin", yaw_reached_margin, 0.0, 0.2);
     getDoubleParam("safe_hover_alt", safe_hover_altitude, 0.0, 5.0);
