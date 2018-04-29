@@ -78,5 +78,7 @@
     #Highest allowed global x position
     arena_highest_x: 20.0,
     #Highest allowed global y position
-    arena_highest_y: 20.0
+    arena_highest_y: 20.0,
+    #Require use of distance sensor
+    require_distance_sensor: true
 }
