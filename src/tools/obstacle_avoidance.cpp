@@ -92,7 +92,7 @@ bool checkAndAvoidSingleObstacle(SP* setpoint_p, const V1& drone_position, const
             else {
                 if (setpoint_modified){
                     // TODO: find out a better solution to this problem
-                    ROS_WARN("[obstacle avoidance]: Two obstacles in range, undefined behaviour!");
+                    ROS_WARN_THROTTLE(1, "[obstacle avoidance]: Two obstacles in range, go up");
                     setpoint_p->position.z = Config::safe_hover_altitude; // hover taller than all obstacles :)
                 }
                 // need to avoid obstacle
@@ -173,16 +173,16 @@ void simulateObstacleMotion(V1& obstacle_pos, const V2& center, const float time
     const auto radius = std::sqrt(std::pow(obstacle_pos.x - center.x, 2) + std::pow(obstacle_pos.y - center.y, 2));
     const auto angular_velocity = obstacle_vel/radius;
 
-    // diff eq for circular motion
-    const auto vel_x = -angular_velocity*(obstacle_pos.y - center.x);
-    const auto vel_y =  angular_velocity*(obstacle_pos.x - center.y);
+    // diff eq for circular motion around a center
+    const auto vel_x = -angular_velocity*(obstacle_pos.y - center.y);
+    const auto vel_y =  angular_velocity*(obstacle_pos.x - center.x);
 
     obstacle_pos.x += time_step * vel_x;
     obstacle_pos.y += time_step * vel_y;
 }
 
 /// Take in a point and return time representing how long that point is safe up to
-float areaSafePrediction(geometry_msgs::Point32 point, const float sim_forward_time) {
+float areaSafePrediction(geometry_msgs::Point32 checkpoint, const float sim_forward_time) {
     const auto drone_pose = control::DroneHandler::getCurrentLocalPose();
     const auto drone_velocity = control::DroneHandler::getCurrentTwist().twist.linear;
     auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
@@ -200,7 +200,7 @@ float areaSafePrediction(geometry_msgs::Point32 point, const float sim_forward_t
         Vector3 position;
     };
     Setpoint_t setpoint;
-    setpoint.position.x = point.x; setpoint.position.y = point.y; setpoint.position.z = point.z;
+    setpoint.position.x = checkpoint.x; setpoint.position.y = checkpoint.y; setpoint.position.z = checkpoint.z;
 
     const auto dt{0.1f};
     geometry_msgs::Point center;
@@ -213,14 +213,17 @@ float areaSafePrediction(geometry_msgs::Point32 point, const float sim_forward_t
             simulateObstacleMotion(obstacle_pos, center, dt);
 
             // check updated obstacle against the setpoint
-            if (checkAndAvoidSingleObstacle(&setpoint, drone_pose.pose.position, drone_velocity, obstacle_pos)){
+            if (checkAndAvoidSingleObstacle(&setpoint, setpoint.position, drone_velocity, obstacle_pos)){
+                ROS_INFO_THROTTLE(1,"obstacles found at (%.3f , %.3f) for %.3f seconds", checkpoint.x, checkpoint.y, t);
                 return t;
             }
         }
 
-        // simulate drone motion here
+        // simulate drone motion here?
         // ...
     }
+    
+    ROS_INFO_THROTTLE(1,"no obstacles found at (%.3f , %.3f) for %.3f seconds", checkpoint.x, checkpoint.y, sim_forward_time);
 
     return sim_forward_time; // maybe return something larger
 }
@@ -242,11 +245,10 @@ void control::ObstacleAvoidance::onWarn() {
 mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::PositionTarget setpoint) {
 
     /// <testing>
-    //geometry_msgs::Point32 point;
-    //point.x = 5.f;
-    //point.y = 15.f;
-    //const auto safe_time = areaSafePrediction(point, 10.f);
-    //ROS_INFO_THROTTLE(1,"safe time for (%.3f , %.3f) is %.3f", point.x, point.y, safe_time);
+    geometry_msgs::Point32 point;
+    point.x = 10.f;
+    point.y = 5.f;
+    const auto safe_time = areaSafePrediction(point, 10.f);
     /// </testing>
 
 
