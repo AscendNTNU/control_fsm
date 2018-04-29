@@ -59,7 +59,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
     setpoint_.position.z = control::Config::blind_hover_alt;
     try {
         //If full position is valid - no need to blind hover
-        if(control::DroneHandler::isLocalPoseValid()) {
+        if(poseIsValid()) {
             if(event.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event); //Pass command on to next state
             } else {
@@ -90,7 +90,7 @@ void BlindHoverState::stateBegin(ControlFSM& fsm, const EventData& event ) {
 void BlindHoverState::loopState(ControlFSM& fsm) {
     try {
         //Transition to position hold when position is valid.
-        if(control::DroneHandler::isLocalPoseValid()) {
+        if(poseIsValid()) {
             if (cmd_.isValidCMD()) {
                 fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
                 cmd_ = EventData(); //Reset cmd_

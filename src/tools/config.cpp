@@ -24,6 +24,7 @@ double Config::no_yaw_correct_dist = 0.2;
 double Config::valid_data_timeout = 2.0; //2 seconds
 double Config::velocity_reached_margin = 0.2;
 std::string Config::mavros_local_vel_topic = "mavros/local_position/velocity";
+std::string Config::mavros_distance_sensor_topic = "/mavros/distance_sensor/hrlv_ez4_pub";
 std::string Config::fsm_error_topic = "control/fsm/on_error";
 std::string Config::fsm_warn_topic = "control/fsm/on_warn";
 std::string Config::fsm_info_topic = "control/fsm/on_info";
@@ -152,6 +153,7 @@ void Config::loadParams() {
     getStringParam("local_position_topic", mavros_local_pos_topic);
     getStringParam("mavros_state_topic", mavros_state_changed_topic);
     getStringParam("local_velocity_topic", mavros_local_vel_topic);
+    getStringParam("distance_sensor_topic", mavros_distance_sensor_topic);
     //LandDetector
     getStringParam("land_detector_topic", land_detector_topic);
     getStringParam("land_detector_type", land_detector_type);

@@ -16,11 +16,14 @@ DroneHandler::DroneHandler() :tf_listener_(tf_buffer_) {
     using control::Config;
     using geometry_msgs::PoseStamped;
     using geometry_msgs::TwistStamped;
+    using sensor_msgs::Range;
     pose_sub_ = n_.subscribe(Config::mavros_local_pos_topic, 1, &DroneHandler::onPoseRecievedCB, this);
     twist_sub_ = n_.subscribe(Config::mavros_local_vel_topic, 1, &DroneHandler::onTwistRecievedCB, this);
+    raw_dist_sub_ = n_.subscribe(Config::mavros_distance_sensor_topic, 1, &DroneHandler::onDistRecievedCB, this);
     //Init default, empty value
     last_pose_ = PoseStamped::ConstPtr(new PoseStamped);
     last_twist_ = TwistStamped::ConstPtr(new TwistStamped);
+    last_dist_ = Range::ConstPtr(new Range); 
 }
 
 const DroneHandler* DroneHandler::getSharedInstancePtr() {
@@ -35,6 +38,10 @@ const DroneHandler* DroneHandler::getSharedInstancePtr() {
 
 geometry_msgs::PoseStamped DroneHandler::getCurrentLocalPose() {
     return getSharedInstancePtr()->getLocalPose();
+}
+
+sensor_msgs::Range DroneHandler::getCurrentDistance() {
+    return getSharedInstancePtr()->getDistance();
 }
 
 geometry_msgs::PoseStamped DroneHandler::getCurrentGlobalPose() {
@@ -132,3 +139,16 @@ geometry_msgs::TransformStamped control::DroneHandler::getLocal2GlobalTf() {
         return geometry_msgs::TransformStamped();
     }
 }
+
+bool control::DroneHandler::isDistValid() {
+    auto& dist = getSharedInstancePtr()->getDistance();
+    return !control::message::hasTimedOut(dist);
+}
+
+const sensor_msgs::Range& control::DroneHandler::getDistance() const {
+    if(control::message::hasTimedOut(*last_dist_)) {
+        control::handleErrorMsg("DroneHandler: Using old distance");
+    }
+    return *last_dist_;
+}
+
