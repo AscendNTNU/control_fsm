@@ -36,7 +36,6 @@ LocalState lowAltState(PosTarget_p target, const DronePos& pos) {
         return LocalState::LOW_ALT;
     } else if (pos.z <= control::Config::takeoff_altitude - control::Config::altitude_reached_margin) {
         //Activate position sampling and continue to desired altitude
-        //TODO: Add another state to sample position and set type_mask
         return LocalState::SAMPLE; 
     } else {
         //Return a transition request
