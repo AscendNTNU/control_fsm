@@ -59,6 +59,8 @@ public:
     static std::string fsm_state_changed_topic;
     /// \fsmparam Topic for recieving local position from FC
     static std::string mavros_local_pos_topic;
+    /// \fsmparam Topic for recieving distance from FC 
+    static std::string mavros_distance_sensor_topic;
     /// \fsmparam Topic for recieving local velocity from FC
     static std::string mavros_local_vel_topic;
     /// \fsmparam Topic for recieving current state from FC

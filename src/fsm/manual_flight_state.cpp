@@ -16,7 +16,8 @@ void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
         event.eventError("CMD rejected!");
         control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else if(event.event_type == EventType::AUTONOMOUS) {
-        if(LandDetector::isOnGround()) {
+        bool low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
+        if(LandDetector::isOnGround() && low_enough) {
             fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
         } else {
             fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
