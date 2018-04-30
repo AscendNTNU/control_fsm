@@ -174,7 +174,6 @@ void PathPlanner::relaxGraph(){
 }
 
 void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent_y, float distance_to_parent) {
-    //std::cout << "Successor = " << x << ", " << y << std::endl;
     if(isValidCoordinate(x,y)){
         int x_index = coordToIndex(x);
         int y_index = coordToIndex(y);
@@ -185,9 +184,11 @@ void PathPlanner::handleSuccessor(float x, float y, float parent_x, float parent
             graph[x_index][y_index].setParentX(parent_x);
             graph[x_index][y_index].setParentY(parent_y);
             destination_reached = true;
-            std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
-            /*std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX()
-                << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;*/
+            if(debug){
+                std::cout << "Destination reached: x=" << x << " y=" << y << std::endl;
+                std::cout << "Destination parent: x=" << graph[x_index][y_index].getParentX()
+                << " y=" << graph[coordToIndex(x)][coordToIndex(y)].getParentY() << std::endl;
+            }
         }
             // If node is not destination and hasn't been searched yet
         else if(!graph[x_index][y_index].closed){
@@ -290,7 +291,7 @@ Obstacle* PathPlanner::findBlockingObstacle(float current_x, float current_y) {
             return &(*it);
         }
     }
-    std::cout << "Could not find blocking obstacle!!" << std::endl;
+    if (debug) {std::cout << "Could not find blocking obstacle!!" << std::endl;}
     return nullptr;
 }
 
@@ -345,7 +346,7 @@ void PathPlanner::makePlan(float current_x, float current_y, float target_x, flo
         y = graph.at(x_index).at(y_index).getParentY();
         
 
-        if(!isValidCoordinate(x,y)) {
+        if(!isValidCoordinate(x,y) && debug) {
             std::cout << "Invalid parent: " << x << ", " << y << std::endl;
             std::cout << "Index: " << x_index << ", " << y_index << std::endl;
         }
@@ -425,7 +426,7 @@ bool PathPlanner::isPlanSafe(float current_x, float current_y) {
 }
 
 void PathPlanner::resetParameters() {
-    std::cout << "Reset Parameters" << std::endl;
+    if (debug) {std::cout << "Reset Parameters" << std::endl;}
     while(!open_list.empty()){
         open_list.pop();
     }
@@ -449,8 +450,8 @@ bool PathPlanner::removeOldPoints(float current_x, float current_y){
 
     bool removed = false;
     if(abs(current_x-simple_plan.begin()->getX()) < margin && abs(current_y-simple_plan.begin()->getY())<margin){
-        std::cout << "Remove " << simple_plan.begin()->getX() << ", "
-                  << simple_plan.begin()->getY() << std::endl;
+        if (debug) {std::cout << "Remove " << simple_plan.begin()->getX() << ", "
+                  << simple_plan.begin()->getY() << std::endl;}
         simple_plan.pop_front();
         removed = true;
     }
