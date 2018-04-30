@@ -69,6 +69,10 @@ public:
     static std::string land_detector_type;
     /// \fsmparam Topic for recieving obstacle positions
     static std::string obstacle_state_topic;
+    /// \fsmparam Topic for recieving ground robot state
+    static std::string ground_robot_state_topic;
+    /// \fsmparam Topic for ground robot transform service
+    static std::string transform_gb_service;
     /// \fsmparam Topic for recieving debug service requests
     static std::string debug_server_topic;
     /// \fsmparam Topic for action server
@@ -91,6 +95,16 @@ public:
     static bool require_obstacle_detection;
     /// \fsmparam When is data considered old?
     static double valid_data_timeout;
+    //"Tracking speed" in the x-y plane
+    static double tracking_param_xy;
+    //Tracking speed in the z direction
+    static double tracking_param_z; 
+    //Variable that control the change of the speed when intercepting, xy-plane
+    static double interception_param_xy;
+    //Variable that control the change of the speed when intercepting, z-direction   
+    static double interception_param_z;
+    // Maximal distance away from the roomba to run interception algorithm
+    static double max_distance;
     /// \fsmparam Frame id for global frame
     static std::string global_frame_id;
     /// \fsmparam Frame id for local frame

@@ -22,8 +22,7 @@ enum class RequestType {
     POSHOLD, 
     GOTO, //GOTO XYZ
     LAND, 
-    TRACKGB, //Track/follow ground robot
-    INTERGB, //Interact with ground robot (tap)
+    LANDGB, //Interact with ground robot (tap)
     MANUALFLIGHT
 };
 
@@ -43,7 +42,7 @@ enum class CommandType {
     LANDXY, //Request part of command to land at XY
     GOTOXYZ, //Reqeust part of going to specified XYZ
     TAKEOFF,
-    //LANDGB //Request part of interacting with ground robot
+    LANDGB //Request part of interacting with ground robot
 };
 
 ///Defines a position goal
@@ -93,7 +92,8 @@ public:
     PositionGoal setpoint_target;
     ///If event is a command, what type?
     CommandType command_type = CommandType::NONE; //No command as default
-
+    ///Ground robot id
+    int gb_id = -1;
     ///Setter function for complete callback
     void setOnCompleteCallback(std::function<void()> callback) { on_complete_ = std::move(callback); }
     ///Setter function for error callback
@@ -114,6 +114,10 @@ public:
     bool isValidRequest() const { return (event_type == EventType::REQUEST && request != RequestType::NONE); }
     ///Chekcs if this event is a specific valid request type
     bool isValidRequest(RequestType type) const { return isValidRequest() && request == type; }
+    ///Clear event
+    void clear() { *this = EventData(); }
+    ///On aborted
+    void abort() { eventError("ABORTED"); clear();}
 };
 
 class TakeoffCMDEvent : public EventData {
@@ -147,13 +151,17 @@ public:
 ///Wrapper class for LandGB CMD events
 class LandGBCMDEvent : public EventData {
 public:
-    //TODO Implement event type
+    explicit LandGBCMDEvent(int gb) {
+        gb_id = gb;
+        event_type = EventType::COMMAND;
+        command_type = CommandType::LANDGB;
+    }
 };
 
 ///Wrapper class for requests events
 class RequestEvent : public EventData {
 public:
-    RequestEvent(RequestType r) {
+    explicit RequestEvent(RequestType r) {
         event_type = EventType::REQUEST;
         request = r;
     }

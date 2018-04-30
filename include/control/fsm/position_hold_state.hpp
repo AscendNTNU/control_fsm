@@ -16,6 +16,7 @@ public:
     ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
+    void processCommand(ControlFSM& fsm, const EventData& cmd);
 };
 
 #endif

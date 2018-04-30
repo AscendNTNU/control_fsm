@@ -77,6 +77,19 @@ TEST(ControlTest, configTest) {
     EXPECT_TRUE(control::Config::getMissingParamSet().empty()) << "Not all params found:\n" << not_found.str();
 }
 
+TEST(ControlTest, eventData) {
+    EventData event;
+    event.event_type = EventType::REQUEST;
+    event.request = RequestType::ABORT;
+    EXPECT_TRUE(event.isValidRequest() && !event.isValidCMD());
+    event.clear();
+    EXPECT_FALSE(event.isValidRequest() || event.isValidCMD());
+    event = LandXYCMDEvent(10, 10);
+    EXPECT_TRUE(event.isValidCMD() && !event.isValidRequest());
+    event.abort();
+    EXPECT_FALSE(event.isValidCMD() || event.isValidRequest());
+}
+
 TEST(ControlTest, goToStateHelpers) {
     geometry_msgs::TwistStamped test_vel;
     test_vel.twist.linear.x = 0.0;

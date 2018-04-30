@@ -6,14 +6,14 @@
 #include <control/tools/config.hpp>
 #include <control/tools/logger.hpp>
 #include <control/tools/obstacle_state_handler.hpp>
+#include <control/tools/ground_robot_handler.hpp>
 
 BeginState ControlFSM::BEGIN_STATE;
 IdleState ControlFSM::IDLE_STATE;
 TakeoffState ControlFSM::TAKEOFF_STATE;
 BlindHoverState ControlFSM::BLIND_HOVER_STATE;
 PositionHoldState ControlFSM::POSITION_HOLD_STATE;
-TrackGBState ControlFSM::TRACK_GB_STATE;
-InteractGBState ControlFSM::INTERACT_GB_STATE;
+LandGBState ControlFSM::LAND_GB_STATE;
 GoToState ControlFSM::GO_TO_STATE;
 LandState ControlFSM::LAND_STATE;
 ManualFlightState ControlFSM::MANUAL_FLIGHT_STATE;
@@ -133,6 +133,10 @@ bool ControlFSM::isReady() {
             //Land detector must be ready
             if (!LandDetector::isReady()) {
                 control::handleWarnMsg("Preflight Check: No valid land detector data!");
+                return false;
+            } 
+            if(!control::GroundRobotHandler::isReady()) {
+                control::handleWarnMsg("Preflight Check: No valid ground robot data!");
                 return false;
             }
         } catch(const std::exception& e) {

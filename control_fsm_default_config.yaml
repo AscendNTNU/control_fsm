@@ -33,6 +33,8 @@
     distance_sensor_topic: /mavros/distance_sensor/hrlv_ez4_pub,
     #Topic for recieving mavros state
     mavros_state_topic: /mavros/state,
+    #Topic for recieving ground robot states
+    ground_robot_state_topic: /ai/world_observation,
     #Topic for debug server
     debug_server_topic: /control/fsm/debug_server,
     #Topic for action server
@@ -63,6 +65,16 @@
     obstacle_state_topic: perception/obstacles,
     #Margin to determine if velocity is reached
     velocity_reached_margin: 0.1,
+    #TODO Add description
+    land_gb_tracking_xy: 2.0,
+    #TODO Add description
+    land_gb_tracking_z: 0.04,
+    #TODO Add description
+    land_gb_interception_xy: 2.0,
+    #TODO Add description
+    land_gb_interception_z: 0.01,
+    #TODO Add description
+    land_gb_max_distance: 2.0,
     #Frame ID for global frame
     global_frame_id: map,
     #Frame ID for local frame

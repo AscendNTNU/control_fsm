@@ -31,9 +31,11 @@ std::string Config::fsm_info_topic = "control/fsm/on_info";
 std::string Config::fsm_state_changed_topic = "control/fsm/state_changed";
 std::string Config::mavros_local_pos_topic = "mavros/local_position/pose";
 std::string Config::mavros_state_changed_topic = "mavros/state";
-std::string Config::land_detector_topic = "/landdetector";
+std::string Config::land_detector_topic = "land_detector";
 std::string Config::land_detector_type = "landing_gear";
 std::string Config::obstacle_state_topic = "/perception_obstacle_states";
+std::string Config::ground_robot_state_topic = "/ai/world_observation";
+std::string Config::transform_gb_service = "transform_gb_service";
 std::string Config::debug_server_topic = "/control/fsm/debug_server";
 std::string Config::action_server_topic = "/control/fsm/action_server";
 int Config::fsm_status_buffer_size = 10;
@@ -43,6 +45,12 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
+double Config::tracking_param_xy = 2.0;
+double Config::tracking_param_z = 0.04; 
+double Config::interception_param_xy = 2.0; 
+double Config::interception_param_z = 0.01; 
+double Config::max_distance = 2.0; 
+
 std::string Config::global_frame_id = "map";
 std::string Config::local_frame_id = "odom";
 bool Config::use_global_transforms = true;
@@ -155,6 +163,15 @@ void Config::loadParams() {
     getStringParam("land_detector_type", land_detector_type);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
+    //Ground robots
+    getStringParam("ground_robot_state_topic", ground_robot_state_topic);
+
+    //Chris's algorithm
+    getDoubleParam("land_gb_tracking_xy", tracking_param_xy, 0.0, 5.0);
+    getDoubleParam("land_gb_tracking_z", tracking_param_z, 0.0, 5.0);
+    getDoubleParam("land_gb_interception_xy", interception_param_xy, 0.0, 5.0);
+    getDoubleParam("land_gb_interception_z", interception_param_z, 0.0, 5.0);
+    getDoubleParam("land_gb_max_distance", max_distance, 0.0, 10.0);
     //Frame id
     getStringParam("global_frame_id", global_frame_id);
     getStringParam("local_frame_id", local_frame_id);

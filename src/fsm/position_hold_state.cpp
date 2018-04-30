@@ -16,6 +16,24 @@ PositionHoldState::PositionHoldState() {
     setpoint_.type_mask = default_mask;
 }
 
+void PositionHoldState::processCommand(ControlFSM& fsm, const EventData& cmd) {
+    //Decide next state
+    switch(cmd.command_type) {
+        case CommandType::TAKEOFF:
+            cmd.finishCMD();
+            break;
+        case CommandType::GOTOXYZ:
+        case CommandType::LANDXY:
+            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, cmd);
+            break;
+        case CommandType::LANDGB:
+            fsm.transitionTo(ControlFSM::LAND_GB_STATE, this, cmd);
+            break;
+        default:
+            break;
+    }
+}
+
 //Handles incoming events
 void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
@@ -26,37 +44,22 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
             case RequestType::LAND:
                 fsm.transitionTo(ControlFSM::LAND_STATE, this, event);
                 break;
-            /*case RequestType::TRACKGB:
-                fsm.transitionTo(ControlFSM::TRACK_GB_STATE, this, event);
+            case RequestType::LANDGB:
+                fsm.transitionTo(ControlFSM::LAND_GB_STATE, this, event);
                 break;
-            */
             default:
                 control::handleWarnMsg("Transition not allowed");
                 break;
         }
     } else if(event.isValidCMD()) {
-        if(event.command_type == CommandType::TAKEOFF) {
-            event.finishCMD();
-        } else {
-            //All other command needs to go via the GOTO state
-            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-        }
+        processCommand(fsm, event);
     }
 }
 
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    using control::Config;
-    using control::DroneHandler;
-    //No need to check other commands
     if(event.isValidCMD()) {
-        if(event.isValidCMD(CommandType::TAKEOFF)) {
-            //Takeoff completed
-            event.finishCMD();
-        } else {
-            //All other valid commands need to go to correct place on arena before anything else
-            fsm.transitionTo(ControlFSM::GO_TO_STATE, this, event);
-            return;
-        }
+        processCommand(fsm, event);
+        return;
     }
     try {
         if(!control::DroneHandler::isLocalPoseValid()) {
@@ -89,7 +92,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             }
         }
         //If altitude is too low - set it to minimum altitude
-        if(setpoint_.position.z < Config::min_in_air_alt) {
+        if(setpoint_.position.z < control::Config::min_in_air_alt) {
             control::handleWarnMsg("Altitude target too low, transition to blind hover");
             EventData pos_lost_event;
             pos_lost_event.event_type = EventType::POSLOST;

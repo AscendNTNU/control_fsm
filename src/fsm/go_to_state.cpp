@@ -42,7 +42,7 @@ void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
         if(cmd_.isValidCMD()) {
             event.eventError("ABORT request should be sent before new command");
         } else {
-            //All other command needs to go via the GOTO state
+            //Send command to positionhold
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, event);
         }
     }
