@@ -62,7 +62,13 @@
     #Topic for recieving obstacle state data
     obstacle_state_topic: perception/obstacles,
     #Margin to determine if velocity is reached
-    velocity_reached_margin: 0.1,
+    velocity_reached_margin: 0.2,
+    #Path planner client topic
+    path_planner_client_topic: /path_planner_service,
+    #Path planner plan topic
+    path_planner_plan_topic: /control/planner/plan,
+    #Path planner timeout
+    path_plan_timeout: 1.0,
     #Frame ID for global frame
     global_frame_id: map,
     #Frame ID for local frame

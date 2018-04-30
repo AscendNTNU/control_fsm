@@ -91,6 +91,12 @@ public:
     static bool require_obstacle_detection;
     /// \fsmparam When is data considered old?
     static double valid_data_timeout;
+    /// \fsmparam How long to wait for path planner
+    static double path_plan_timeout;
+    /// \fsmparam Topic for planner plan sub
+    static std::string path_planner_plan_topic;
+    /// \fsmparam Topic for planner service client
+    static std::string path_planner_client_topic;
     /// \fsmparam Frame id for global frame
     static std::string global_frame_id;
     /// \fsmparam Frame id for local frame

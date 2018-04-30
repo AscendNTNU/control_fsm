@@ -6,12 +6,20 @@
 #include <tf2/LinearMath/Transform.h>
 #include "control/tools/config.hpp"
 #include "control/tools/target_tools.hpp"
+#include <ascend_msgs/PathPlanner.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
+//Gurantees construction on first use!
+ros::NodeHandle& GoToState::getNodeHandler() {
+    static ros::NodeHandle n;
+    return n;
+}
 
-GoToState::GoToState() : StateInterface::StateInterface() {
+GoToState::GoToState() : StateInterface::StateInterface()  {
+    using ascend_msgs::PointArrayStamped;
+    last_plan_ = ascend_msgs::PointArrayStamped::ConstPtr(new ascend_msgs::PointArrayStamped);
     setpoint_.type_mask = default_mask;
 }
 
@@ -93,18 +101,35 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
+    //Request new plan
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
+    req.request.goal_x = static_cast<float>(cmd_.position_goal_local.x);
+    req.request.goal_y = static_cast<float>(cmd_.position_goal_local.y);
+    
+    if(!path_planner_client_.call(req)) {
+        control::handleErrorMsg("Couldn't request path plan");
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        return;
+    }
+    //Change stamp
+    path_requested_stamp_ = ros::Time::now();
+ 
     // Set setpoint in local frame to target
-    setpoint_.position.x = local_target_.x();
-    setpoint_.position.y = local_target_.y();
-    setpoint_.position.z = local_target_.z();
-
     try {
         ///Calculate yaw setpoint
         using control::pose::quat2yaw;
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
-        auto quat = DroneHandler::getCurrentLocalPose().pose.orientation;
-        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+
+        auto pose = DroneHandler::getCurrentLocalPose().pose;
+        //Hold position while waiting for new plan!
+        setpoint_.position.x = pose.position.x;
+        setpoint_.position.y = pose.position.y;
+        setpoint_.position.z = pose.position.z;
+        setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(pose.orientation)));
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -115,6 +140,12 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::ABORT;
+    if(!path_planner_client_.call(req)) {
+        control::handleErrorMsg("Failed to call path planner service");
+    }
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -125,13 +156,38 @@ void GoToState::loopState(ControlFSM& fsm) {
         if(!DroneHandler::isGlobalPoseValid()) {
             throw control::PoseNotValidException();
         }
+        
+        bool last_plan_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
+        bool plan_requested_timeout = ros::Time::now() - path_requested_stamp_ > ros::Duration(control::Config::path_plan_timeout);
 
+        //No new valid plan recieved
+        if(last_plan_timeout || last_plan_->points.empty()) {
+            if(plan_requested_timeout) {
+                control::handleErrorMsg("Missing valid path plan!");
+                RequestEvent abort_event(RequestType::ABORT);
+                if(cmd_.isValidCMD()) {
+                    cmd_.eventError("ABORT");
+                    cmd_ = EventData();
+                }
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            }
+            return;
+        }
+        
+        auto& target_point = last_plan_->points[0];
+        local_target_ = tf2::Vector3(target_point.x, target_point.y, cmd_.position_goal_local.z);
+        setpoint_.position.x = local_target_.x();
+        setpoint_.position.y = local_target_.y();
+        setpoint_.position.z = local_target_.z();
+        
         auto tf = DroneHandler::getLocal2GlobalTf();
         tf2::Transform tf_matrix;
         tf2::convert(tf.transform, tf_matrix);
 
         //Transform local target back to global using latest transform
         auto global_target = tf_matrix * local_target_;
+        
+        //TODO Should path planner be global or local? 
 
         //If target becomes invalid, abort
         if(Config::restrict_arena_boundaries) {
@@ -145,7 +201,6 @@ void GoToState::loopState(ControlFSM& fsm) {
                 return;
             }
         }
-
         using control::pose::quat2mavrosyaw;
         //Get pose
         auto local_pose = control::DroneHandler::getCurrentLocalPose();
@@ -191,12 +246,20 @@ const mavros_msgs::PositionTarget* GoToState::getSetpointPtr() {
     return &setpoint_;
 }
 
+void GoToState::planCB(ascend_msgs::PointArrayStamped::ConstPtr msg_p) {
+    last_plan_ = msg_p;
+}
+
 //Initialize state
 void GoToState::stateInit(ControlFSM& fsm) {
     using control::Config;
-    //TODO Uneccesary variables - Config can be used directly
-    //Set state variables
+    using ascend_msgs::PointArrayStamped;
+    using ascend_msgs::PathPlanner;
+    auto& pc_topic = Config::path_planner_client_topic;
+    auto& ps_topic = Config::path_planner_plan_topic;
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
+    path_planner_client_ = getNodeHandler().serviceClient<PathPlanner>(pc_topic); 
+    path_planner_sub_ = getNodeHandler().subscribe(ps_topic, 1, &GoToState::planCB, this);
 
     setStateIsReady();
     control::handleInfoMsg("GoTo init completed!");
@@ -322,7 +385,6 @@ void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
     }
 }
-
 
 
 ascend_msgs::ControlFSMState GoToState::getStateMsg() const {
