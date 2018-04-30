@@ -5,7 +5,6 @@
 #include <control/tools/logger.hpp>
 #include <control/tools/ground_robot_handler.hpp>
 #include <control/tools/intercept_groundbot.hpp>
-#include <ascend_msgs/GroundRobotTransform.h>
 
 #include <functional>
 
@@ -13,7 +12,7 @@ using GRstate = ascend_msgs::GRState;
 using PoseStamped = geometry_msgs::PoseStamped;
 using PosTarget = mavros_msgs::PositionTarget;
 
-enum class LocalState: int {IDLE, SETUP, LAND, RECOVER, ABORT, COMPLETED};
+enum class LocalState: int {IDLE, LOW_ALT, LAND, RECOVER, ABORT, COMPLETED};
 //Parameters for thresholds, do they deserve a spot in the config?
 constexpr double DISTANCE_THRESHOLD = 0.5;
 constexpr double HEIGHT_THRESHOLD = 0.5;
@@ -24,7 +23,7 @@ LocalState idleStateHandler(const GRstate& gb_pose,
                             PosTarget* setpoint_p,
                             const EventData& cmd);
 
-LocalState setupStateHandler(const GRstate& gb_pose,
+LocalState lowAltitudeHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
                             PosTarget* setpoint_p,
                             const EventData& cmd);
@@ -52,8 +51,8 @@ LocalState completedStateHandler(const GRstate& gb_state,
 //State function array, containing all the state functions.
 std::array<std::function<decltype(idleStateHandler)>, 6> state_function_array = {
     idleStateHandler,
-    setupStateHandler,
     landStateHandler,
+    lowAltitudeHandler,
     recoverStateHandler,
     abortStateHandler,
     completedStateHandler
@@ -80,7 +79,7 @@ LocalState idleStateHandler(const GRstate& gb_pose,
         drone_pos.z > HEIGHT_THRESHOLD      &&
         gb_pose.downward_tracked) {
 	    control::handleInfoMsg("Start land");    
-        return LocalState::SETUP;
+        return LocalState::LAND;
     } else {
         std::string msg = "Can't land! Distance: ";
         msg += std::to_string(distance_to_gb < DISTANCE_THRESHOLD);
@@ -91,22 +90,6 @@ LocalState idleStateHandler(const GRstate& gb_pose,
     }
 }
 
-LocalState setupStateHandler(const GRstate& gb_pose,
-                             const PoseStamped& drone_pose,
-                             PosTarget* setpoint_p,
-                             const EventData& cmd) {
-    //Calls service to change to the GMFRAME transform
-    ascend_msgs::GroundRobotTransform tf;
-    tf.request.state = tf.request.GBFRAME;
-    tf.request.gb_id = cmd.gb_id;
-    if (!ros::service::call(control::Config::transform_gb_service, tf)) {
-        //Failing the transform is critical!
-        control::handleCriticalMsg("GB Transform service is unavailable!");
-        return LocalState::ABORT;
-    }
-    if (tf.response.success) return LocalState::LAND;
-    else return LocalState::SETUP;
-}
 
 LocalState landStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
@@ -128,6 +111,13 @@ LocalState landStateHandler(const GRstate& gb_pose,
         //Keep running the algorithm.
         return LocalState::LAND;
     }
+}
+
+LocalState lowAltitudeHandler(const GRstate& gb_pose,
+                              const PoseStamped& drone_pose,
+                              PosTarget* setpoint_p,
+                              const EvnetData& cmd) {
+    
 }
 
     
@@ -278,35 +268,17 @@ void LandGBState::loopState(ControlFSM& fsm) {
     local_state = stateFunction(gb_pose, drone_pose, &setpoint_, cmd_);
 
     if (local_state == LocalState::COMPLETED) {
-        ascend_msgs::GroundRobotTransform tf;
-        tf.request.state = tf.request.LOCALFRAME;
-        if (ros::service::call(control::Config::transform_gb_service, tf)) {
-            control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
-        } else if (tf.response.success) {
-            cmd_.finishCMD();
-            RequestEvent transition(RequestType::POSHOLD);
-            transition.setpoint_target = PositionGoal(setpoint_.position.z);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
-            return;
-        }
-        //Sets the setpoint mask to blindhover.
-        setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
-
+        cmd_.finishCMD();
+        RequestEvent transition(RequestType::POSHOLD);
+        transition.setpoint_target = PositionGoal(setpoint_.position.z);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
+        return;
     }
     if (local_state == LocalState::ABORT) {
-        ascend_msgs::GroundRobotTransform tf;
-        tf.request.state = tf.request.LOCALFRAME;
-        if (ros::service::call(control::Config::transform_gb_service, tf)) {
-            control::handleCriticalMsg("GB Transform service is unavailable! - Cannot transform to local frame.");
-        } else if (tf.response.success) {
-            cmd_.abort();
-            RequestEvent abort_event(RequestType::ABORT);
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-            return; 
-        }
-        //Sets the setpoint mask to blindhover.
-        setpoint_.type_mask = default_mask | IGNORE_PX | IGNORE_PY;
-
+        cmd_.abort();
+        RequestEvent abort_event(RequestType::ABORT);
+        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        return; 
     }
 
 }
