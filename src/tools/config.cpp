@@ -54,6 +54,7 @@ double Config::arena_lowest_x = 0.0;
 double Config::arena_lowest_y = 0.0;
 double Config::arena_highest_x = 20.0;
 double Config::arena_highest_y = 20.0;
+bool Config::require_distance_sensor = true;
 
 void Config::loadParams() {
     if(!ros::isInitialized()) {
@@ -174,6 +175,7 @@ void Config::loadParams() {
     getDoubleParam("arena_lowest_y", arena_lowest_y, -100.0, 100.0);
     getDoubleParam("arena_highest_x", arena_highest_x, -100.0, 100.0);
     getDoubleParam("arena_highest_y", arena_highest_y, -100.0, 100.0);
+    getBoolParam("require_distance_sensor", require_distance_sensor);
 }
 
 using Request = ascend_msgs::ReloadConfig::Request;
