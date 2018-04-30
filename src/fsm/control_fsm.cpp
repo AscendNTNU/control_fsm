@@ -158,6 +158,17 @@ bool ControlFSM::isReady() {
                 return false;
             }
         }
+        try {
+            if(control::Config::require_distance_sensor) {
+                if(!control::DroneHandler::isDistValid()) {
+                    control::handleWarnMsg("Preflight Check: No valid distance data");
+                    return false;
+                }
+            }
+        } catch(const std::exception& e) {
+            control::handleCriticalMsg(e.what());
+            return false;
+        }
     }
 
     //Preflight has passed - no need to check it again.
