@@ -47,6 +47,7 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         if(!control::DroneHandler::isLocalPoseValid()) {
             throw control::PoseNotValidException();
         }
+      
         auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
         //Position XY is ignored in typemask, but the values are set as a precaution.
@@ -61,6 +62,15 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
                 setpoint_.position.x = event.setpoint_target.x;
                 setpoint_.position.y = event.setpoint_target.y;
             }
+        }
+
+        //reset obstacle avoidance flag
+        obstacle_avoidance_kicked_in_ = false;
+
+        // TODO:Check with obstacle_avoidance if it is ok to land
+        if (true){
+            // assuming obstacle_avoidance doesn't complain, disable it during landing
+            fsm.obstacle_avoidance_.relaxResponsibility();
         }
 
         //Only land blind when the drone is below a certain altitude
@@ -94,13 +104,18 @@ void LandState::loopState(ControlFSM& fsm) {
         } else {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
         }
-        
+
+        if (obstacle_avoidance_kicked_in_){
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        }
+
         //Only use distance sensor if required
         bool low_enough = true;    
         if(control::Config::require_distance_sensor) {
             low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
         }
- 
+      
         //Check landing
         if(LandDetector::isOnGround() && low_enough) {
             if(cmd_.isValidCMD()) {
@@ -120,6 +135,19 @@ void LandState::loopState(ControlFSM& fsm) {
         control::handleCriticalMsg(e.what());
     }
 }
+
+
+//Initialize state
+void LandState::stateInit(ControlFSM& fsm) {
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        this->obstacle_avoidance_kicked_in_  = true;
+    };
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
+
+    setStateIsReady();
+    control::handleInfoMsg("Land init completed!");
+}
+
 
 const mavros_msgs::PositionTarget* LandState::getSetpointPtr() {
     setpoint_.header.stamp = ros::Time::now();

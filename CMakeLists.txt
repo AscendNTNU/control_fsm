@@ -73,10 +73,25 @@ target_link_libraries(control_fsm_lib
 add_executable(control_fsm_main src/nodes/control_fsm_main)
 add_executable(action_interface_client src/nodes/action_interface_client.cpp)
 
+add_library(path_planner_lib src/path_planner/path_planner src/path_planner/node)
+
+add_executable(path_planner_node src/nodes/path_planner_node)
+
+add_executable(test_path_planner_node src/nodes/test_path_planner_node)
+
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(control_fsm_main control_fsm_lib)
 target_link_libraries(action_interface_client ${catkin_LIBRARIES})
+
+target_link_libraries(path_planner_node 
+        ${catkin_LIBRARIES}
+        control_tools_lib
+        path_planner_lib)
+
+target_link_libraries(test_path_planner_node 
+        ${catkin_LIBRARIES}
+        control_tools_lib)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -87,6 +102,9 @@ add_dependencies(action_interface_client ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 if(CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
     add_rostest_gtest(utest test/launch_test.test test/utest.cpp)
+    target_link_libraries(utest control_fsm_lib path_planner_lib)
     target_link_libraries(utest control_fsm_lib)
+    target_link_libraries(utest ${catkin_LIBRARIS})
     roslaunch_add_file_check(launch)
 endif()
+

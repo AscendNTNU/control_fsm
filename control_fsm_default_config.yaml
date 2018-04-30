@@ -8,13 +8,13 @@
     #When is a destination reached
     dest_reached_margin: 0.2,
     #Topic for publishing error messages
-    fsm_error_topic: control/fsm/on_error, 
+    fsm_error_topic: control/fsm/on_error,
     #Topic for publishing info messages
-    fsm_info_topic: control/fsm/on_info, 
+    fsm_info_topic: control/fsm/on_info,
     #Topic for publishing current state
     fsm_state_changed_topic: control/fsm/state_changed,
     #Topic for publishing warning messages
-    fsm_warn_topic: control/fsm/on_warn, 
+    fsm_warn_topic: control/fsm/on_warn,
     #Altitude for optimal gb detection
     gb_search_altitude: 1.0, 
     #Time to wait before automatic landing
@@ -38,21 +38,23 @@
     #Topic for action server
     action_server_topic: /control/fsm/action_server,
     #When is message considered old?
-    message_timeout: 2.0, 
+    message_timeout: 2.0,
     #For what distances is it uneccesary to adjust yaw
-    no_yaw_correct_dist: 0.2, 
-    #Safety distance 
-    obstacle_too_close_dist: 2.0, 
+    no_yaw_correct_dist: 0.2,
+    #Safety distance
+    obstacle_too_close_dist: 2.0,
     #Require all data streams to enable FSM
     require_all_streams: true,
-    #Require obstacle detection 
-    require_obs_detection: true, 
+    #Require obstacle detection
+    require_obs_detection: true,
+    #Safe altitude for hovering
+    safe_hover_alt: 1.0,
     #Margin to determine if we're close enough to setpoint
     setp_reached_margin: 0.2, 
     #Buffersize for status messages
     status_msg_buffer_size: 10,
     #Takeoff altitude
-    takeoff_altitude: 1.0, 
+    takeoff_altitude: 1.0,
     #Margin to determine if we're close enough to yaw setpoint
     yaw_reached_margin: 0.02,
     #Altitude for goto in landxy
@@ -60,9 +62,20 @@
     #Minimum flying altitude
     min_in_air_alt: 0.5,
     #Topic for recieving obstacle state data
-    obstacle_state_topic: perception/obstacles,
+    obstacle_state_topic: perception/obstacles/lidar,
     #Margin to determine if velocity is reached
-    velocity_reached_margin: 0.1,
+    velocity_reached_margin: 0.2,
+    #Path planner client topic
+    path_planner_client_topic: /path_planner_service,
+    #Path planner plan topic
+    path_planner_plan_topic: /control/planner/plan,
+    #Path planner timeout
+    path_plan_timeout: 1.0,
+    #Obstacle avoidance clearance 
+    obstacle_clearance_max: 1.1,
+    obstacle_clearance_min: 1.0,
+    #Obstacle avoidance checkradius
+    obstacle_clearance_checkradius: 40.0,
     #Frame ID for global frame
     global_frame_id: map,
     #Frame ID for local frame

@@ -83,6 +83,11 @@ public:
     static double safe_hover_altitude;
     /// \fsmparam Drone safezone
     static double obstacle_too_close_dist;
+    /// \fsmparam Clearance osbtacle avoidance 
+    static double obstacle_clearance_max;
+    static double obstacle_clearance_min;
+    /// \fsmparam Radius in which obstacle collisions will be checked for
+    static double obstacle_clearance_checkradius;
     /// \fsmparam Topic to listen for info about obstacles
     static std::string lidar_topic;
     /// \fsmparam Finished drone will require all datastreams to be available
@@ -91,6 +96,12 @@ public:
     static bool require_obstacle_detection;
     /// \fsmparam When is data considered old?
     static double valid_data_timeout;
+    /// \fsmparam How long to wait for path planner
+    static double path_plan_timeout;
+    /// \fsmparam Topic for planner plan sub
+    static std::string path_planner_plan_topic;
+    /// \fsmparam Topic for planner service client
+    static std::string path_planner_client_topic;
     /// \fsmparam Frame id for global frame
     static std::string global_frame_id;
     /// \fsmparam Frame id for local frame

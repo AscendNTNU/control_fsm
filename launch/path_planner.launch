@@ -1,0 +1,16 @@
+<launch>
+	<arg name="node_name" default="path_planner_node"/>
+	<arg name="mavros_setpoint_topic" default="/mavros/setpoint_raw/local"/>
+	<arg name="obstacle_state_topic" default="/perception/obstacles"/>
+	<arg name="plan_points_topic" default="/control/planner/plan"/>
+	<arg name="obstacle_radius" default="1.0"/>
+	<arg name="node_distance" default="0.4"/>
+	
+    	<node name="$(arg node_name)" pkg="control_fsm" type="path_planner_node" output="screen">
+    		<param name="mavros_setpoint_topic" value="$(arg mavros_setpoint_topic)"/>
+    		<param name="obstacle_state_topic" value="$(arg obstacle_state_topic)"/>
+    		<param name="plan_points_topic" value="$(arg plan_points_topic)"/>
+    		<param name="obstacle_radius" value="$(arg obstacle_radius)"/>
+    		<param name="node_distance" value="$(arg node_distance)"/>
+    	</node>
+</launch>
