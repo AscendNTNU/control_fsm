@@ -103,12 +103,10 @@ int main(int argc, char** argv){
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed
     	if(planner_state.make_plan && (!plan.isPlanSafe(planner_state.current_x,planner_state.current_y) || planner_state.new_goal)){
-    		ROS_INFO("Make new plan.");
+    		
     		planner_state.new_goal = false;
 		    plan.makePlan(planner_state.current_x, planner_state.current_y, planner_state.goal_x, planner_state.goal_y);
-		    simple_plan = plan.getSimplePlan();
-
-		    
+		    simple_plan = plan.getSimplePlan();    
 		    
 		    // Removing old plan
 		    points_in_plan.clear();
@@ -118,18 +116,13 @@ int main(int argc, char** argv){
 			    // The first point in the plan is the current point of the drone, so it doesn't need to be sent as part of the plan
 			    std::list<Node>::iterator second_point = ++(simple_plan.begin());
 
-			    std::cout << "Published points:\t";
 			    for(std::list<Node>::iterator it = second_point; it != simple_plan.end(); it++){
 
 	        		point.x = it->getX();
 	        		point.y = it->getY();
 	        		
-	        		points_in_plan.push_back(point);
-
-	        		std::cout << point.x << ", " << point.y << "         ";
-	        	
+	        		points_in_plan.push_back(point);	        	
 	    		}
-	    		std::cout << std::endl;
     		}
     	}
     
@@ -143,33 +136,20 @@ int main(int argc, char** argv){
 		    	simple_plan = plan.getSimplePlan();
     			if(!simple_plan.empty()){
 
-				    std::cout << "Published points:\t";
 				    for(std::list<Node>::iterator it = simple_plan.begin(); it != simple_plan.end(); it++){
 
 		        		point.x = it->getX();
 		        		point.y = it->getY();
 		        		
 		        		points_in_plan.push_back(point);
-
-		        		std::cout << point.x << ", " << point.y << "         ";
-		        	
 		    		}
-		    		std::cout << std::endl;
 		    	}
     		}
-    		/*std::cout << "Published points:\t";
-    		for(auto it = points_in_plan.begin(); it != points_in_plan.end(); it++){
-    			std::cout << it->x << ", " << it->y << "\t" << std::endl;
-    		}*/
     		msg.header.stamp = ros::Time::now();
     		pub_plan.publish(msg);
-    		//std::cout << std::endl;
     	}
-
     	rate.sleep();
-    	
     }
 
     ros::spin();
-
 }
