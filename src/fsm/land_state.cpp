@@ -109,9 +109,14 @@ void LandState::loopState(ControlFSM& fsm) {
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
         }
-
+        
+        //Only use distance sensor if required
+        bool low_enough = true;    
+        if(control::Config::require_distance_sensor) {
+            low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
+        }
+  
         //Check landing
-        bool low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
         if(LandDetector::isOnGround() && low_enough) {
             if(cmd_.isValidCMD()) {
                 //Only landxy should occur!
