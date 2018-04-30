@@ -95,14 +95,15 @@ LocalState landStateHandler(const GRstate& gb_pose,
                             const PoseStamped& drone_pose,
                             PosTarget* setpoint_p,
                             const EventData& cmd) {
+    auto& drone_pos = drone_pose.pose.position;
     //Runs the interception algorithm
     bool interception_ok = control::gb::interceptGB(drone_pose, gb_pose, *setpoint_p);
     
     //Checks if we have landed or the data is not good.
-    if(LandDetector::isOnGround()) {
-        //Success
-	control::handleInfoMsg("Land successful!");
-        return LocalState::RECOVER;
+    if(drone_pos.z < control::Config::interception_low_alt_boundry) {
+        //Boundry reached. Transition to blind landing.
+	control::handleInfoMsg("Interception altitude boundry reached!");
+        return LocalState::LOW_ALT;
     } else if(!interception_ok) {
 	control::handleErrorMsg("Interception algorithm failed!");
         //Oh shit!
@@ -116,8 +117,14 @@ LocalState landStateHandler(const GRstate& gb_pose,
 LocalState lowAltitudeHandler(const GRstate& gb_pose,
                               const PoseStamped& drone_pose,
                               PosTarget* setpoint_p,
-                              const EvnetData& cmd) {
-    
+                              const EventData& cmd) {
+    //Checks if we are on the ground else we keep on landin'
+    if(LandDetector::isOnGround()) {
+        return LocalState::COMPLETED;
+    } else {
+        setpoint_p->type_mask = default_mask | SETPOINT_TYPE_LAND | IGNORE_PX | IGNORE_PY;
+        return LocalState::LOW_ALT;
+    }
 }
 
     
@@ -269,9 +276,8 @@ void LandGBState::loopState(ControlFSM& fsm) {
 
     if (local_state == LocalState::COMPLETED) {
         cmd_.finishCMD();
-        RequestEvent transition(RequestType::POSHOLD);
-        transition.setpoint_target = PositionGoal(setpoint_.position.z);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, transition);        
+        RequestEvent transition(RequestType::TAKEOFF);
+        fsm.transitionTo(ControlFSM::TAKEOFF_STATE, this, transition);        
         return;
     }
     if (local_state == LocalState::ABORT) {
