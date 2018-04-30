@@ -29,6 +29,8 @@
     local_velocity_topic: /mavros/local_position/velocity,
     #Topic for recieving local position estimates
     local_position_topic: /mavros/local_position/pose, 
+    #Topic for recieving distance data
+    distance_sensor_topic: /mavros/distance_sensor/hrlv_ez4_pub,
     #Topic for recieving mavros state
     mavros_state_topic: /mavros/state,
     #Topic for debug server
@@ -76,5 +78,7 @@
     #Highest allowed global x position
     arena_highest_x: 20.0,
     #Highest allowed global y position
-    arena_highest_y: 20.0
+    arena_highest_y: 20.0,
+    #Require use of distance sensor
+    require_distance_sensor: true
 }

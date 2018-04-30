@@ -57,6 +57,8 @@ public:
     static std::string fsm_state_changed_topic;
     /// \fsmparam Topic for recieving local position from FC
     static std::string mavros_local_pos_topic;
+    /// \fsmparam Topic for recieving distance from FC 
+    static std::string mavros_distance_sensor_topic;
     /// \fsmparam Topic for recieving local velocity from FC
     static std::string mavros_local_vel_topic;
     /// \fsmparam Topic for recieving current state from FC
@@ -105,6 +107,8 @@ public:
     static double arena_highest_x;
     /// \fsmparam Highest allowed y global position
     static double arena_highest_y;
+    /// \fsmparam Require use of distance sensor to allow transition to idle
+    static bool require_distance_sensor;
 
     /**Load paramaters
      * @throw control::ROSNotInitializedException
