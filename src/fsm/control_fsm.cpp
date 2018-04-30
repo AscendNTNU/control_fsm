@@ -125,10 +125,6 @@ bool ControlFSM::isReady() {
                 control::handleWarnMsg("Preflight Check: No valid twist data");
                 return false;
             }
-            if(!control::DroneHandler::isDistValid()) {
-                control::handleWarnMsg("Preflight Check: No valid distance data");
-                return false;
-            }
             //Mavros must publish state data
             if (subscribers_.mavros_state_changed_sub.getNumPublishers() <= 0) {
                 control::handleWarnMsg("Preflight Check: No valid mavros state data!");
@@ -157,6 +153,17 @@ bool ControlFSM::isReady() {
                 control::handleErrorMsg("Exception: " + std::string(e.what()));
                 return false;
             }
+        }
+        try {
+            if(control::Config::require_distance_sensor) {
+                if(!control::DroneHandler::isDistValid()) {
+                    control::handleWarnMsg("Preflight Check: No valid distance data");
+                    return false;
+                }
+            }
+        } catch(const std::exception& e) {
+            control::handleCriticalMsg(e.what());
+            return false;
         }
     }
 
