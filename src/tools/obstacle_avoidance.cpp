@@ -87,7 +87,7 @@ bool checkAndAvoidSingleObstacle(SP* setpoint_p, const V1& drone_position, const
                     && setpoint_distance_to_obstacle > drone_distance_to_obstacle
                     && setpoint_distance_to_obstacle > minimum_distance){
                 // no action, maybe logging?
-                ROS_INFO_THROTTLE(1, "[obstacle avoidance]: Prefer setpoint over avoid algorithm");
+                ROS_DEBUG_THROTTLE(1, "[obstacle avoidance]: Prefer setpoint over avoid algorithm");
             }
             else {
                 if (setpoint_modified){
@@ -121,10 +121,6 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
     ascend_msgs::PolygonArray zone_msg;
 
     const bool obstacles_valid = control::ObstacleStateHandler::isInstanceReady();
-    
-    if (!obstacles_valid){
-        ROS_WARN_THROTTLE(1, "[obstacle_avoidance]: ObstacleStateHandler not ready"); 
-    }
 
     for (int i = 0; i < obstacles.count && obstacles_valid; i++){
         
@@ -133,7 +129,7 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         }
     
         // generate points for zone_pub_
-        constexpr int N_points{16};
+        constexpr int N_points{12};
         geometry_msgs::Polygon polygon;
         for (int j = 0; j < N_points; j++){
             const float angle = static_cast<float>(j)*2.f*PI/static_cast<float>(N_points);
@@ -152,11 +148,6 @@ bool control::ObstacleAvoidance::doObstacleAvoidance(mavros_msgs::PositionTarget
         }
         
         zone_msg.polygons.push_back(polygon);
-
-        if (setpoint_modified){
-            //const auto new_distance_to_obstacle = calcDistanceToObstacle(setpoint->position, obstacle_global_position);
-            //ROS_INFO_THROTTLE(1, "Distance improvement %.3f to %.3f", drone_distance_to_obstacle, new_distance_to_obstacle);
-        }
     }
 
     zone_pub_.publish(zone_msg);
@@ -182,7 +173,8 @@ void simulateObstacleMotion(V1& obstacle_pos, const V2& center, const float time
 }
 
 /// Take in a point and return time representing how long that point is safe up to
-float areaSafePrediction(geometry_msgs::Point32 checkpoint, const float sim_forward_time) {
+template<typename P> // P is point (x/y/x)
+float areaSafePrediction(const P& checkpoint, const float sim_forward_time) {
     const auto drone_pose = control::DroneHandler::getCurrentLocalPose();
     const auto drone_velocity = control::DroneHandler::getCurrentTwist().twist.linear;
     auto obstacles = control::ObstacleStateHandler::getCurrentObstacles();
@@ -214,7 +206,6 @@ float areaSafePrediction(geometry_msgs::Point32 checkpoint, const float sim_forw
 
             // check updated obstacle against the setpoint
             if (checkAndAvoidSingleObstacle(&setpoint, setpoint.position, drone_velocity, obstacle_pos)){
-                ROS_INFO_THROTTLE(1,"obstacles found at (%.3f , %.3f) for %.3f seconds", checkpoint.x, checkpoint.y, t);
                 return t;
             }
         }
@@ -223,10 +214,17 @@ float areaSafePrediction(geometry_msgs::Point32 checkpoint, const float sim_forw
         // ...
     }
     
-    ROS_INFO_THROTTLE(1,"no obstacles found at (%.3f , %.3f) for %.3f seconds", checkpoint.x, checkpoint.y, sim_forward_time);
-
     return sim_forward_time; // maybe return something larger
 }
+
+bool control::ObstacleAvoidance::predictSafetyOfPoint(const geometry_msgs::Point& point){
+    const bool safe = areaSafePrediction(point, 30.f) >= 30.f;
+
+    return safe;
+}
+
+
+
 
 void control::ObstacleAvoidance::onModified() {
     //Run all callbacks
@@ -244,15 +242,7 @@ void control::ObstacleAvoidance::onWarn() {
 
 mavros_msgs::PositionTarget control::ObstacleAvoidance::run(mavros_msgs::PositionTarget setpoint) {
 
-    /// <testing>
-    geometry_msgs::Point32 point;
-    point.x = 10.f;
-    point.y = 5.f;
-    const auto safe_time = areaSafePrediction(point, 10.f);
-    /// </testing>
-
-
-    mavros_msgs::PositionTarget setpoint_unchanged = setpoint; 
+    const mavros_msgs::PositionTarget setpoint_unchanged = setpoint; 
 
     const bool setpoint_modified = doObstacleAvoidance(&setpoint);
 

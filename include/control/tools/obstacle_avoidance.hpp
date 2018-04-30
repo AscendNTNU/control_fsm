@@ -3,6 +3,7 @@
 #include <set>
 #include <functional>
 #include <mavros_msgs/PositionTarget.h>
+#include <geometry_msgs/Point32.h>
 #include <memory>
 #include <ros/ros.h>
 
@@ -58,17 +59,21 @@ public:
     ///Obstacle avoidance has reduced responsibility. 
     ///It won't change setpoints and only calls warning level callbacks
     void relaxResponsibility() { 
-	    ROS_INFO("[control]: Low-Level obstacle-avoidance disabled");
+	    ROS_DEBUG("[control]: Low-Level obstacle-avoidance disabled");
 	    has_setpoint_responsibility_ = false; 
     }
     ///Obstacle avoidance takes full responsibility over setpoints and calls all callbacks
     void takeResponsibility() { 
-	    ROS_INFO("[control]: Low-Level obstacle-avoidance enabled");
+	    ROS_DEBUG("[control]: Low-Level obstacle-avoidance enabled");
 	    has_setpoint_responsibility_ = true; 
     }
 
     ///Modifies setpoint if obstacle is too close
     mavros_msgs::PositionTarget run(mavros_msgs::PositionTarget setpoint);
+    ///Simulate and tell if point is safe in the future
+    bool predictSafetyOfPoint(const geometry_msgs::Point& point);
+
+
     ///Returns true when obstacle avoidance is running
     bool isReady() { return true; }
 };

@@ -67,10 +67,13 @@ void LandState::stateBegin(ControlFSM& fsm, const EventData& event) {
         //reset obstacle avoidance flag
         obstacle_avoidance_kicked_in_ = false;
 
-        // TODO:Check with obstacle_avoidance if it is ok to land
-        if (true){
-            // assuming obstacle_avoidance doesn't complain, disable it during landing
+        //Check with obstacle_avoidance if it is ok to land
+        if (fsm.obstacle_avoidance_.predictSafetyOfPoint(setpoint_.position)){
             fsm.obstacle_avoidance_.relaxResponsibility();
+        } else {
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            return;
         }
 
         //Only land blind when the drone is below a certain altitude
