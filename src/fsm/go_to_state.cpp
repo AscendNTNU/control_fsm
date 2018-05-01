@@ -179,8 +179,8 @@ void GoToState::loopState(ControlFSM& fsm) {
         }
 
         if (obstacle_avoidance_kicked_in_){
-            //RequestEvent abort_event(RequestType::ABORT);
-            //fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
             return;
         }
       
