@@ -4,11 +4,20 @@
 #include <ros/ros.h>
 #include <ascend_msgs/PointArrayStamped.h>
 #include <memory>
-#include <functional>
 
+namespace go_to_impl {
+    enum class LocalState{INIT_PLAN, GOTO, REACHED_POINT, ABORT, COMPLETED};
+}
 ///Moves drone to XYZ
 class GoToState : public StateInterface {
 private:
+    //Local state interface
+    friend go_to_impl::LocalState initPlanStateHandler(GoToState& s);
+    friend go_to_impl::LocalState goToStateHandler(GoToState& s);
+    friend go_to_impl::LocalState pointReachedStateHandler(GoToState& s);
+    friend go_to_impl::LocalState completedStateHandler(GoToState& s);
+    friend go_to_impl::LocalState abortStateHandler(GoToState& s);
+
     ///Get nodehandle, constructed on first use!
     static ros::NodeHandle& getNodeHandler();
     ///Path planner ROS service client
@@ -36,6 +45,7 @@ private:
 
     ///Local target to reach
     tf2::Vector3 local_target_;
+
 public:
     GoToState();
     void stateInit(ControlFSM& fsm) override;

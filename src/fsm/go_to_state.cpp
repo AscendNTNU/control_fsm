@@ -8,13 +8,141 @@
 #include "control/tools/target_tools.hpp"
 #include <ascend_msgs/PathPlanner.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <functional>
+#include <array>
 
+using namespace go_to_impl;
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 //Gurantees construction on first use!
 ros::NodeHandle& GoToState::getNodeHandler() {
     static ros::NodeHandle n;
     return n;
+}
+
+//Forward declaration
+bool targetWithinArena(const tf2::Vector3& target);
+
+LocalState initPlanStateHandler(GoToState& s);
+LocalState goToStateHandler(GoToState& s);
+LocalState pointReachedStateHandler(GoToState& s);
+LocalState abortStateHandler(GoToState& s);
+LocalState completedStateHandler(GoToState& s);
+
+LocalState local_state = LocalState::INIT_PLAN;
+
+std::array<std::function<decltype(initPlanStateHandler)>, 5> state_array = { 
+    initPlanStateHandler,
+    goToStateHandler,
+    pointReachedStateHandler,
+    abortStateHandler,
+    completedStateHandler
+};
+
+std::function<decltype(initPlanStateHandler)> stateFunction = initPlanStateHandler;
+
+//Calls pathplanner service and request next step in plan
+LocalState initPlanStateHandler(GoToState& s) {
+    //Get transforms and apply local -> global tf to get global goal.
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+    s.local_target_ = s.cmd_.position_goal_local.getVec3();
+    auto global_target = tf_matrix * s.local_target_;
+
+    //Checks if the point is valid.
+    bool target_alt_too_low = s.local_target_.z() < control::Config::min_in_air_alt;
+    bool invalid_target = !s.cmd_.position_goal_local.xyz_valid ||
+                          !targetWithinArena(global_target)     ||
+                          target_alt_too_low;
+
+    if(target_alt_too_low) {
+        control::handleWarnMsg("Target altitude too low?");
+    }
+    if(invalid_target) {
+        return LocalState::ABORT;
+    }
+    
+    //Request a new plan from the pathplanner.
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
+    req.request.goal_x = static_cast<float>(global_target.x());
+    req.request.goal_y = static_cast<float>(global_target.y());
+
+    if(!s.path_planner_client_.call(req)) {
+        control::handleErrorMsg("Could not request path plan");
+        return LocalState::ABORT;
+    }
+    s.path_requested_stamp_ = ros::Time::now();
+
+    return LocalState::GOTO;
+}
+
+//Sends setpoints and awaits arrival at point
+LocalState goToStateHandler(GoToState& s) {
+    bool last_plan_timeout = ros::Time::now() - s.last_plan_->header.stamp >ros::Duration(control::Config::path_plan_timeout);
+    bool plan_requested_timeout = ros::Time::now() - s.path_requested_stamp_ > ros::Duration(control::Config::path_plan_timeout);
+    
+    //Checks if the plan has timed out or if the 
+    if(last_plan_timeout || s.last_plan_->points.empty()) {
+        if(plan_requested_timeout) {
+            return LocalState::ABORT;
+        }
+        return LocalState::GOTO;
+    }
+    
+    auto& target_point = s.last_plan_->points[0];
+    s.local_target_ = tf2::Vector3(target_point.x, target_point.y, s.cmd_.position_goal_local.z);
+    s.setpoint_.position.x = s.local_target_.x();
+    s.setpoint_.position.y = s.local_target_.y(); 
+    s.setpoint_.position.z = s.local_target_.z();
+
+    return LocalState::REACHED_POINT;
+}
+
+//Checks if the point is the last point of the plan
+LocalState pointReachedStateHandler(GoToState& s) {
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+    auto global_target = tf_matrix * s.local_target_;
+    if(control::Config::restrict_arena_boundaries) {
+        if(!targetWithinArena(global_target)) {
+            return LocalState::ABORT;
+        }
+    }
+    
+    using control::pose::quat2mavrosyaw;
+    auto local_pose = control::DroneHandler::getCurrentLocalPose();
+    auto& local_position = local_pose.pose.position;
+    auto& quat = local_pose.pose.orientation;
+    
+    double delta_x = local_position.x - s.local_target_.x();
+    double delta_y = local_position.y - s.local_target_.y();
+    double delta_z = local_position.z - s.local_target_.z();
+    double delta_xy_squared = pow(delta_x, 2) + pow(delta_y, 2);
+    double delta_yaw = quat2mavrosyaw(quat) - s.setpoint_.yaw;
+
+    using std::fabs;
+    using control::Config;
+    bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
+    bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
+    bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
+    
+    if (xy_reached && yaw_reached) {
+        return LocalState::COMPLETED;
+    } else {
+        return LocalState::GOTO;
+    }
+}
+
+LocalState abortStateHandler(GoToState& s) {
+    return LocalState::ABORT;
+}
+
+LocalState completedStateHandler(GoToState& s) {
+    return LocalState::COMPLETED;
 }
 
 GoToState::GoToState() : StateInterface::StateInterface()  {
@@ -69,53 +197,8 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     cmd_ = event;
     //Has not arrived yet
+    //TODO: This should be moved to the ISM
     delay_transition_.enabled = false;
-
-    //Get transform message
-    auto tf = control::DroneHandler::getLocal2GlobalTf();
-
-    //Get tf matrix
-    tf2::Transform tf_matrix;
-    tf2::convert(tf.transform, tf_matrix);
-
-    //Get position goal matrix
-    local_target_ = cmd_.position_goal_local.getVec3();
-    //Apply global to local transform
-    auto global_target = tf_matrix * local_target_; 
-
-    //Is target altitude too low?
-    bool target_alt_too_low = local_target_.z() < control::Config::min_in_air_alt;
-    //Is target illegal?
-    bool invalid_target = !event.position_goal_local.xyz_valid ||
-                          !targetWithinArena(global_target)    ||
-                          target_alt_too_low;
-
-    if(target_alt_too_low) {
-        control::handleWarnMsg("Target altitude is too low");
-    }
-    if(invalid_target) {
-        event.eventError("No valid position target");
-        cmd_ = EventData();
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
-
-    //Request new plan
-    using PathServiceRequest = ascend_msgs::PathPlanner;
-    PathServiceRequest req;
-    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
-    req.request.goal_x = static_cast<float>(cmd_.position_goal_local.x);
-    req.request.goal_y = static_cast<float>(cmd_.position_goal_local.y);
-    
-    if(!path_planner_client_.call(req)) {
-        control::handleErrorMsg("Couldn't request path plan");
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
-    //Change stamp
-    path_requested_stamp_ = ros::Time::now();
  
     // Set setpoint in local frame to target
     try {
@@ -156,77 +239,10 @@ void GoToState::loopState(ControlFSM& fsm) {
         if(!DroneHandler::isGlobalPoseValid()) {
             throw control::PoseNotValidException();
         }
-        
-        bool last_plan_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
-        bool plan_requested_timeout = ros::Time::now() - path_requested_stamp_ > ros::Duration(control::Config::path_plan_timeout);
 
-        //No new valid plan recieved
-        if(last_plan_timeout || last_plan_->points.empty()) {
-            if(plan_requested_timeout) {
-                control::handleErrorMsg("Missing valid path plan!");
-                RequestEvent abort_event(RequestType::ABORT);
-                if(cmd_.isValidCMD()) {
-                    cmd_.eventError("ABORT");
-                    cmd_ = EventData();
-                }
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-            }
-            return;
-        }
-        
-        auto& target_point = last_plan_->points[0];
-        local_target_ = tf2::Vector3(target_point.x, target_point.y, cmd_.position_goal_local.z);
-        setpoint_.position.x = local_target_.x();
-        setpoint_.position.y = local_target_.y();
-        setpoint_.position.z = local_target_.z();
-        
-        auto tf = DroneHandler::getLocal2GlobalTf();
-        tf2::Transform tf_matrix;
-        tf2::convert(tf.transform, tf_matrix);
+        local_state = stateFunction(*this);
+        stateFunction = state_array[static_cast<int>(local_state)];
 
-        //Transform local target back to global using latest transform
-        auto global_target = tf_matrix * local_target_;
-        
-        //TODO Should path planner be global or local? 
-
-        //If target becomes invalid, abort
-        if(Config::restrict_arena_boundaries) {
-            if(!targetWithinArena(global_target)) {
-                //Target outside arena!!
-                control::handleWarnMsg("Target outside arena, aborting!");
-                cmd_.eventError("Target outside arena");
-                cmd_ = EventData();
-                RequestEvent abort_event(RequestType::ABORT);
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-                return;
-            }
-        }
-        using control::pose::quat2mavrosyaw;
-        //Get pose
-        auto local_pose = control::DroneHandler::getCurrentLocalPose();
-        //Get reference to position in pose
-        auto& local_position = local_pose.pose.position;
-        //Get reference to orientation in pose
-        auto& quat = local_pose.pose.orientation;
-        //Calculate distance to target
-        double delta_x = local_position.x - local_target_.x();
-        double delta_y = local_position.y - local_target_.y();
-        double delta_z = local_position.z - local_target_.z();
-        double delta_xy_squared = pow(delta_x, 2) + pow(delta_y, 2);
-        double delta_yaw = quat2mavrosyaw(quat) - setpoint_.yaw;
-        //Check if we're close enough
-        using std::pow;
-        using std::fabs;
-        using control::Config;
-        bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
-        bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
-        bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
-        //If destination is reached, begin transition to another state
-        if(xy_reached && yaw_reached) {
-            destinationReached(fsm, z_reached);
-        } else {
-            delay_transition_.enabled = false;
-        }
     } catch(const std::exception& e) {
         //Exceptions should never occur!
         control::handleCriticalMsg(e.what());
