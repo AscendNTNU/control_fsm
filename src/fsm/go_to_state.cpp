@@ -22,6 +22,7 @@ ros::NodeHandle& GoToState::getNodeHandler() {
 
 //Forward declaration
 bool targetWithinArena(const tf2::Vector3& target);
+bool droneNotMovingXY(const geometry_msgs::TwistStamped& target);
 
 LocalState initPlanStateHandler(GoToState& s);
 LocalState goToStateHandler(GoToState& s);
@@ -91,7 +92,7 @@ LocalState goToStateHandler(GoToState& s) {
     bool plan_requested_timeout = ros::Time::now() - s.path_requested_stamp_ > 
                                   ros::Duration(control::Config::path_plan_timeout);
     
-    //Checks if the plan has timed out or if the 
+    //Checks if the plan has timed out or if the plan is empty
     if(last_plan_timeout || s.last_plan_->points.empty()) {
         if(plan_requested_timeout) {
             s.cmd_.eventError("Plan timeout or no points in plan!");
@@ -136,18 +137,22 @@ LocalState pointReachedStateHandler(GoToState& s) {
     using std::fabs;
     using control::Config;
     bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
-    bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
+    //Unsure if this is relevant at this point or if it should be checked at a later point
+    //bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
     bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
     
+    //This is messy, is there another more efficient way to do it?
     if (xy_reached && yaw_reached) {
         if(s.cmd_.command_type == CommandType::LANDXY) {
             if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
-
                 return LocalState::COMPLETED;
+            } else {
+                return LocalState::SLOW;
             }
-            return LocalState::SLOW;
+
+        } else if (s.cmd_.command_type == CommandType::GOTOXYZ) {
+            return LocalState::COMPLETED;
         }
-        return LocalState::COMPLETED;
     } else {
         return LocalState::GOTO;
     }
@@ -155,7 +160,7 @@ LocalState pointReachedStateHandler(GoToState& s) {
 
 LocalState slowStateHandler(GoToState& s) { 
     //TODO: Make the drone slow down. 
-    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist()] {
+    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
         return LocalState::COMPLETED;
     } else {
         return LocalState::SLOW;
@@ -274,8 +279,12 @@ void GoToState::loopState(ControlFSM& fsm) {
         }
         if(local_state == LocalState::COMPLETED) {
             //This should handle land and gotoxy differently
-            cmd_.finishCMD();
-            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
+            if(cmd_.command_type == CommandType::GOTOXYZ) {
+                cmd_.finishCMD();
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
+            } else if (cmd_.command_type == CommandType::LANDXY) {
+                fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+            }
 
         }
 
