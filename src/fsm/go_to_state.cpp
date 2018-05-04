@@ -26,15 +26,18 @@ bool targetWithinArena(const tf2::Vector3& target);
 LocalState initPlanStateHandler(GoToState& s);
 LocalState goToStateHandler(GoToState& s);
 LocalState pointReachedStateHandler(GoToState& s);
+LocalState slowStateHandler(GoToState& s);
 LocalState abortStateHandler(GoToState& s);
 LocalState completedStateHandler(GoToState& s);
 
 LocalState local_state = LocalState::INIT_PLAN;
 
-std::array<std::function<decltype(initPlanStateHandler)>, 5> state_array = { 
+std::array<std::function<decltype(initPlanStateHandler)>,
+           static_cast<int>(LocalState::NUM_STATES)> state_array = { 
     initPlanStateHandler,
     goToStateHandler,
     pointReachedStateHandler,
+    slowStateHandler,
     abortStateHandler,
     completedStateHandler
 };
@@ -60,6 +63,7 @@ LocalState initPlanStateHandler(GoToState& s) {
         control::handleWarnMsg("Target altitude too low?");
     }
     if(invalid_target) {
+        s.cmd_.eventError("Invalid target!");
         return LocalState::ABORT;
     }
     
@@ -72,6 +76,7 @@ LocalState initPlanStateHandler(GoToState& s) {
 
     if(!s.path_planner_client_.call(req)) {
         control::handleErrorMsg("Could not request path plan");
+        s.cmd_.eventError("Could not request plan!");
         return LocalState::ABORT;
     }
     s.path_requested_stamp_ = ros::Time::now();
@@ -81,12 +86,15 @@ LocalState initPlanStateHandler(GoToState& s) {
 
 //Sends setpoints and awaits arrival at point
 LocalState goToStateHandler(GoToState& s) {
-    bool last_plan_timeout = ros::Time::now() - s.last_plan_->header.stamp >ros::Duration(control::Config::path_plan_timeout);
-    bool plan_requested_timeout = ros::Time::now() - s.path_requested_stamp_ > ros::Duration(control::Config::path_plan_timeout);
+    bool last_plan_timeout = ros::Time::now() - s.last_plan_->header.stamp >
+                             ros::Duration(control::Config::path_plan_timeout);
+    bool plan_requested_timeout = ros::Time::now() - s.path_requested_stamp_ > 
+                                  ros::Duration(control::Config::path_plan_timeout);
     
     //Checks if the plan has timed out or if the 
     if(last_plan_timeout || s.last_plan_->points.empty()) {
         if(plan_requested_timeout) {
+            s.cmd_.eventError("Plan timeout or no points in plan!");
             return LocalState::ABORT;
         }
         return LocalState::GOTO;
@@ -109,6 +117,7 @@ LocalState pointReachedStateHandler(GoToState& s) {
     auto global_target = tf_matrix * s.local_target_;
     if(control::Config::restrict_arena_boundaries) {
         if(!targetWithinArena(global_target)) {
+            s.cmd_.eventError("Target outside arena!");
             return LocalState::ABORT;
         }
     }
@@ -131,9 +140,25 @@ LocalState pointReachedStateHandler(GoToState& s) {
     bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
     
     if (xy_reached && yaw_reached) {
+        if(s.cmd_.command_type == CommandType::LANDXY) {
+            if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
+
+                return LocalState::COMPLETED;
+            }
+            return LocalState::SLOW;
+        }
         return LocalState::COMPLETED;
     } else {
         return LocalState::GOTO;
+    }
+}
+
+LocalState slowStateHandler(GoToState& s) { 
+    //TODO: Make the drone slow down. 
+    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist()] {
+        return LocalState::COMPLETED;
+    } else {
+        return LocalState::SLOW;
     }
 }
 
@@ -199,6 +224,7 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
     //Has not arrived yet
     //TODO: This should be moved to the ISM
     delay_transition_.enabled = false;
+    local_state = LocalState::INIT_PLAN;
  
     // Set setpoint in local frame to target
     try {
@@ -239,9 +265,19 @@ void GoToState::loopState(ControlFSM& fsm) {
         if(!DroneHandler::isGlobalPoseValid()) {
             throw control::PoseNotValidException();
         }
-
-        local_state = stateFunction(*this);
         stateFunction = state_array[static_cast<int>(local_state)];
+        local_state = stateFunction(*this);
+        
+        if(local_state == LocalState::ABORT) {
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        }
+        if(local_state == LocalState::COMPLETED) {
+            //This should handle land and gotoxy differently
+            cmd_.finishCMD();
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
+
+        }
 
     } catch(const std::exception& e) {
         //Exceptions should never occur!

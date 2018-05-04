@@ -6,7 +6,13 @@
 #include <memory>
 
 namespace go_to_impl {
-    enum class LocalState{INIT_PLAN, GOTO, REACHED_POINT, ABORT, COMPLETED};
+    enum class LocalState{INIT_PLAN, 
+                          GOTO, 
+                          REACHED_POINT,
+                          SLOW, 
+                          ABORT, 
+                          COMPLETED,
+                          NUM_STATES};
 }
 ///Moves drone to XYZ
 class GoToState : public StateInterface {
@@ -15,6 +21,7 @@ private:
     friend go_to_impl::LocalState initPlanStateHandler(GoToState& s);
     friend go_to_impl::LocalState goToStateHandler(GoToState& s);
     friend go_to_impl::LocalState pointReachedStateHandler(GoToState& s);
+    friend go_to_impl::LocalState slowStateHandler(GoToState& s);
     friend go_to_impl::LocalState completedStateHandler(GoToState& s);
     friend go_to_impl::LocalState abortStateHandler(GoToState& s);
 
