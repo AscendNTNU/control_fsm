@@ -36,12 +36,6 @@ private:
     ///Last recieved plan
     ascend_msgs::PointArrayStamped::ConstPtr last_plan_;
     
-    struct {
-        ros::Time started;
-        bool enabled = false;
-        ros::Duration delayTime;
-    } delay_transition_;
-
     ///Current command
     EventData cmd_;
 
@@ -66,12 +60,6 @@ public:
     ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
     void handleManual(ControlFSM &fsm) override;
-
-    ///Handles transitions when position is reached
-    void destinationReached(ControlFSM &fsm, bool z_reached);
-
-    ///Handles landing transition
-    void landingTransition(ControlFSM& fsm);
 };
 
 //Only make these available for unit testing

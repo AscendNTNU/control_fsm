@@ -137,25 +137,20 @@ LocalState pointReachedStateHandler(GoToState& s) {
     using std::fabs;
     using control::Config;
     bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
-    //Unsure if this is relevant at this point or if it should be checked at a later point
-    //bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
+    bool z_reached = delta_z <= fabs(Config::altitude_reached_margin);
     bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
     
     //This is messy, is there another more efficient way to do it?
     if (xy_reached && yaw_reached) {
         if(s.cmd_.command_type == CommandType::LANDXY) {
-            if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
-                return LocalState::COMPLETED;
-            } else {
-                return LocalState::SLOW;
-            }
-
-        } else if (s.cmd_.command_type == CommandType::GOTOXYZ) {
+            //Altitude not important, but velocity is
+            return LocalState::SLOW;
+        } else if(z_reached) {
+            //Altitude important before PosHold
             return LocalState::COMPLETED;
         }
-    } else {
-        return LocalState::GOTO;
     }
+    return LocalState::GOTO;
 }
 
 LocalState slowStateHandler(GoToState& s) { 
@@ -226,9 +221,6 @@ bool targetWithinArena(const tf2::Vector3& target) {
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     cmd_ = event;
-    //Has not arrived yet
-    //TODO: This should be moved to the ISM
-    delay_transition_.enabled = false;
     local_state = LocalState::INIT_PLAN;
  
     // Set setpoint in local frame to target
@@ -276,16 +268,15 @@ void GoToState::loopState(ControlFSM& fsm) {
         if(local_state == LocalState::ABORT) {
             RequestEvent abort_event(RequestType::ABORT);
             fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        }
-        if(local_state == LocalState::COMPLETED) {
+        } else if(local_state == LocalState::COMPLETED) {
             //This should handle land and gotoxy differently
-            if(cmd_.command_type == CommandType::GOTOXYZ) {
-                cmd_.finishCMD();
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, cmd_);
-            } else if (cmd_.command_type == CommandType::LANDXY) {
+            if (cmd_.isValidCMD(CommandType::LANDXY)) {
                 fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+            } else {
+                cmd_.finishCMD();
+                RequestEvent pos_hold_event(RequestType::POSHOLD);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
             }
-
         }
 
     } catch(const std::exception& e) {
@@ -318,7 +309,6 @@ void GoToState::stateInit(ControlFSM& fsm) {
     using ascend_msgs::PathPlanner;
     auto& pc_topic = Config::path_planner_client_topic;
     auto& ps_topic = Config::path_planner_plan_topic;
-    delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
     path_planner_client_ = getNodeHandler().serviceClient<PathPlanner>(pc_topic); 
     path_planner_sub_ = getNodeHandler().subscribe(ps_topic, 1, &GoToState::planCB, this);
 
@@ -379,74 +369,6 @@ bool droneNotMovingXY(const geometry_msgs::TwistStamped& target) {
     double dy_sq = pow(t_l.y, 2);
     return (dx_sq + dy_sq) < pow(Config::velocity_reached_margin, 2);
 }
-
-void GoToState::landingTransition(ControlFSM& fsm) {
-    //If no valid twist data it's unsafe to land
-    if(!control::DroneHandler::isTwistValid()) {
-        control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
-        cmd_.eventError("Unsafe to land!");
-        cmd_ = EventData();
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
-    //Check if drone is moving
-    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
-        //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-        if(!delay_transition_.enabled) {
-            delay_transition_.started = ros::Time::now();
-            delay_transition_.enabled = true;
-
-            if(cmd_.isValidCMD()) {
-                cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-            }
-        }
-        //Delay transition
-        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-            return;
-        }
-        //If all checks passed - land!
-
-        //Set local target to improve landing
-        auto& setp_pos = setpoint_.position;
-        cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-        //Transition
-        fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
-    } else {
-        //If drone is moving, reset delayed transition
-        delay_transition_.enabled = false;
-    }
-}
-
-void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
-    //Transition to correct state
-    if(cmd_.isValidCMD()) {
-        switch(cmd_.command_type) {
-            case CommandType::LANDXY:
-                landingTransition(fsm);
-                break;
-            case CommandType::GOTOXYZ:
-                if (z_reached){
-                    cmd_.finishCMD();
-                    RequestEvent done_event(RequestType::POSHOLD);
-                    //Attempt to hold position target
-                    auto& setp_pos = setpoint_.position;
-                    done_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
-                }
-                break;
-            default:
-                control::handleWarnMsg("Unrecognized command type");
-                break;
-        }
-    } else {
-        RequestEvent pos_hold_event(RequestType::POSHOLD);
-        auto& setp_pos = setpoint_.position;
-        pos_hold_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
-    }
-}
-
 
 ascend_msgs::ControlFSMState GoToState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
