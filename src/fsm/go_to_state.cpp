@@ -102,7 +102,11 @@ LocalState goToStateHandler(GoToState& s) {
     }
     
     auto& target_point = s.last_plan_->points[0];
-    s.local_target_ = tf2::Vector3(target_point.x, target_point.y, s.cmd_.position_goal_local.z);
+    auto global_target = tf2::Vector3(target_point.x, target_point.y, s.cmd_.position_goal_local.z);
+    auto tf = control::DroneHandler::getGlobal2LocalTf();
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+    s.local_target_ = tf_matrix * global_target; 
     s.setpoint_.position.x = s.local_target_.x();
     s.setpoint_.position.y = s.local_target_.y(); 
     s.setpoint_.position.z = s.local_target_.z();
@@ -128,9 +132,9 @@ LocalState pointReachedStateHandler(GoToState& s) {
     auto& local_position = local_pose.pose.position;
     auto& quat = local_pose.pose.orientation;
     
-    double delta_x = local_position.x - s.local_target_.x();
-    double delta_y = local_position.y - s.local_target_.y();
-    double delta_z = local_position.z - s.local_target_.z();
+    double delta_x = local_position.x - s.cmd_.position_goal_local.x;
+    double delta_y = local_position.y - s.cmd_.position_goal_local.y;
+    double delta_z = local_position.z - s.cmd_.position_goal_local.z;
     double delta_xy_squared = pow(delta_x, 2) + pow(delta_y, 2);
     double delta_yaw = quat2mavrosyaw(quat) - s.setpoint_.yaw;
 
