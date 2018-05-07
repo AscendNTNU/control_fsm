@@ -99,6 +99,7 @@ int main(int argc, char** argv){
 			auto& position = current_pose.pose.position;
 			planner_state.current_x = position.x;
 			planner_state.current_y = position.y;
+			control::pathplanner::correctCoordinates(planner_state.current_x, planner_state.current_y);
 		}
 
     	// Make new plan as long as a plan is requested and the current one is invalid or the goal is changed

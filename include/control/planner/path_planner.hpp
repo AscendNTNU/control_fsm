@@ -17,7 +17,7 @@
 namespace control{
 namespace pathplanner{
 
-#define FIELD_LENGTH 10.0
+#define FIELD_LENGTH 20.0
 
 
 struct Obstacle {
@@ -114,8 +114,12 @@ public:
     float max_f = 0;
 };
 
-// Convert between coordinate x or y in metres and index in graph
-//int coordToIndex(float k);
+void correctCoordinates(float &x, float &y){
+    if (x < 0) {x = 0.0;}
+    else if (x >= FIELD_LENGTH) {x = FIELD_LENGTH-0.1;}
+    if (y < 0) {y = 0.0;}
+    else if (y >= FIELD_LENGTH) {y = FIELD_LENGTH-0.1;}
+}
 
 }
 }
