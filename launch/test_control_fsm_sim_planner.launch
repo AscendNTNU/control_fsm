@@ -3,10 +3,11 @@
     	<include file="$(find mavros)/launch/px4.launch">
         	<arg name="fcu_url" value="udp://:14540@127.0.0.1:14557"/>
     	</include>
+	<param name="/mavros/local_position/frame_id" value="odom"/>
     	<include file="$(find control_fsm)/launch/control_fsm.launch">
 		  <arg name="node_name" value="$(arg fsm_name)"/>
         </include>
-        <param name="$(arg fsm_name)/require_obs_detection" value="false"/>
+        <param name="$(arg fsm_name)/require_obs_detection" value="true"/>
     	<param name="$(arg fsm_name)/land_xy_goto_altitude" value="2.0"/>
     	<param name="$(arg fsm_name)/takeoff_altitude" value="2.0"/>
     	<param name="$(arg fsm_name)/land_detector_topic" value="/mavros/extended_state"/>

@@ -8,13 +8,170 @@
 #include "control/tools/target_tools.hpp"
 #include <ascend_msgs/PathPlanner.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <functional>
+#include <array>
 
+using namespace go_to_impl;
 constexpr double PI = 3.14159265359;
 constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
 //Gurantees construction on first use!
 ros::NodeHandle& GoToState::getNodeHandler() {
     static ros::NodeHandle n;
     return n;
+}
+
+//Forward declaration
+bool targetWithinArena(const tf2::Vector3& target);
+bool droneNotMovingXY(const geometry_msgs::TwistStamped& target);
+
+LocalState initPlanStateHandler(GoToState& s);
+LocalState goToStateHandler(GoToState& s);
+LocalState pointReachedStateHandler(GoToState& s);
+LocalState slowStateHandler(GoToState& s);
+LocalState abortStateHandler(GoToState& s);
+LocalState completedStateHandler(GoToState& s);
+
+LocalState local_state = LocalState::INIT_PLAN;
+
+std::array<std::function<decltype(initPlanStateHandler)>,
+           static_cast<int>(LocalState::NUM_STATES)> state_array = { 
+    initPlanStateHandler,
+    goToStateHandler,
+    pointReachedStateHandler,
+    slowStateHandler,
+    abortStateHandler,
+    completedStateHandler
+};
+
+std::function<decltype(initPlanStateHandler)> stateFunction = initPlanStateHandler;
+
+//Calls pathplanner service and request next step in plan
+LocalState initPlanStateHandler(GoToState& s) {
+    //Get transforms and apply local -> global tf to get global goal.
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+    s.local_target_ = s.cmd_.position_goal_local.getVec3();
+    auto global_target = tf_matrix * s.local_target_;
+
+    //Checks if the point is valid.
+    bool target_alt_too_low = s.local_target_.z() < control::Config::min_in_air_alt;
+    bool invalid_target = !s.cmd_.position_goal_local.xyz_valid ||
+                          !targetWithinArena(global_target)     ||
+                          target_alt_too_low;
+
+    if(target_alt_too_low) {
+        control::handleWarnMsg("Target altitude too low?");
+    }
+    if(invalid_target) {
+        s.cmd_.eventError("Invalid target!");
+        return LocalState::ABORT;
+    }
+    
+    //Request a new plan from the pathplanner.
+    using PathServiceRequest = ascend_msgs::PathPlanner;
+    PathServiceRequest req;
+    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
+    req.request.goal_x = static_cast<float>(global_target.x());
+    req.request.goal_y = static_cast<float>(global_target.y());
+
+    if(!s.path_planner_client_.call(req)) {
+        control::handleErrorMsg("Could not request path plan");
+        s.cmd_.eventError("Could not request plan!");
+        return LocalState::ABORT;
+    }
+    s.path_requested_stamp_ = ros::Time::now();
+
+    return LocalState::GOTO;
+}
+
+//Sends setpoints and awaits arrival at point
+LocalState goToStateHandler(GoToState& s) {
+    bool last_plan_timeout = ros::Time::now() - s.last_plan_->header.stamp >
+                             ros::Duration(control::Config::path_plan_timeout);
+    bool plan_requested_timeout = ros::Time::now() - s.path_requested_stamp_ > 
+                                  ros::Duration(control::Config::path_plan_timeout);
+    
+    //Checks if the plan has timed out or if the plan is empty
+    if(last_plan_timeout || s.last_plan_->points.empty()) {
+        if(plan_requested_timeout) {
+            s.cmd_.eventError("Plan timeout or no points in plan!");
+            return LocalState::ABORT;
+        }
+        return LocalState::GOTO;
+    }
+    
+    auto& target_point = s.last_plan_->points[0];
+    auto global_target = tf2::Vector3(target_point.x, target_point.y, s.cmd_.position_goal_local.z);
+    auto tf = control::DroneHandler::getGlobal2LocalTf();
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+    s.local_target_ = tf_matrix * global_target; 
+    s.setpoint_.position.x = s.local_target_.x();
+    s.setpoint_.position.y = s.local_target_.y(); 
+    s.setpoint_.position.z = s.local_target_.z();
+
+    return LocalState::REACHED_POINT;
+}
+
+//Checks if the point is the last point of the plan
+LocalState pointReachedStateHandler(GoToState& s) {
+    auto tf = control::DroneHandler::getLocal2GlobalTf();
+    tf2::Transform tf_matrix;
+    tf2::convert(tf.transform, tf_matrix);
+    auto global_target = tf_matrix * s.local_target_;
+    if(control::Config::restrict_arena_boundaries) {
+        if(!targetWithinArena(global_target)) {
+            s.cmd_.eventError("Target outside arena!");
+            return LocalState::ABORT;
+        }
+    }
+    
+    using control::pose::quat2mavrosyaw;
+    auto local_pose = control::DroneHandler::getCurrentLocalPose();
+    auto& local_position = local_pose.pose.position;
+    auto& quat = local_pose.pose.orientation;
+    
+    double delta_x = local_position.x - s.cmd_.position_goal_local.x;
+    double delta_y = local_position.y - s.cmd_.position_goal_local.y;
+    double delta_z = local_position.z - s.cmd_.position_goal_local.z;
+    double delta_xy_squared = pow(delta_x, 2) + pow(delta_y, 2);
+    double delta_yaw = quat2mavrosyaw(quat) - s.setpoint_.yaw;
+
+    using std::fabs;
+    using control::Config;
+    bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
+    bool z_reached = delta_z <= fabs(Config::altitude_reached_margin);
+    bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
+    
+    //This is messy, is there another more efficient way to do it?
+    if (xy_reached && yaw_reached) {
+        if(s.cmd_.command_type == CommandType::LANDXY) {
+            //Altitude not important, but velocity is
+            return LocalState::SLOW;
+        } else if(z_reached) {
+            //Altitude important before PosHold
+            return LocalState::COMPLETED;
+        }
+    }
+    return LocalState::GOTO;
+}
+
+LocalState slowStateHandler(GoToState& s) { 
+    //TODO: Make the drone slow down. 
+    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
+        return LocalState::COMPLETED;
+    } else {
+        return LocalState::SLOW;
+    }
+}
+
+LocalState abortStateHandler(GoToState& s) {
+    return LocalState::ABORT;
+}
+
+LocalState completedStateHandler(GoToState& s) {
+    return LocalState::COMPLETED;
 }
 
 GoToState::GoToState() : StateInterface::StateInterface()  {
@@ -68,54 +225,7 @@ bool targetWithinArena(const tf2::Vector3& target) {
 void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
 
     cmd_ = event;
-    //Has not arrived yet
-    delay_transition_.enabled = false;
-
-    //Get transform message
-    auto tf = control::DroneHandler::getLocal2GlobalTf();
-
-    //Get tf matrix
-    tf2::Transform tf_matrix;
-    tf2::convert(tf.transform, tf_matrix);
-
-    //Get position goal matrix
-    local_target_ = cmd_.position_goal_local.getVec3();
-    //Apply global to local transform
-    auto global_target = tf_matrix * local_target_; 
-
-    //Is target altitude too low?
-    bool target_alt_too_low = local_target_.z() < control::Config::min_in_air_alt;
-    //Is target illegal?
-    bool invalid_target = !event.position_goal_local.xyz_valid ||
-                          !targetWithinArena(global_target)    ||
-                          target_alt_too_low;
-
-    if(target_alt_too_low) {
-        control::handleWarnMsg("Target altitude is too low");
-    }
-    if(invalid_target) {
-        event.eventError("No valid position target");
-        cmd_ = EventData();
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
-
-    //Request new plan
-    using PathServiceRequest = ascend_msgs::PathPlanner;
-    PathServiceRequest req;
-    req.request.cmd = PathServiceRequest::Request::MAKE_PLAN;
-    req.request.goal_x = static_cast<float>(cmd_.position_goal_local.x);
-    req.request.goal_y = static_cast<float>(cmd_.position_goal_local.y);
-    
-    if(!path_planner_client_.call(req)) {
-        control::handleErrorMsg("Couldn't request path plan");
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
-    //Change stamp
-    path_requested_stamp_ = ros::Time::now();
+    local_state = LocalState::INIT_PLAN;
  
     // Set setpoint in local frame to target
     try {
@@ -156,77 +266,23 @@ void GoToState::loopState(ControlFSM& fsm) {
         if(!DroneHandler::isGlobalPoseValid()) {
             throw control::PoseNotValidException();
         }
+        stateFunction = state_array[static_cast<int>(local_state)];
+        local_state = stateFunction(*this);
         
-        bool last_plan_timeout = ros::Time::now() - last_plan_->header.stamp > ros::Duration(control::Config::path_plan_timeout);
-        bool plan_requested_timeout = ros::Time::now() - path_requested_stamp_ > ros::Duration(control::Config::path_plan_timeout);
-
-        //No new valid plan recieved
-        if(last_plan_timeout || last_plan_->points.empty()) {
-            if(plan_requested_timeout) {
-                control::handleErrorMsg("Missing valid path plan!");
-                RequestEvent abort_event(RequestType::ABORT);
-                if(cmd_.isValidCMD()) {
-                    cmd_.eventError("ABORT");
-                    cmd_ = EventData();
-                }
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-            }
-            return;
-        }
-        
-        auto& target_point = last_plan_->points[0];
-        local_target_ = tf2::Vector3(target_point.x, target_point.y, cmd_.position_goal_local.z);
-        setpoint_.position.x = local_target_.x();
-        setpoint_.position.y = local_target_.y();
-        setpoint_.position.z = local_target_.z();
-        
-        auto tf = DroneHandler::getLocal2GlobalTf();
-        tf2::Transform tf_matrix;
-        tf2::convert(tf.transform, tf_matrix);
-
-        //Transform local target back to global using latest transform
-        auto global_target = tf_matrix * local_target_;
-        
-        //TODO Should path planner be global or local? 
-
-        //If target becomes invalid, abort
-        if(Config::restrict_arena_boundaries) {
-            if(!targetWithinArena(global_target)) {
-                //Target outside arena!!
-                control::handleWarnMsg("Target outside arena, aborting!");
-                cmd_.eventError("Target outside arena");
-                cmd_ = EventData();
-                RequestEvent abort_event(RequestType::ABORT);
-                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-                return;
+        if(local_state == LocalState::ABORT) {
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+        } else if(local_state == LocalState::COMPLETED) {
+            //This should handle land and gotoxy differently
+            if (cmd_.isValidCMD(CommandType::LANDXY)) {
+                fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
+            } else {
+                cmd_.finishCMD();
+                RequestEvent pos_hold_event(RequestType::POSHOLD);
+                fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
             }
         }
-        using control::pose::quat2mavrosyaw;
-        //Get pose
-        auto local_pose = control::DroneHandler::getCurrentLocalPose();
-        //Get reference to position in pose
-        auto& local_position = local_pose.pose.position;
-        //Get reference to orientation in pose
-        auto& quat = local_pose.pose.orientation;
-        //Calculate distance to target
-        double delta_x = local_position.x - local_target_.x();
-        double delta_y = local_position.y - local_target_.y();
-        double delta_z = local_position.z - local_target_.z();
-        double delta_xy_squared = pow(delta_x, 2) + pow(delta_y, 2);
-        double delta_yaw = quat2mavrosyaw(quat) - setpoint_.yaw;
-        //Check if we're close enough
-        using std::pow;
-        using std::fabs;
-        using control::Config;
-        bool xy_reached = delta_xy_squared <= pow(Config::dest_reached_margin, 2);
-        bool z_reached = (fabs(delta_z) <= Config::altitude_reached_margin);
-        bool yaw_reached = (fabs(delta_yaw) <= Config::yaw_reached_margin);
-        //If destination is reached, begin transition to another state
-        if(xy_reached && yaw_reached) {
-            destinationReached(fsm, z_reached);
-        } else {
-            delay_transition_.enabled = false;
-        }
+
     } catch(const std::exception& e) {
         //Exceptions should never occur!
         control::handleCriticalMsg(e.what());
@@ -257,7 +313,6 @@ void GoToState::stateInit(ControlFSM& fsm) {
     using ascend_msgs::PathPlanner;
     auto& pc_topic = Config::path_planner_client_topic;
     auto& ps_topic = Config::path_planner_plan_topic;
-    delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
     path_planner_client_ = getNodeHandler().serviceClient<PathPlanner>(pc_topic); 
     path_planner_sub_ = getNodeHandler().subscribe(ps_topic, 1, &GoToState::planCB, this);
 
@@ -318,74 +373,6 @@ bool droneNotMovingXY(const geometry_msgs::TwistStamped& target) {
     double dy_sq = pow(t_l.y, 2);
     return (dx_sq + dy_sq) < pow(Config::velocity_reached_margin, 2);
 }
-
-void GoToState::landingTransition(ControlFSM& fsm) {
-    //If no valid twist data it's unsafe to land
-    if(!control::DroneHandler::isTwistValid()) {
-        control::handleErrorMsg("No valid twist data, unsafe to land! Transitioning to poshold");
-        cmd_.eventError("Unsafe to land!");
-        cmd_ = EventData();
-        RequestEvent abort_event(RequestType::ABORT);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
-        return;
-    }
-    //Check if drone is moving
-    if(droneNotMovingXY(control::DroneHandler::getCurrentTwist())) {
-        //Hold current position for a duration - avoiding unwanted velocity before doing anything else
-        if(!delay_transition_.enabled) {
-            delay_transition_.started = ros::Time::now();
-            delay_transition_.enabled = true;
-
-            if(cmd_.isValidCMD()) {
-                cmd_.sendFeedback("Destination reached, letting drone slow down before transitioning!");
-            }
-        }
-        //Delay transition
-        if(ros::Time::now() - delay_transition_.started < delay_transition_.delayTime) {
-            return;
-        }
-        //If all checks passed - land!
-
-        //Set local target to improve landing
-        auto& setp_pos = setpoint_.position;
-        cmd_.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-        //Transition
-        fsm.transitionTo(ControlFSM::LAND_STATE, this, cmd_);
-    } else {
-        //If drone is moving, reset delayed transition
-        delay_transition_.enabled = false;
-    }
-}
-
-void GoToState::destinationReached(ControlFSM& fsm, bool z_reached) {
-    //Transition to correct state
-    if(cmd_.isValidCMD()) {
-        switch(cmd_.command_type) {
-            case CommandType::LANDXY:
-                landingTransition(fsm);
-                break;
-            case CommandType::GOTOXYZ:
-                if (z_reached){
-                    cmd_.finishCMD();
-                    RequestEvent done_event(RequestType::POSHOLD);
-                    //Attempt to hold position target
-                    auto& setp_pos = setpoint_.position;
-                    done_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-                    fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, done_event);
-                }
-                break;
-            default:
-                control::handleWarnMsg("Unrecognized command type");
-                break;
-        }
-    } else {
-        RequestEvent pos_hold_event(RequestType::POSHOLD);
-        auto& setp_pos = setpoint_.position;
-        pos_hold_event.setpoint_target = PositionGoal(setp_pos.x, setp_pos.y, setp_pos.z);
-        fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, pos_hold_event);
-    }
-}
-
 
 ascend_msgs::ControlFSMState GoToState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
