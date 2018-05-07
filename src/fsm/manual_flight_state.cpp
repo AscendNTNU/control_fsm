@@ -50,14 +50,25 @@ void printLandStateOnChange(bool landed) {
 }
 
 void ManualFlightState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    printLandState(LandDetector::isOnGround());
+    const auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
+    const auto &position = pose_stamped.pose.position;
+    bool on_ground = LandDetector::isOnGround() ;   
+    //Only use distance sensor if required
+    if(control::Config::require_distance_sensor) {
+        on_ground = on_ground && (control::DroneHandler::getCurrentDistance().range < 0.1);
+    }
+    printLandState(on_ground);
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
     try {
         const auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         const auto &position = pose_stamped.pose.position;
-        const bool on_ground = LandDetector::isOnGround(); 
+        bool on_ground = LandDetector::isOnGround() ;   
+        //Only use distance sensor if required
+        if(control::Config::require_distance_sensor) {
+            on_ground = on_ground && (control::DroneHandler::getCurrentDistance().range < 0.1);
+        }
         printLandStateOnChange(on_ground);
 
         if (on_ground) {
