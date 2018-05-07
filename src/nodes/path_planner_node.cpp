@@ -9,6 +9,8 @@
 #include "ascend_msgs/PointArrayStamped.h"
 #include "ascend_msgs/PathPlanner.h"
 #include "control/tools/obstacle_state_handler.hpp"
+#include <tf2/LinearMath/Transform.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 using control::pathplanner::PathPlanner;
 
@@ -85,7 +87,14 @@ int main(int argc, char** argv){
 	    	auto current_coord = obstacles_msg.global_robot_position.begin();
 	    	auto current_dir = obstacles_msg.direction.begin();
 	    	while(current_coord != obstacles_msg.global_robot_position.end() && current_dir != obstacles_msg.direction.end()){
-		    	obstacles.push_back(control::pathplanner::Obstacle(current_coord->x, current_coord->y,*current_dir));
+
+	    		auto tf = control::DroneHandler::getLocal2GlobalTf();
+		    	tf2::Transform tf_matrix;
+		    	tf2::convert(tf.transform, tf_matrix);
+		    	auto local_obstacle = tf2::Vector3(current_coord->x, current_coord->y, current_coord->z);
+		    	auto global_obstacle = tf_matrix * local_obstacle;
+
+		    	obstacles.push_back(control::pathplanner::Obstacle(static_cast<float>(global_obstacle.x()), static_cast<float>(global_obstacle.y()),*current_dir));
 		    	current_coord++;
 		    	current_dir++;
 	    	}
