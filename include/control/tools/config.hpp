@@ -71,8 +71,6 @@ public:
     static std::string obstacle_state_topic;
     /// \fsmparam Topic for recieving ground robot state
     static std::string ground_robot_state_topic;
-    /// \fsmparam Topic for ground robot transform service
-    static std::string transform_gb_service;
     /// \fsmparam Topic for recieving debug service requests
     static std::string debug_server_topic;
     /// \fsmparam Topic for action server
@@ -103,6 +101,8 @@ public:
     static double interception_param_xy;
     //Variable that control the change of the speed when intercepting, z-direction   
     static double interception_param_z;
+    // \fsmparam Variable to tweak the low boundry of interception algorithm
+    static double interception_low_alt_boundry;
     // Maximal distance away from the roomba to run interception algorithm
     static double max_distance;
     /// \fsmparam Frame id for global frame

@@ -35,7 +35,6 @@ std::string Config::land_detector_topic = "land_detector";
 std::string Config::land_detector_type = "landing_gear";
 std::string Config::obstacle_state_topic = "/perception_obstacle_states";
 std::string Config::ground_robot_state_topic = "/ai/world_observation";
-std::string Config::transform_gb_service = "transform_gb_service";
 std::string Config::debug_server_topic = "/control/fsm/debug_server";
 std::string Config::action_server_topic = "/control/fsm/action_server";
 int Config::fsm_status_buffer_size = 10;
@@ -49,6 +48,7 @@ double Config::tracking_param_xy = 2.0;
 double Config::tracking_param_z = 0.04; 
 double Config::interception_param_xy = 2.0; 
 double Config::interception_param_z = 0.01; 
+double Config::interception_low_alt_boundry = 0.1;
 double Config::max_distance = 2.0; 
 
 std::string Config::global_frame_id = "map";
@@ -171,6 +171,7 @@ void Config::loadParams() {
     getDoubleParam("land_gb_tracking_z", tracking_param_z, 0.0, 5.0);
     getDoubleParam("land_gb_interception_xy", interception_param_xy, 0.0, 5.0);
     getDoubleParam("land_gb_interception_z", interception_param_z, 0.0, 5.0);
+    getDoubleParam("interception_low_alt_boundry", interception_low_alt_boundry, 0.0, 0.5);
     getDoubleParam("land_gb_max_distance", max_distance, 0.0, 10.0);
     //Frame id
     getStringParam("global_frame_id", global_frame_id);
