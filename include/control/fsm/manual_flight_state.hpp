@@ -2,9 +2,13 @@
 #define MANUAL_FLIGHT_STATE_HPP
 
 #include "state_interface.hpp"
+#include "event_data.hpp"
 
 ///Runs preflight checks and transition to idle when ready
 class ManualFlightState : public StateInterface {
+private:
+    RequestType next_state_ = RequestType::IDLE;
+        
 public:
     ManualFlightState();
     void handleEvent(ControlFSM& fsm, const EventData& event) override;

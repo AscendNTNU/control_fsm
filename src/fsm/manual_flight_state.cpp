@@ -11,46 +11,48 @@ ManualFlightState::ManualFlightState() {
 //Only check for an abort event
 void ManualFlightState::handleEvent(ControlFSM& fsm, const EventData& event) {
     if(event.isValidRequest()) {
-        control::handleWarnMsg("Invalid transition request");
+        if (event.request == RequestType::BLINDHOVER) {
+            next_state_ = RequestType::BLINDHOVER;
+        } else if (event.request == RequestType::IDLE) {
+            next_state_ = RequestType::IDLE;
+        } else {
+            control::handleWarnMsg("Invalid transition request");
+        }
     } else if(event.isValidCMD()) {
         event.eventError("CMD rejected!");
         control::handleWarnMsg("Drone is not yet active - commands ignored");
     } else if(event.event_type == EventType::AUTONOMOUS) {
-        bool low_enough = true; 
-        
-        //Only use distance sensor if required
-        if(control::Config::require_distance_sensor) {
-            low_enough = control::DroneHandler::getCurrentDistance().range < 0.1;
-        }
-        
-        if(LandDetector::isOnGround() && low_enough) {
-            fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); //Transition to IDLE_STATE
+        if (next_state_ == RequestType::BLINDHOVER){
+            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); 
+        } else if (next_state_ == RequestType::IDLE){
+            fsm.transitionTo(ControlFSM::IDLE_STATE, this, event); 
         } else {
-            fsm.transitionTo(ControlFSM::BLIND_HOVER_STATE, this, event); //Transition to BLIND_HOVER_STATE
+            control::handleInfoMsg("Unexpected transition request ignored");
         }
     } else {
         control::handleInfoMsg("Event ignored");
     }
 }
 
-void printLandState(bool landed) {
-    if(landed) {
-        control::handleInfoMsg("On ground: Transitions to IDLE when armed and OFFBOARD");
-    } else {
-        control::handleInfoMsg("In air: Transitions to POSHOLD when armed and OFFBOARD"); 
+void printNextState(RequestType next_state) {
+    if (next_state == RequestType::BLINDHOVER){
+        control::handleInfoMsg("Transition to BLINDHOVER when armed and offboard");
+    } else if (next_state == RequestType::IDLE){
+        control::handleInfoMsg("Transition to IDLE when armed and offboard");
     }
 }
 
-void printLandStateOnChange(bool landed) {
-    static bool last_state = landed;
-    if(landed != last_state) {
-        printLandState(landed);
+void printNextStateOnChange(RequestType next_state) {
+    static RequestType last_printed_state = next_state;
+    if (last_printed_state != next_state) {
+        printNextState(next_state);
     }
-    last_state = landed;;
+
+    last_printed_state = next_state;
 }
 
 void ManualFlightState::stateBegin(ControlFSM& fsm, const EventData& event) {
-    printLandState(LandDetector::isOnGround());
+    printNextState(next_state_);
 }
 
 void ManualFlightState::loopState(ControlFSM& fsm) {
@@ -58,7 +60,7 @@ void ManualFlightState::loopState(ControlFSM& fsm) {
         const auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         const auto &position = pose_stamped.pose.position;
         const bool on_ground = LandDetector::isOnGround(); 
-        printLandStateOnChange(on_ground);
+        printNextStateOnChange(next_state_);
 
         if (on_ground) {
             setpoint_.type_mask = default_mask | SETPOINT_TYPE_IDLE; //Send IDLE setpoints while drone is on ground
