@@ -41,7 +41,7 @@ bool ObstacleStateHandler::isInstanceReady() {
 }
 
 bool ObstacleStateHandler::isReady() const {
-    if(control::message::hasTimedOut(*last_msg_p_)) {
+    if(control::message::hasTimedOut(*last_msg_p_) && control::Config::require_obstacle_detection) {
         control::handleWarnMsg("Obstacle handler: Using old data");
         return false;
     }
