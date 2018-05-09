@@ -41,10 +41,7 @@ bool ObstacleStateHandler::isInstanceReady() {
 }
 
 bool ObstacleStateHandler::isReady() const {
-    if(last_msg_p_->count == 0) {
-        control::handleWarnMsg("Obstacle handler: No data available");
-        return false;
-    } else if(control::message::hasTimedOut(*last_msg_p_)) {
+    if(control::message::hasTimedOut(*last_msg_p_) && control::Config::require_obstacle_detection) {
         control::handleWarnMsg("Obstacle handler: Using old data");
         return false;
     }

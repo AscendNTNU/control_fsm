@@ -1,6 +1,7 @@
 #include "control/fsm/go_to_state.hpp"
 #include "control/fsm/control_fsm.hpp"
 #include <control/tools/logger.hpp>
+#include <control/tools/obstacle_avoidance.hpp>
 #include <control/exceptions/pose_not_valid_exception.hpp>
 #include <control/fsm/go_to_state.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -9,10 +10,46 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 constexpr double PI = 3.14159265359;
-constexpr double MAVROS_YAW_CORRECTION_PI_HALF = 3.141592653589793 / 2.0;
+constexpr double MAVROS_YAW_CORRECTION_PI_HALF = PI / 2.0;
 
 GoToState::GoToState() : StateInterface::StateInterface() {
     setpoint_.type_mask = default_mask;
+}
+
+/**
+ * @brief Returns a yaw that is a multiple of 90 degrees
+ * @details Drone should fly as straight forward as possible
+ * , but yaw should be a multiple of 90 degrees.
+ * This method assumes dx and dy != 0 at the same time
+ * @param dx difference in x
+ * @param dy difference in y
+ * @return Yaw angle in radians - not mavros corrected
+ */
+double calculatePathYaw(double dx, double dy) {
+    //Avoid fatal error if dx and dy is too small
+    //If method is used correctly this should NEVER be a problem
+    if(std::fabs(dx * dx + dy * dy) < 0.001) {
+        return 0;
+    }
+    /*
+    angle = acos(([dx, dy] dot [1,0]) / (norm([dx, dy]) * norm([1,0]))) = acos(dx / (norm([dx, dy]) * 1))
+    */
+    double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
+
+    //Select closest multiple of 90 degrees
+    if(angle > 3 * PI / 4) {
+        angle = PI;
+    } else if(angle > PI / 4) {
+        angle = PI / 2.0;
+    } else {
+        angle = 0;
+    }
+    //Invert if dy is negative
+    if (dy < 0) {
+        angle = -angle;
+    }
+
+    return angle;
 }
 
 void GoToState::handleEvent(ControlFSM& fsm, const EventData& event) {
@@ -93,18 +130,36 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         return;
     }
 
+    // Set obstacle avoidance flag on entry
+    obstacle_avoidance_kicked_in_  = false;
+
     // Set setpoint in local frame to target
     setpoint_.position.x = local_target_.x();
     setpoint_.position.y = local_target_.y();
     setpoint_.position.z = local_target_.z();
-
+  
     try {
         ///Calculate yaw setpoint
         using control::pose::quat2yaw;
         using control::getMavrosCorrectedTargetYaw;
         using control::DroneHandler;
+
         auto quat = DroneHandler::getCurrentLocalPose().pose.orientation;
+        //auto pos  = DroneHandler::getCurrentPose().pose.position;
+
+	// calculate dx,dy
+	//auto dx = setpoint_.position.x - pos.x;
+	//auto dy = setpoint_.position.y - pos.y;
+
         setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(quat2yaw(quat)));
+        /*
+	if (std::fabs(dx*dx + dy*dy) < 0.01){
+	    // assume drone is stationary and dont change orientation
+	} else{
+            setpoint_.yaw = static_cast<float>(getMavrosCorrectedTargetYaw(calculatePathYaw(dx, dy)));
+        }
+	*/
+
     } catch(const std::exception& e) {
         //Critical bug - no recovery
         //Transition to position hold if no pose available
@@ -112,9 +167,6 @@ void GoToState::stateBegin(ControlFSM& fsm, const EventData& event) {
         RequestEvent abort_event(RequestType::ABORT);
         fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
     }
-}
-
-void GoToState::stateEnd(ControlFSM& fsm, const EventData& event) {
 }
 
 void GoToState::loopState(ControlFSM& fsm) {
@@ -126,6 +178,12 @@ void GoToState::loopState(ControlFSM& fsm) {
             throw control::PoseNotValidException();
         }
 
+        if (obstacle_avoidance_kicked_in_){
+            RequestEvent abort_event(RequestType::ABORT);
+            fsm.transitionTo(ControlFSM::POSITION_HOLD_STATE, this, abort_event);
+            return;
+        }
+      
         auto tf = DroneHandler::getLocal2GlobalTf();
         tf2::Transform tf_matrix;
         tf2::convert(tf.transform, tf_matrix);
@@ -198,45 +256,16 @@ void GoToState::stateInit(ControlFSM& fsm) {
     //Set state variables
     delay_transition_.delayTime = ros::Duration(Config::go_to_hold_dest_time);
 
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        this->obstacle_avoidance_kicked_in_  = true;
+    };
+
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
     setStateIsReady();
     control::handleInfoMsg("GoTo init completed!");
 }
 
-/**
- * @brief Returns a yaw that is a multiple of 90 degrees
- * @details Drone should fly as straight forward as possible
- * , but yaw should be a multiple of 90 degrees.
- * This method assumes dx and dy != 0 at the same time
- * @param dx difference in x
- * @param dy difference in y
- * @return Yaw angle in radians - not mavros corrected
- */
-double calculatePathYaw(double dx, double dy) {
-    //Avoid fatal error if dx and dy is too small
-    //If method is used correctly this should NEVER be a problem
-    if(std::fabs(dx * dx + dy * dy) < 0.001) {
-        return 0;
-    }
-    /*
-    angle = acos(([dx, dy] dot [1,0]) / (norm([dx, dy]) * norm([1,0]))) = acos(dx / (norm([dx, dy]) * 1))
-    */
-    double angle = std::acos(dx / std::sqrt(dx * dx + dy * dy));
 
-    //Select closest multiple of 90 degrees
-    if(angle > 3 * PI / 4) {
-        angle = PI;
-    } else if(angle > PI / 4) {
-        angle = PI / 2.0;
-    } else {
-        angle = 0;
-    }
-    //Invert if dy is negative
-    if (dy < 0) {
-        angle = -angle;
-    }
-
-    return angle;
-}
 
 void GoToState::handleManual(ControlFSM& fsm) {
     cmd_.eventError("Lost OFFBOARD");

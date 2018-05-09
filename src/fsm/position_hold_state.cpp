@@ -14,6 +14,7 @@
 //Constructor sets default setpoint type mask
 PositionHoldState::PositionHoldState() {
     setpoint_.type_mask = default_mask;
+
 }
 
 //Handles incoming events
@@ -44,6 +45,24 @@ void PositionHoldState::handleEvent(ControlFSM& fsm, const EventData& event) {
     }
 }
 
+void PositionHoldState::stateInit(ControlFSM& fsm) {
+    std::function<void()> obstacleAvoidanceCB = [this]()->void {
+        //TODO: logic to avoid being pushed around
+
+        // keep new setpoint after obstacle avoidance
+        auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
+        auto& position = pose_stamped.pose.position;
+        //Set setpoint to current position
+        setpoint_.position.x = position.x;
+        setpoint_.position.y = position.y;
+    };
+
+    fsm.obstacle_avoidance_.registerOnWarnCBPtr(std::make_shared< std::function<void()> >(obstacleAvoidanceCB));
+
+    setStateIsReady();
+    control::handleInfoMsg("PositionHold init completed!");
+}
+
 void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
     using control::Config;
     using control::DroneHandler;
@@ -63,6 +82,7 @@ void PositionHoldState::stateBegin(ControlFSM& fsm, const EventData& event) {
             //Error if pose is not valid
             throw control::PoseNotValidException();
         }
+
         //Get pose - and position
         auto pose_stamped = control::DroneHandler::getCurrentLocalPose();
         auto& position = pose_stamped.pose.position;
@@ -132,6 +152,4 @@ ascend_msgs::ControlFSMState PositionHoldState::getStateMsg() const {
     msg.state_id = ControlFSMState::POS_HOLD_STATE;
     return msg;
 }
-
-
 

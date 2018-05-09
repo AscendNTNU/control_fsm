@@ -85,6 +85,11 @@ public:
     static double safe_hover_altitude;
     /// \fsmparam Drone safezone
     static double obstacle_too_close_dist;
+    /// \fsmparam Clearance osbtacle avoidance 
+    static double obstacle_clearance_max;
+    static double obstacle_clearance_min;
+    /// \fsmparam Radius in which obstacle collisions will be checked for
+    static double obstacle_clearance_checkradius;
     /// \fsmparam Topic to listen for info about obstacles
     static std::string lidar_topic;
     /// \fsmparam Finished drone will require all datastreams to be available

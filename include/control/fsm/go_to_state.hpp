@@ -18,7 +18,13 @@ private:
 
     ///Current command
     EventData cmd_;
+    
+    ///Is state active flag
+    bool is_active_ = false;
 
+    ///Obstacle avoidance kicked in flag
+    bool obstacle_avoidance_kicked_in_ = false;
+  
     ///Local target to reach
     tf2::Vector3 local_target_;
 public:
@@ -29,7 +35,6 @@ public:
     void stateBegin(ControlFSM& fsm, const EventData& event) override;
     // Poll drone position and set setpoint
     void loopState(ControlFSM& fsm) override;
-    void stateEnd(ControlFSM& fsm, const EventData& event) override;
     std::string getStateName() const override { return "GoTo";}
     ascend_msgs::ControlFSMState getStateMsg() const override;
     const mavros_msgs::PositionTarget* getSetpointPtr() override;
