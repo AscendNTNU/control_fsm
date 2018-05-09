@@ -8,8 +8,7 @@ namespace obstacle_math {
 constexpr double PI{3.14159265358979323846264338327950288419};
 
 // wrap any angle to range [0, 2pi)
-template<typename T, typename = typename std::enable_if<std::is_arithmetic<T>::value, T>::type>
-T angleWrapper(const T angle){
+float angleWrapper(const float angle){
     return angle - 2*PI*floor(angle/(2*PI));
 }
 
@@ -44,20 +43,20 @@ inline double calcDistanceToObstacle(const T& point, const K& obstacle_position)
 }
 
 
-template<typename T, typename K, typename N>
-inline N calcAngleToObstacle(const T& point, const K& obstacle_position, const N obstacle_direction){
+template<typename T, typename K>
+inline float calcAngleToObstacle(const T& point, const K& obstacle_position){
     T delta_drone_obstacle;
     delta_drone_obstacle.x = point.x - obstacle_position.x;
     delta_drone_obstacle.y = point.y - obstacle_position.y;
 
-    const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle_direction);
+    //const float angle_to_obstacle = angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x) - obstacle_direction);
 
-    return angle_to_obstacle;
+    return angleWrapper(std::atan2(delta_drone_obstacle.y, delta_drone_obstacle.x));
 }
 
 // Apply 2d transformation matrix
 template<typename T>
-inline T rotateXY(const T& point, const float angle){
+T rotateXY(const T& point, const float angle){
     T new_point;
     new_point.x = point.x * std::cos(angle) - point.y * std::sin(angle);
     new_point.y = point.x * std::sin(angle) + point.y * std::cos(angle);

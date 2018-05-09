@@ -43,10 +43,12 @@ double Config::obstacle_too_close_dist = 2.0;
 std::string Config::lidar_topic = "perception/obstacles/lidar";
 bool Config::require_all_data_streams = true;
 bool Config::require_obstacle_detection = true;
+double Config::obstacle_clearance_max = 2.0f;
+double Config::obstacle_clearance_min = 1.5f;
+double Config::obstacle_clearance_checkradius = 2.0f;
 std::string Config::global_frame_id = "map";
 std::string Config::local_frame_id = "odom";
 bool Config::use_global_transforms = true;
-
 bool Config::restrict_arena_boundaries = true;
 double Config::arena_lowest_x = 0.0;
 double Config::arena_lowest_y = 0.0;
@@ -155,6 +157,12 @@ void Config::loadParams() {
     getStringParam("land_detector_type", land_detector_type);
     //Obstacles
     getStringParam("obstacle_state_topic", obstacle_state_topic);
+    //Obstacle avoidance
+    getDoubleParam("obstacle_clearance_max", obstacle_clearance_max, 0, 100);
+    getDoubleParam("obstacle_clearance_min", obstacle_clearance_min, 0, 100);
+    getDoubleParam("obstacle_clearance_checkradius", obstacle_clearance_checkradius, 0, 100);  
+    //Action server
+    getStringParam("action_server_topic", action_server_topic);
     //Frame id
     getStringParam("global_frame_id", global_frame_id);
     getStringParam("local_frame_id", local_frame_id);
@@ -168,7 +176,6 @@ void Config::loadParams() {
     getDoubleParam("arena_highest_x", arena_highest_x, -100.0, 100.0);
     getDoubleParam("arena_highest_y", arena_highest_y, -100.0, 100.0);
     getBoolParam("require_distance_sensor", require_distance_sensor);
-
 }
 
 using Request = ascend_msgs::ReloadConfig::Request;

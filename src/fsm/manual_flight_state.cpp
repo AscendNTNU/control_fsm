@@ -52,6 +52,7 @@ void printNextStateOnChange(RequestType next_state) {
 }
 
 void ManualFlightState::stateBegin(ControlFSM& fsm, const EventData& event) {
+    fsm.obstacle_avoidance_.relaxResponsibility();	
     printNextState(next_state_);
 }
 
@@ -87,8 +88,6 @@ const mavros_msgs::PositionTarget* ManualFlightState::getSetpointPtr() {
 void ManualFlightState::handleManual(ControlFSM &fsm) {
     //Already in manual, nothing to do
 }
-
-
 
 ascend_msgs::ControlFSMState ManualFlightState::getStateMsg() const {
     using ascend_msgs::ControlFSMState;
