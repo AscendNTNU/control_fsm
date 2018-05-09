@@ -18,6 +18,8 @@ can therefore "ripple" through the fsm to reach the target state. See RequestsVs
     - The only purpose of a manual request is debugging, and internal transitions! Be careful!
 - Tracking and interacting with groundrobots is not yet implemented
 - Altitude restrictions is implemented. Drone will not attempt to fly below min_in_air_altitude!
+- Specify which state the drone should switch to when going out of manual flight. This is done by manually sending a request with RequestType::IDLE or RequestType::BLINDHOVER.
+  Defaults to IDLE. 
 
 **Coordinate frames: **
 The statemachine assumes these frames are set correctly:
