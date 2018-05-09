@@ -29,8 +29,7 @@ using obstacle_math::calcAngleToObstacle;
 using obstacle_math::calcDistanceToObstacle;
 
 /// Return a vector (x,y,z) which corresponds to the point closest to the obstacle
-/// which is allowed, referenced from the obstacles coordinate system. x-axis is positive
-/// direction of motion. Obstacle driving in with obstacle_direction=0 would be driving in x-direction
+/// which is allowed
 geometry_msgs::Vector3 calcMinimumVector(const float drone_angle_to_obstacle, const float drone_direction, const float drone_speed_ratio,
                                               const float clearance_min, const float clearance_max){
 
