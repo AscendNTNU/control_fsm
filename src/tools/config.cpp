@@ -36,6 +36,7 @@ std::string Config::land_detector_type = "landing_gear";
 std::string Config::obstacle_state_topic = "/perception_obstacle_states";
 std::string Config::debug_server_topic = "/control/fsm/debug_server";
 std::string Config::action_server_topic = "/control/fsm/action_server";
+std::string Config::idle_pose_topic = "/mavros/mocap/pose";
 int Config::fsm_status_buffer_size = 10;
 double Config::go_to_hold_dest_time = 0.5;
 double Config::safe_hover_altitude = 2.0;
@@ -152,6 +153,7 @@ void Config::loadParams() {
     getStringParam("mavros_state_topic", mavros_state_changed_topic);
     getStringParam("local_velocity_topic", mavros_local_vel_topic);
     getStringParam("distance_sensor_topic", mavros_distance_sensor_topic);
+    getStringParam("idle_pose_topic", idle_pose_topic);
     //LandDetector
     getStringParam("land_detector_topic", land_detector_topic);
     getStringParam("land_detector_type", land_detector_type);

@@ -5,6 +5,9 @@
 #include "control/fsm/event_data.hpp"
 #include "control/fsm/control_fsm.hpp"
 
+ros::Publisher pose_pub;
+geometry_msgs::PoseStamped idle_pose;
+
 //Sets setpoint type to IDLE
 IdleState::IdleState() {
     setpoint_ = mavros_msgs::PositionTarget();
@@ -29,6 +32,25 @@ void IdleState::handleEvent(ControlFSM& fsm, const EventData& event) {
     } else  {
         control::handleInfoMsg("Event ignored");
     }
+}
+
+void IdleState::stateInit(ControlFSM& fsm) {
+    using control::Config;
+    using geometry_msgs::PoseStamped;
+    auto& nh = fsm.node_handler_;
+    pose_pub = nh.advertise<PoseStamped>(Config::idle_pose_topic, 1);
+}
+
+void IdleState::stateBegin(ControlFSM& fsm, const EventData& event) {
+    //Drone assumed to be on ground, stationary (or it will be soon anyways :') )
+    idle_pose = control::DroneHandler::getCurrentLocalPose();
+    idle_pose.pose.position.z = 0.0;
+}
+
+void IdleState::loopState(ControlFSM& fsm) {
+    //Publish to pose filter, forcing z = 0 when on ground!
+    idle_pose.header.stamp = ros::Time::now();
+    pose_pub.publish(idle_pose);
 }
 
 const mavros_msgs::PositionTarget* IdleState::getSetpointPtr() {
