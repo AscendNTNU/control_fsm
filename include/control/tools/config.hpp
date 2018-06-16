@@ -73,6 +73,8 @@ public:
     static std::string debug_server_topic;
     /// \fsmparam Topic for action server
     static std::string action_server_topic;
+    /// \fsmparam Topic for publishing pose in IDLE state
+    static std::string idle_pose_topic;
     /// \fsmparam Buffer size used for FSMError, FSMWarn etc
     static int fsm_status_buffer_size;
     /// \fsmparam Time gotostate waits before transitioning

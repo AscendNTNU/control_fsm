@@ -37,6 +37,8 @@
     debug_server_topic: /control/fsm/debug_server,
     #Topic for action server
     action_server_topic: /control/fsm/action_server,
+    #Topic for publishing filter state from IDLE
+    idle_pose_topic: /mavros/mocap/pose,
     #When is message considered old?
     message_timeout: 2.0,
     #For what distances is it uneccesary to adjust yaw
