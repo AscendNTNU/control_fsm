@@ -39,6 +39,7 @@ void IdleState::stateInit(ControlFSM& fsm) {
     using geometry_msgs::PoseStamped;
     auto& nh = fsm.node_handler_;
     pose_pub = nh.advertise<PoseStamped>(Config::idle_pose_topic, 1);
+    setStateIsReady();
 }
 
 void IdleState::stateBegin(ControlFSM& fsm, const EventData& event) {
